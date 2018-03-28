@@ -1,0 +1,127 @@
+// snemo/digitization/fldigi.cc
+//
+// Copyright (c) 2018 by  F. Mauger <mauger@lpccaen.in2p3.fr>
+//
+// This file is part of Digitization Falaise plugin.
+//
+// Digitization Falaise plugin is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Digitization Falaise plugin is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Digitization Falaise plugin.  If not, see <http://www.gnu.org/licenses/>.
+
+// Ourselves:
+#include "snemo/digitization/fldigi.h"
+
+// Standard library:
+#include <iostream>
+#include <cstdint>
+
+// Third party:
+// - Bayeux/datatools
+#include <bayeux/datatools/exception.h>
+// Mute some specific "shadow" warnings in Boost <=1.55:
+#if defined (__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
+#if defined (__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
+#endif
+#include <bayeux/datatools/kernel.h>
+#if defined (__GNUC__)
+#pragma GCC diagnostic pop
+#endif
+#if defined (__clang__)
+#pragma clang diagnostic pop
+#endif
+
+// This project;
+#include "snemo/digitization/detail/fldigi_sys.h"
+#include "snemo/digitization/resource.h"
+
+namespace {
+
+  static bool _fldigiinit = false;
+
+  void fldigi_initialize_impl()
+  {
+    ::datatools::logger::priority logging = ::snemo::digitization::detail::fldigi_sys::process_logging_env();
+    DT_LOG_TRACE_ENTERING(logging);
+    snemo::digitization::init_resources();
+
+    DT_THROW_IF(!datatools::kernel::is_instantiated(),
+                std::runtime_error,
+                "The Bayeux/datatools' kernel is not instantiated !");
+
+    // Populate the library info register, basically dumb if we don't
+    // have it so assume it exists and hope for an exception if
+    // it doesn't
+    if (!::snemo::digitization::detail::fldigi_sys::is_instantiated()) {
+      DT_LOG_TRACE(logging, "Instantiating Digitization Falaise plugin system singleton...");
+      ::snemo::digitization::detail::fldigi_sys & fldigiSys
+          = ::snemo::digitization::detail::fldigi_sys::instantiate();
+      DT_LOG_TRACE(logging, "Initializing Digitization Falaise plugin system singleton with specific internals...");
+      fldigiSys.initialize();
+    }
+    DT_LOG_TRACE_EXITING(logging);
+  }
+
+  void fldigi_terminate_impl()
+  {
+    ::datatools::logger::priority logging = ::snemo::digitization::detail::fldigi_sys::process_logging_env();
+    DT_LOG_TRACE_ENTERING(logging);
+    if (::snemo::digitization::detail::fldigi_sys::is_instantiated()) {
+      DT_LOG_TRACE(logging, "Shutdown Digitization Falaise plugin system singleton specific internals...");
+      ::snemo::digitization::detail::fldigi_sys & fldigiSys
+          = ::snemo::digitization::detail::fldigi_sys::instance();
+      fldigiSys.shutdown();
+      DT_LOG_TRACE(logging, "Digitization Falaise plugin system singleton have been terminated.");
+    }
+    DT_LOG_TRACE_EXITING(logging);
+  }
+
+}
+
+namespace snemo {
+
+  namespace digitization {
+
+    void initialize(int argc_, char * argv_[], uint32_t flags_)
+    {
+      if (! ::_fldigiinit) {
+        // Initialization code from Falaise itself:
+        fldigi_initialize_impl();
+        ::_fldigiinit = true;
+      } else {
+        DT_THROW(std::logic_error,
+                 "Attempt to initialize the already initialized Digitization Falaise plugin library!");
+      }
+      return;
+    }
+
+    void terminate()
+    {
+      if (::_fldigiinit) {
+        // Termination code for Falaise:
+        fldigi_terminate_impl();
+
+        ::_fldigiinit = false;
+      } else {
+        DT_THROW(std::logic_error,
+                 "Attempt to terminate the already terminated Digitization Falaise plugin library!");
+      }
+      return;
+    }
+
+  } // namespace digitization
+
+} // namespace snemo
