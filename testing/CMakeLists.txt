@@ -2,6 +2,32 @@
 set(FalaiseDigitizationPlugin_TESTS
   test_version.cxx
   test_fldigi.cxx
+  test_bimap.cxx
+  test_calo_ctw.cxx
+  test_calo_ctw_data.cxx
+  test_calo_tp.cxx
+  test_calo_tp_data.cxx
+  test_calo_tp_to_ctw_algo.cxx
+  test_calo_trigger_algorithm.cxx
+  test_geiger_ctw.cxx
+  test_geiger_ctw_data.cxx
+  test_geiger_neighbour_trigger.cxx
+  test_geiger_tp.cxx
+  test_geiger_tp_data.cxx
+  test_geiger_tp_to_ctw_algo.cxx
+  test_ID_convertor.cxx
+  test_memory.cxx
+  test_sd_reader.cxx
+  test_sd_to_calo_signal_algo.cxx
+  test_sd_to_ctw_process.cxx
+  test_sd_to_geiger_signal_algo.cxx
+  test_sd_to_signal_process.cxx
+  test_sd_to_tp_process.cxx
+  test_signal_to_geiger_tp_algo.cxx
+  test_simulated_data_reading.cxx
+  test_tracker_trigger_algorithm.cxx
+  test_trigger_algorithm.cxx
+  test_trigger_algorithm_test_fake_ctw.cxx
  )
 
 # # - Use C++11

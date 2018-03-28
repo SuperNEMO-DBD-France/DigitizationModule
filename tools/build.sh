@@ -86,6 +86,8 @@ if [ -n "${falaise_option}" ]; then
 fi
 cmake \
     -DCMAKE_INSTALL_PREFIX="${install_dir}" \
+    -DFalaiseDigitizationPlugin_ENABLE_TESTING=ON \
+    -DFalaiseDigitizationPlugin_ENABLE_DEVEL=ON \
     ${falaise_option} \
     ${src_dir}
 if [ $? -ne 0 ]; then

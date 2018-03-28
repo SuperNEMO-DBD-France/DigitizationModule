@@ -88,7 +88,59 @@ list(APPEND FalaiseDigitizationPlugin_HEADERS
   ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/resource.h
   ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/fldigi.h
   ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/detail/fldigi_sys.h
-   )
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/calo_ctw_constants.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/calo_ctw_data.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/calo_ctw.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/calo_signal.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/calo_tp_data.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/calo_tp.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/calo_tp_to_ctw_algo.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/calo_trigger_algorithm.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/clock_utils.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/coincidence_trigger_algorithm.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/digitization_driver.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/digitization_module.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/electronic_mapping.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/geiger_ctw_data.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/geiger_ctw.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/geiger_signal.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/geiger_tp_constants.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/geiger_tp_data.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/geiger_tp.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/geiger_tp_to_ctw_algo.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/ID_convertor.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/mapping.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/memory.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/memory-inl.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/sd_to_calo_signal_algo.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/sd_to_geiger_signal_algo.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/signal_data.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/signal_to_calo_tp_algo.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/signal_to_geiger_tp_algo.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/tracker_sliding_zone.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/tracker_trigger_algorithm.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/tracker_trigger_mem_maker.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/tracker_zone.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/trigger_algorithm.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/trigger_display_manager.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/trigger_info.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/trigger_structures.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/trigger_structures.h
+  # Serialization:
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/calo_ctw_data.ipp
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/calo_ctw.ipp
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/calo_signal.ipp
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/calo_tp_data.ipp
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/calo_tp.ipp
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/geiger_ctw_data.ipp
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/geiger_ctw.ipp
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/geiger_signal.ipp
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/geiger_tp_data.ipp
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/geiger_tp.ipp
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/signal_data.ipp
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/the_serializable.ipp
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/the_serializable.h
+  )
 
 # - Sources:
 list(APPEND FalaiseDigitizationPlugin_SOURCES
@@ -97,6 +149,41 @@ list(APPEND FalaiseDigitizationPlugin_SOURCES
   ${CMAKE_CURRENT_BINARY_DIR}/source/falaise/snemo/digitization/resource.cc
   ${CMAKE_CURRENT_BINARY_DIR}/source/falaise/snemo/digitization/fldigi.cc
   ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/detail/fldigi_sys.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/calo_ctw.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/calo_ctw_data.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/calo_signal.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/calo_tp.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/calo_tp_data.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/calo_tp_to_ctw_algo.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/calo_trigger_algorithm.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/clock_utils.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/coincidence_trigger_algorithm.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/digitization_driver.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/digitization_module.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/electronic_mapping.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/geiger_ctw.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/geiger_ctw_data.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/geiger_signal.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/geiger_tp.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/geiger_tp_data.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/geiger_tp_to_ctw_algo.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/ID_convertor.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/mapping.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/sd_to_calo_signal_algo.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/sd_to_geiger_signal_algo.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/signal_data.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/signal_to_calo_tp_algo.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/signal_to_geiger_tp_algo.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/tracker_sliding_zone.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/tracker_trigger_algorithm.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/tracker_trigger_mem_maker.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/tracker_zone.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/trigger_algorithm.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/trigger_display_manager.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/trigger_info.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/trigger_structures.cc
+  # Serialization:
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/the_serializable.cc
   )
 
 ############################################################################################
@@ -139,10 +226,18 @@ install(DIRECTORY ${PROJECT_SOURCE_DIR}/resources/modules/Digitization/
   DESTINATION ${CMAKE_INSTALL_DATADIR}/Falaise/resources/modules/Digitization)
 
 # Test support:
-option(FalaiseDigitizationPlugin_ENABLE_TESTING "Build unit testing system for FalaiseDigitization" ON)
+option(FalaiseDigitizationPlugin_ENABLE_TESTING "Build unit testing system for FalaiseDigitization" OFF)
+message(STATUS "[DEBUG] With tests : ${FalaiseDigitizationPlugin_ENABLE_TESTING}")
 if(FalaiseDigitizationPlugin_ENABLE_TESTING)
   enable_testing()
   add_subdirectory(testing)
+endif()
+
+# Devel stuff support:
+option(FalaiseDigitizationPlugin_ENABLE_DEVEL "Build devel programs for FalaiseDigitization" OFF)
+message(STATUS "[DEBUG] With devel : ${FalaiseDigitizationPlugin_ENABLE_DEVEL}")
+if(FalaiseDigitizationPlugin_ENABLE_DEVEL)
+  add_subdirectory(devel)
 endif()
 
 # - end
