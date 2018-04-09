@@ -1,29 +1,32 @@
-/// \file falaise/snemo/digitization/digitization_driver.h
-/* Author(s)     : Francois Mauger <mauger@lpccaen.in2p3.fr>
- *               : Guillaume Oliviero <goliviero@lpccaen.in2p3.fr>
- * Creation date : 2016-12-06
- * Last modified : 2014-12-07
+// -*- mode: c++ ; -*-
+/** \file falaise/snemo/digitization/digitization_module.h
+ * Author(s) :    Yves Lemiere <lemiere@lpccaen.in2p3.fr>
+ *                Francois Mauger <mauger@lpccaen.in2p3.fr>
+ *                Guillaume Oliviero <goliviero@lpccaen.in2p3.fr>
+ * Creation date: 2016
+ * Last modified: 2018
  *
- * Copyright (C) 2012-2016 Guillaume Oliviero <goliviero@lpccaen.in2p3.fr>
+ * Copyright (C) 2018 Guillaume Oliviero <goliviero@lpccaen.in2p3.fr>
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or (at
- * your option) any later version.
+ * This  program is  free  software; you  can  redistribute it  and/or
+ * modify it  under the  terms of  the GNU  General Public  License as
+ * published by the Free Software  Foundation; either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * WITHOUT  ANY  WARRANTY;  without   even  the  implied  warranty  of
+ * MERCHANTABILITY or FITNESS  FOR A PARTICULAR PURPOSE.   See the GNU
  * General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
+ * You should have  received a copy of the GNU  General Public License
+ * along  with  this program;  if  not,  write  to the  Free  Software
+ * Foundation,  Inc.,  51 Franklin  Street,  Fifth  Floor, Boston,  MA
+ * 02110-1301, USA.
  *
  * Description:
  *
- *   A driver class that wraps the Digitization algorithms, trigger and readout.
+ *   A driver  class that  wraps the Digitization  algorithms, trigger
+ *   and readout.
  *
  * History:
  *
@@ -65,6 +68,12 @@ namespace snemo {
       /// Destructor
       virtual ~digitization_driver();
 
+      /// Set logging priority level
+      void set_logging_priority(datatools::logger::priority logging_priority_);
+
+      /// Get logging priority
+      datatools::logger::priority get_logging_priority() const;
+
       /// Check the geometry manager
       bool has_geometry_manager() const;
 
@@ -74,23 +83,48 @@ namespace snemo {
       /// Return a non-mutable reference to the geometry manager
       const geomtools::manager & get_geometry_manager() const;
 
-      /// Initialize the gamma tracker through configuration properties
-      virtual void initialize(const datatools::properties & setup_);
-
-      /// Reset the clusterizer
-      virtual void reset();
+      /// Initialize the digitization driver through configuration properties
+			virtual void initialize(const datatools::properties & config_);
 
       /// Check the initialization status
       bool is_initialized() const;
 
-      /// Process digitization algorithm (sd to trigger for the moment)
-      void process_digitization_algorithms(const mctools::signal::signal_data & SSD_,
+      /// Reset the driver
+      virtual void reset();
+
+      /// Run the algorithm
+      virtual void process(const mctools::signal::signal_data & SSD_,
+													 snemo::datamodel::sim_digi_data & SDD_);
+
+      // Smart print
+      virtual void tree_dump(std::ostream & out_ = std::clog,
+                             const std::string & title_ = "",
+                             const std::string & indent_ = "",
+                             bool inherit_ = false) const;
+
+		protected:
+
+			/// Set default attribute values
+      void _set_defaults();
+
+      /// Process digitization algorithms ('SSD' to trigger for the moment)
+      void _process_digitization_algorithms(const mctools::signal::signal_data & SSD_,
                                            snemo::datamodel::sim_digi_data & SDD_);
+
+      /// Process readout algorithms (TO DO)
+      void _process_readout_algorithms(const mctools::signal::signal_data & SSD_,
+																			snemo::datamodel::sim_digi_data & SDD_);
+
+    private:
+
+      /// Set the initialization flag
+      void _set_initialized_(bool);
 
     private:
 
       // Configuration:
       bool _initialized_; //!< Initialization status
+      datatools::logger::priority _logging_priority_; //!< Logging priority
       const geomtools::manager * _geometry_manager_;  //!< The SuperNEMO geometry manager
 
       // Algorithms:

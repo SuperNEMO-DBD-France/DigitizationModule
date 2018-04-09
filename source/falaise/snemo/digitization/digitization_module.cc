@@ -1,21 +1,18 @@
 /// \file falaise/snemo/digitization/digitization_module.cc
-// Author(s): Guillaume OLIVIERO <goliviero@lpccaen.in2p3.fr>
-
-// Ourselves:
-#include <snemo/digitization/digitization_module.h>
-
-// Standard library:
 
 // Third party:
 // - Bayeux/datatools:
+#include <bayeux/datatools/handle.h>
 #include <datatools/service_manager.h>
+// - Bayeux/geomtools:
+#include <bayeux/geomtools/geometry_service.h>
 
 // This project (Falaise):
-//#include <falaise/snemo/processing/services.h>
+#include <falaise/snemo/processing/services.h>
 #include <falaise/snemo/datamodels/data_model.h>
 
-// This plugin (digitization_module) :
-#include <falaise/snemo/digitization/digitization_driver.h>
+// Ourselves:
+#include <snemo/digitization/digitization_module.h>
 
 namespace snemo {
 
@@ -25,10 +22,24 @@ namespace snemo {
     DPP_MODULE_REGISTRATION_IMPLEMENT(digitization_module,
                                       "snemo::digitization::digitization_module")
 
+    void digitization_module::_set_defaults_()
+    {
+      _SSD_label_.clear();
+      _SDD_label_.clear();
+      _Geo_label_.clear();
+      _Db_label_.clear();
+      _abort_at_missing_input_ = true;
+      _abort_at_former_output_ = false;
+      _preserve_former_output_ = false;
+      _driver_->reset();
+      return;
+    }
+
     digitization_module::digitization_module(datatools::logger::priority logging_priority_)
       : dpp::base_module(logging_priority_)
     {
-      _set_defaults();
+      _geometry_manager_ = nullptr;
+      _set_defaults_();
       return;
     }
 
@@ -38,64 +49,99 @@ namespace snemo {
       return;
     }
 
-    void digitization_module::set_geometry_manager(const geomtools::manager & geo_mgr_)
-    {
-      DT_THROW_IF (is_initialized(), std::logic_error, "Already initialized/locked !");
-      _geometry_manager_ = & geo_mgr_;
-      return;
-    }
-
-    const geomtools::manager & digitization_module::get_geometry_manager() const
-    {
-      DT_THROW_IF (!has_geometry_manager(), std::logic_error, "No geometry manager is setup !");
-      return *_geometry_manager_;
-    }
-
-
-    bool digitization_module::has_geometry_manager() const
-    {
-      return _geometry_manager_ != 0;
-    }
-
-
-    void digitization_module::_set_defaults()
-    {
-      _SSD_label_ = snemo::datamodel::data_info::default_simulated_signal_data_label();
-      _SDD_label_ = snemo::datamodel::data_info::default_simulated_digitized_data_label();
-      _driver_->reset();
-      return;
-    }
-
-    void digitization_module::initialize(const datatools::properties  & setup_,
-                                         datatools::service_manager   & /* service_manager_*/,
+    void digitization_module::initialize(const datatools::properties  & config_,
+                                         datatools::service_manager   & service_manager_,
                                          dpp::module_handle_dict_type & /* module_dict_ */)
 
     {
-      DT_THROW_IF(is_initialized(),
-                  std::logic_error,
-                  "Module '" << get_name() << "' is already initialized ! ");
+      DT_THROW_IF (is_initialized(), std::logic_error,
+                   "Module '" << get_name() << "' is already initialized ! ");
 
-      dpp::base_module::_common_initialize(setup_);
+      dpp::base_module::_common_initialize(config_);
 
-      if (setup_.has_key("SSD_label")) {
-        _SSD_label_ = setup_.fetch_string("SSD_label");
+      /// Input SSD bank:
+      if (_SSD_label_.empty()) {
+        if (config_.has_key("SSD_label")) {
+          _SSD_label_ = config_.fetch_string("SSD_label");
+        }
+      }
+      // Default label:
+      if (_SSD_label_.empty()) {
+        _SSD_label_  = snemo::datamodel::data_info::default_simulated_signal_data_label();
       }
 
-      if (setup_.has_key("SDD_label")) {
-        _SDD_label_ = setup_.fetch_string("SDD_label");
+      /// Output SDD bank:
+      if (_SDD_label_.empty()) {
+        if (config_.has_key("SDD_label")) {
+          _SDD_label_ = config_.fetch_string("SDD_label");
+        }
+      }
+      // Default label:
+      if (_SDD_label_.empty()) {
+        _SDD_label_ = snemo::datamodel::data_info::default_simulated_digitized_data_label();
+      }
+
+      /*if (_db_manager_ == nullptr) */ {
+        /// Db service:
+        if (_Db_label_.empty()) {
+          if (config_.has_key("Db_label")) {
+            _Db_label_ = config_.fetch_string("Db_label");
+          }
+        }
+        // Default label:
+        // if (_Db_label_.empty()) {
+        //   _Db_label_ = snemo::datamodel::data_info::default_database_service_label();
+        // }
+        // DT_THROW_IF(! service_manager_.has(_Db_label_) ||
+        //             ! service_manager_.is_a<snemo::XXX::database_service>(_Db_label_),
+        //             std::logic_error,
+        //             "Module '" << get_name() << "' has no '" << _Db_label_ << "' service !");
+        // const snemo::XXX::::database_service & Db = service_manager_.get<snemo::XXX::database_service>(_Db_label_);
+        // set_db_manager(Db.get_geom_manager());
+      }
+
+      if (_geometry_manager_ == nullptr) {
+        /// Geo service:
+        if (_Geo_label_.empty()) {
+          if (config_.has_key("Geo_label")) {
+            _Geo_label_ = config_.fetch_string("Geo_label");
+          }
+        }
+        // Default label:
+        if (_Geo_label_.empty()) {
+          _Geo_label_ = snemo::processing::service_info::default_geometry_service_label();
+        }
+        DT_THROW_IF(! service_manager_.has(_Geo_label_) ||
+                    ! service_manager_.is_a<geomtools::geometry_service>(_Geo_label_),
+                    std::logic_error,
+                    "Module '" << get_name() << "' has no '" << _Geo_label_ << "' service !");
+        const geomtools::geometry_service & Geo = service_manager_.get<geomtools::geometry_service>(_Geo_label_);
+        set_geometry_manager(Geo.get_geom_manager());
+      }
+      DT_THROW_IF(_geometry_manager_ == nullptr, std::logic_error, "Missing geometry manager !");
+
+      if (config_.has_key("abort_at_missing_input")) {
+        set_abort_at_missing_input(config_.fetch_boolean("abort_at_missing_input"));
+      }
+
+      if (config_.has_key("abort_at_former_output")) {
+        set_abort_at_former_output(config_.fetch_boolean("abort_at_former_output"));
+      }
+
+      if (config_.has_key("preserve_former_output")) {
+        set_preserve_former_output(config_.fetch_boolean("preserve_former_output"));
       }
 
       // Driver :
-      _driver_->initialize(setup_);
+      _driver_->initialize(config_);
 
-      // Tag the module as initialized :
       _set_initialized(true);
+      return;
     }
 
     void digitization_module::reset()
     {
-      DT_THROW_IF(! is_initialized(),
-                  std::logic_error,
+      DT_THROW_IF(! is_initialized(), std::logic_error,
                   "Module '" << get_name() << "' is not initialized !");
 
       _set_initialized(false);
@@ -105,7 +151,135 @@ namespace snemo {
         }
         _driver_.reset();
       }
-      _set_defaults();
+      _geometry_manager_ = nullptr;
+      // _database_manager_ = nullptr;
+      _set_defaults_();
+      return;
+    }
+
+    void digitization_module::set_ssd_label(const std::string & lbl_)
+    {
+      DT_THROW_IF(is_initialized(), std::logic_error,
+                  "Module '" << get_name() << "' is already initialized ! ");
+      _SSD_label_ = lbl_;
+      return;
+    }
+
+    const std::string & digitization_module::get_ssd_label() const
+    {
+      return _SSD_label_;
+    }
+
+    void digitization_module::set_sdd_label(const std::string & lbl_)
+    {
+      DT_THROW_IF(is_initialized(), std::logic_error,
+                  "Module '" << get_name() << "' is already initialized ! ");
+      _SDD_label_ = lbl_;
+      return;
+    }
+
+    const std::string & digitization_module::get_sdd_label() const
+    {
+      return _SDD_label_;
+    }
+
+    void digitization_module::set_geo_label(const std::string & lbl_)
+    {
+      DT_THROW_IF(is_initialized(), std::logic_error,
+                  "Module '" << get_name() << "' is already initialized ! ");
+      _Geo_label_ = lbl_;
+      return;
+    }
+
+    const std::string & digitization_module::get_geo_label() const
+    {
+      return _Geo_label_;
+    }
+
+    void digitization_module::set_db_label(const std::string & lbl_)
+    {
+      DT_THROW_IF(is_initialized(), std::logic_error,
+                  "Module '" << get_name() << "' is already initialized ! ");
+      _Db_label_ = lbl_;
+      return;
+    }
+
+    const std::string & digitization_module::get_db_label() const
+    {
+      return _Db_label_;
+    }
+
+    bool digitization_module::has_database_manager() const
+    {
+      // return _database_manager_ != nullptr;
+      return false;
+    }
+
+    // void digitization_module::set_database_manager(const database::manager & gmgr_)
+    // {
+    //   DT_THROW_IF(is_initialized(), std::logic_error,
+    //               "Module '" << get_name() << "' is already initialized ! ");
+    //   _geometry_manager_ = &gmgr_;
+    //   return;
+    // }
+
+    // const database::manager & digitization_module::get_database_manager() const
+    // {
+    //   DT_THROW_IF(! is_initialized(), std::logic_error,
+    //               "Module '" << get_name() << "' is not initialized ! ");
+    //   return *_database_manager_;
+    // }
+
+    bool digitization_module::has_geometry_manager() const
+    {
+      return _geometry_manager_ != nullptr;
+    }
+
+    void digitization_module::set_geometry_manager(const geomtools::manager & geo_mgr_)
+    {
+      DT_THROW_IF(is_initialized(), std::logic_error,
+                  "Module '" << get_name() << "' is already initialized ! ");
+      _geometry_manager_ = & geo_mgr_;
+      return;
+    }
+
+    const geomtools::manager & digitization_module::get_geometry_manager() const
+    {
+      DT_THROW_IF(!is_initialized(), std::logic_error,
+                  "Module '" << get_name() << "' is not initialized ! ");
+      return * _geometry_manager_;
+    }
+
+    bool digitization_module::is_abort_at_missing_input() const
+    {
+      return _abort_at_missing_input_;
+    }
+
+    void digitization_module::set_abort_at_missing_input(bool a_)
+    {
+      _abort_at_missing_input_ = a_;
+      return;
+    }
+
+    bool digitization_module::is_abort_at_former_output() const
+    {
+      return _abort_at_former_output_;
+    }
+
+    void digitization_module::set_abort_at_former_output(bool a_)
+    {
+      _abort_at_former_output_ = a_;
+      return;
+    }
+
+    bool digitization_module::is_preserve_former_output() const
+    {
+      return _preserve_former_output_;
+    }
+
+    void digitization_module::set_preserve_former_output(bool p_)
+    {
+      _preserve_former_output_ = p_;
       return;
     }
 
@@ -114,38 +288,56 @@ namespace snemo {
       DT_THROW_IF(!is_initialized(), std::logic_error,
                   "Module '" << get_name() << "' is not initialized !");
 
-      /*************************
-       * Check simulated data *
-       *************************/
-      const bool abort_at_missing_input = true;
-      // Check if some 'simulated_data' are available in the data model:
+      /*******************************
+       * Check simulated signal data *
+       *******************************/
+      // Check if some 'mctools::signal::signal_data' are available in the data model:
       if (!data_record_.has(_SSD_label_))
         {
-          DT_THROW_IF(abort_at_missing_input, std::logic_error, "Missing signal simulated data to be processed !");
+          DT_THROW_IF(is_abort_at_missing_input(), std::logic_error,
+		      "Missing signal simulated data to be processed !");
           // leave the data unchanged.
           return dpp::base_module::PROCESS_ERROR;
         }
-      // Get the 'simulated_data' entry from the data model :
+      // Get the 'mctools::signal::signal_data' entry from the data model :
       const mctools::signal::signal_data & the_signal_data = data_record_.get<mctools::signal::signal_data>(_SSD_label_);
 
+
+      /**********************************
+       * Check simulated digitized data *
+       *********************************/
+
       // Add the new SDD bank:
-      snemo::datamodel::sim_digi_data & the_digi_data = data_record_.add<snemo::datamodel::sim_digi_data>(_SDD_label_);
+      snemo::datamodel::sim_digi_data * ptr_sim_signal_data = nullptr;
+      if (! data_record_.has(_SDD_label_)) {
+	ptr_sim_signal_data = &(data_record_.add<snemo::datamodel::sim_digi_data>(_SDD_label_));
+      } else {
+	ptr_sim_signal_data = &(data_record_.grab<snemo::datamodel::sim_digi_data>(_SDD_label_));
+      }
+
+      snemo::datamodel::sim_digi_data & the_digi_data = *ptr_sim_signal_data;
 
       /********************
        * Process the data *
        ********************/
+
       // Main processing method :
-      _process(the_signal_data, the_digi_data);
+      try {
+	_process_(the_signal_data, the_digi_data);
+      } catch (std::exception & error) {
+        DT_LOG_ERROR(get_logging_priority(), error.what());
+        return dpp::base_module::PROCESS_ERROR;
+      }
 
       return dpp::base_module::PROCESS_SUCCESS;
     }
 
-    void digitization_module::_process(const mctools::signal::signal_data & SSD_,
-                                       snemo::datamodel::sim_digi_data & SDD_)
+    void digitization_module::_process_(const mctools::signal::signal_data & SSD_,
+					snemo::datamodel::sim_digi_data & SDD_)
     {
       DT_LOG_TRACE(get_logging_priority(), "Entering...");
 
-      _driver_->process_digitization_algorithms(SSD_, SDD_);
+      _driver_->process(SSD_, SDD_);
 
       DT_LOG_TRACE(get_logging_priority(), "Exiting.");
       return;

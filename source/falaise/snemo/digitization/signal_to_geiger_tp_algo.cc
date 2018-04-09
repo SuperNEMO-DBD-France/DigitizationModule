@@ -3,7 +3,7 @@
 // Author(s): Guillaume OLIVIERO <goliviero@lpccaen.in2p3.fr>
 
 // Standard library :
-#include <math.h> 
+#include <math.h>
 
 // This project :
 #include <snemo/digitization/clock_utils.h>
@@ -13,7 +13,7 @@
 #include <snemo/digitization/geiger_tp_data.h>
 
 namespace snemo {
-  
+
   namespace digitization {
 
     signal_to_geiger_tp_algo::signal_to_tp_working_data::signal_to_tp_working_data()
@@ -26,14 +26,14 @@ namespace snemo {
       signal_ref = 0;
       feb_id.reset();
       clocktick_800 = clock_utils::INVALID_CLOCKTICK;
-      shift_800     = clock_utils::INVALID_CLOCKTICK; 
+      shift_800     = clock_utils::INVALID_CLOCKTICK;
     }
 
     bool signal_to_geiger_tp_algo::signal_to_tp_working_data::operator<(const signal_to_tp_working_data & other_) const
     {
       return this-> clocktick_800 < other_.clocktick_800;
     }
-    
+
     signal_to_geiger_tp_algo::signal_to_geiger_tp_algo()
     {
       _initialized_   = false;
@@ -44,7 +44,7 @@ namespace snemo {
     }
 
     signal_to_geiger_tp_algo::~signal_to_geiger_tp_algo()
-    {   
+    {
       if (is_initialized())
 	{
 	  reset();
@@ -54,7 +54,7 @@ namespace snemo {
 
     void signal_to_geiger_tp_algo::initialize(electronic_mapping & my_electronic_mapping_)
     {
-      DT_THROW_IF(is_initialized(), std::logic_error, "SD to geiger tp algorithm is already initialized ! ");
+      DT_THROW_IF(is_initialized(), std::logic_error, "Signal to geiger tp algorithm is already initialized ! ");
       _electronic_mapping_ = & my_electronic_mapping_;
       for (unsigned int i = 0; i < geiger::tp::TP_SIZE; i++)
 	{
@@ -63,7 +63,7 @@ namespace snemo {
       _initialized_ = true;
       return;
     }
-    
+
     bool signal_to_geiger_tp_algo::is_initialized() const
     {
       return _initialized_;
@@ -71,7 +71,7 @@ namespace snemo {
 
     void signal_to_geiger_tp_algo::reset()
     {
-      DT_THROW_IF(!is_initialized(), std::logic_error, "SD to geiger tp algorithm is not initialized, it can't be reset ! ");
+      DT_THROW_IF(!is_initialized(), std::logic_error, "Signal to geiger tp algorithm is not initialized, it can't be reset ! ");
       _initialized_ = false;
       _electronic_mapping_ = 0;
       _clocktick_ref_ = clock_utils::INVALID_CLOCKTICK;
@@ -79,11 +79,11 @@ namespace snemo {
     }
 
     void signal_to_geiger_tp_algo::set_clocktick_reference(uint32_t clocktick_ref_)
-    { 
-      _clocktick_ref_ = clocktick_ref_;     
+    {
+      _clocktick_ref_ = clocktick_ref_;
       return;
     }
-			
+
     void signal_to_geiger_tp_algo::set_clocktick_shift(double clocktick_shift_)
     {
       _clocktick_shift_ = clocktick_shift_;
@@ -109,7 +109,7 @@ namespace snemo {
       gg_tp.set_gg_tp_active_bit(my_wd_data_.feb_id.get(mapping::CHANNEL_INDEX));
       gg_tp.set_auxiliaries(my_wd_data_.auxiliaries);
       _activated_bits_[my_wd_data_.feb_id.get(mapping::CHANNEL_INDEX)] = 1;
-      // gg_tp.tree_dump(std::clog, "***** Geiger TP creation : *****", "INFO : "); 
+      // gg_tp.tree_dump(std::clog, "***** Geiger TP creation : *****", "INFO : ");
 
       return;
     }
@@ -123,24 +123,24 @@ namespace snemo {
       return;
     }
 
-    void signal_to_geiger_tp_algo::_prepare_working_data(const signal_data & signal_data_,
+    void signal_to_geiger_tp_algo::_prepare_working_data(const mctools::signal::signal_data & SSD_,
 							 working_data_collection_type & wd_collection_)
     {
-      DT_THROW_IF(!is_initialized(), std::logic_error, "SD to geiger TP algorithm is not initialized ! ");
-      std::size_t number_of_hits = signal_data_.get_geiger_signals().size();      
-      double first_geiger_time_reference = signal_data_.get_geiger_signals()[0].get().get_anode_avalanche_time();
-      
+      DT_THROW_IF(!is_initialized(), std::logic_error, "Signal to geiger TP algorithm is not initialized ! ");
+      std::size_t number_of_hits = SSD_.get_geiger_signals().size();
+      double first_geiger_time_reference = SSD_.get_geiger_signals()[0].get().get_anode_avalanche_time();
+
       for (std::size_t i = 0; i < number_of_hits; i++)
 	{
-	  if (signal_data_.get_geiger_signals()[i].get().get_anode_avalanche_time() < first_geiger_time_reference)
+	  if (SSD_.get_geiger_signals()[i].get().get_anode_avalanche_time() < first_geiger_time_reference)
 	    {
-	      first_geiger_time_reference = signal_data_.get_geiger_signals()[i].get().get_anode_avalanche_time();
+	      first_geiger_time_reference = SSD_.get_geiger_signals()[i].get().get_anode_avalanche_time();
 	    }
 	}
-      
+
       for (std::size_t i = 0; i < number_of_hits; i++)
-	{	 	    
-	  const geiger_signal & a_geiger_signal    = signal_data_.get_geiger_signals()[i].get();
+	{
+	  const geiger_signal & a_geiger_signal    = SSD_.get_geiger_signals()[i].get();
 	  const geomtools::geom_id & geom_id       = a_geiger_signal.get_geom_id();
 	  const datatools::properties & properties = a_geiger_signal.get_auxiliaries();
 	  geomtools::geom_id electronic_id;
@@ -149,18 +149,18 @@ namespace snemo {
 
 	  double relative_time = a_geiger_signal.get_anode_avalanche_time() - first_geiger_time_reference ;
 	  uint32_t a_geiger_signal_clocktick = std::floor(first_geiger_time_reference/800) +  _clocktick_ref_ + clock_utils::TRACKER_FEB_SHIFT_CLOCKTICK_NUMBER;
-	  
+
 	  if (relative_time > 800)
 	    {
 	      a_geiger_signal_clocktick += static_cast<int32_t>(relative_time) / 800;
 	    }
-	  
+
 	  signal_to_tp_working_data a_working_data;
 	  a_working_data.signal_ref    = & a_geiger_signal;
 	  a_working_data.feb_id        = electronic_id;
 	  a_working_data.auxiliaries   = properties;
-	  a_working_data.clocktick_800 = a_geiger_signal_clocktick;	      
-	  wd_collection_.push_back(a_working_data);	
+	  a_working_data.clocktick_800 = a_geiger_signal_clocktick;
+	  wd_collection_.push_back(a_working_data);
 	}
 
       return ;
@@ -175,16 +175,16 @@ namespace snemo {
     void signal_to_geiger_tp_algo::_geiger_tp_process(const working_data_collection_type & wd_collection_,
 						      geiger_tp_data & my_geiger_tp_data_)
     {
-      DT_THROW_IF(!is_initialized(), std::logic_error, "SD to geiger TP algorithm is not initialized ! ");
+      DT_THROW_IF(!is_initialized(), std::logic_error, "Signal to geiger TP algorithm is not initialized ! ");
       int32_t geiger_tp_hit_id = 0;
       for (unsigned int i = 0; i < wd_collection_.size(); i++)
 	{
-	  uint32_t signal_clocktick  = wd_collection_[i].clocktick_800;	    
+	  uint32_t signal_clocktick  = wd_collection_[i].clocktick_800;
 	  int existing_index = -1;
 	  bool existing_eid  = false;
-	  
+
 	  for (unsigned int j = 0; j < clock_utils::ACTIVATED_GEIGER_CELLS_NUMBER; j++)
-	    { 
+	    {
 	      bool existing_ct = false;
 	      std::vector<datatools::handle<geiger_tp> > my_list_of_gg_tp_per_eid;
 
@@ -220,31 +220,49 @@ namespace snemo {
 		{
 		  add_geiger_tp(wd_collection_[i],
 				signal_clocktick,
-				geiger_tp_hit_id, 
+				geiger_tp_hit_id,
 				my_geiger_tp_data_);
 		}
 	      signal_clocktick++;
 	    } // end of for (j < 10)
 
 	} //end of for (i < wd_size)
-      
-      return;
-    }
-    
-    void signal_to_geiger_tp_algo::process(const signal_data & signal_data_,
-					   geiger_tp_data & my_geiger_tp_data_)
-    {
-      DT_THROW_IF(!is_initialized(), std::logic_error, "SD to geiger TP algorithm is not initialized ! ");
-      _process(signal_data_, my_geiger_tp_data_);
+
       return;
     }
 
-    void signal_to_geiger_tp_algo::_process(const signal_data & signal_data_,
+    void signal_to_geiger_tp_algo::process(const mctools::signal::signal_data & SSD_,
+					   geiger_tp_data & my_geiger_tp_data_)
+    {
+      DT_THROW_IF(!is_initialized(), std::logic_error, "Signal to geiger TP algorithm is not initialized ! ");
+
+
+      /////////////////////////////////
+      // Check simulated signal data //
+      /////////////////////////////////
+
+
+      // // Check if some 'simulated_data' are available in the data model:
+      // if (SSD_.has("SSD")) {
+      // 	if (
+      // 	    /********************
+      // 	     * Process the data *
+      //  ********************/
+
+      // // Main processing method :
+      // _process(SSD_, my_geiger_tp_data_);
+
+
+      // }
+
+    }
+
+    void signal_to_geiger_tp_algo::_process(const mctools::signal::signal_data & SSD_,
 					    geiger_tp_data & my_geiger_tp_data_)
     {
-      DT_THROW_IF(!is_initialized(), std::logic_error, "SD to geiger TP algorithm is not initialized ! ");
+      DT_THROW_IF(!is_initialized(), std::logic_error, "Signal to geiger TP algorithm is not initialized ! ");
       working_data_collection_type my_wd_collection;
-      _prepare_working_data(signal_data_, my_wd_collection);
+      _prepare_working_data(SSD_, my_wd_collection);
       _sort_working_data(my_wd_collection);
       _geiger_tp_process(my_wd_collection, my_geiger_tp_data_);
       return;
