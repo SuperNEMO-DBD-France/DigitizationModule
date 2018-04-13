@@ -15,8 +15,12 @@
 #include <datatools/logger.h>
 // - Bayeux/mctools:
 #include <mctools/signal/signal_data.h>
+#include <mctools/signal/signal_shape_builder.h>
+#include <mctools/signal/utils.h>
 // - Bayeux/geomtools:
 #include <geomtools/manager.h>
+// - Bayeux/mygsl:
+#include <mygsl/i_unary_function_with_derivative.h>
 
 // This project :
 #include <snemo/digitization/geiger_tp_data.h>
@@ -40,7 +44,8 @@ namespace snemo {
 				void reset();
  				bool operator<(const signal_to_tp_working_data &) const;
 
-				const geiger_signal * signal_ref;
+				const mctools::signal::base_signal * signal_ref;
+				mygsl::unary_function_promoted_with_numeric_derivative signal_deriv;
 				geomtools::geom_id    feb_id;
 				datatools::properties auxiliaries;
 				uint32_t              clocktick_800;
@@ -63,6 +68,15 @@ namespace snemo {
 
       /// Reset the object
       void reset();
+
+      /// Check the signal category
+      bool has_signal_category() const;
+
+      // Set the signal category
+      void set_signal_category(const std::string & category_);
+
+      /// Return the signal category
+      const std::string & get_signal_category() const;
 
       /// Set the clocktick reference for the algorithm
       void set_clocktick_reference(uint32_t clocktick_ref_);
@@ -105,9 +119,12 @@ namespace snemo {
 
 			// Configuration :
       bool    _initialized_;      //!< Initialization flag
-      uint32_t _clocktick_ref_;   //!< Clocktick reference of the algorithm
-      double   _clocktick_shift_; //!< Clocktick shift between [0:800]
 			electronic_mapping * _electronic_mapping_; //!< Convert geometric ID into electronic ID
+			mctools::signal::signal_shape_builder * _ssb_; //!< An external shape builder
+
+			std::string _signal_category_; //!< Identifier of the input tracker signal category
+			uint32_t _clocktick_ref_;      //!< Clocktick reference of the algorithm
+      double   _clocktick_shift_;    //!< Clocktick shift between [0:800]
 
 			// Data :
 			bool _activated_bits_[geiger::tp::TP_SIZE]; //!< Table of booleans to see which bits were activated

@@ -5,6 +5,9 @@
 // Standard library :
 #include <math.h>
 
+// - Bayeux/mctools:
+#include <mctools/signal/utils.h>
+
 // This project :
 #include <snemo/digitization/clock_utils.h>
 
@@ -78,6 +81,23 @@ namespace snemo {
       return;
     }
 
+    bool signal_to_geiger_tp_algo::has_signal_category() const
+    {
+      return !_signal_category_.empty();
+    }
+
+    const std::string & signal_to_geiger_tp_algo::get_signal_category() const
+    {
+      return _signal_category_;
+    }
+
+    void signal_to_geiger_tp_algo::set_signal_category(const std::string & category_)
+    {
+      _signal_category_ = category_;
+      return;
+    }
+
+
     void signal_to_geiger_tp_algo::set_clocktick_reference(uint32_t clocktick_ref_)
     {
       _clocktick_ref_ = clocktick_ref_;
@@ -92,7 +112,7 @@ namespace snemo {
 
     void signal_to_geiger_tp_algo::add_geiger_tp(const signal_to_tp_working_data & my_wd_data_,
 						 uint32_t signal_clocktick_,
-						 int32_t hit_id_,
+ 						 int32_t hit_id_,
 						 geiger_tp_data & my_geiger_tp_data_)
     {
       snemo::digitization::geiger_tp & gg_tp = my_geiger_tp_data_.add();
@@ -127,42 +147,77 @@ namespace snemo {
 							 working_data_collection_type & wd_collection_)
     {
       DT_THROW_IF(!is_initialized(), std::logic_error, "Signal to geiger TP algorithm is not initialized ! ");
-      std::size_t number_of_hits = SSD_.get_geiger_signals().size();
-      double first_geiger_time_reference = SSD_.get_geiger_signals()[0].get().get_anode_avalanche_time();
+      std::size_t number_of_hits = SSD_.get_number_of_signals(get_signal_category());
 
-      for (std::size_t i = 0; i < number_of_hits; i++)
-	{
-	  if (SSD_.get_geiger_signals()[i].get().get_anode_avalanche_time() < first_geiger_time_reference)
-	    {
-	      first_geiger_time_reference = SSD_.get_geiger_signals()[i].get().get_anode_avalanche_time();
-	    }
-	}
+      // double first_geiger_time_reference = SSD_.get_signals(get_signal_cateogory())[0].get().get_anode_avalanche_time();
 
-      for (std::size_t i = 0; i < number_of_hits; i++)
-	{
-	  const geiger_signal & a_geiger_signal    = SSD_.get_geiger_signals()[i].get();
-	  const geomtools::geom_id & geom_id       = a_geiger_signal.get_geom_id();
-	  const datatools::properties & properties = a_geiger_signal.get_auxiliaries();
-	  geomtools::geom_id electronic_id;
+      // for (std::size_t i = 0; i < number_of_hits; i++)
+      // 	{
+      // 	  if (SSD_.get_geiger_signals()[i].get().get_anode_avalanche_time() < first_geiger_time_reference)
+      // 	    {
+      // 	      first_geiger_time_reference = SSD_.get_geiger_signals()[i].get().get_anode_avalanche_time();
+      // 	    }
+      // 	}
 
-	  _electronic_mapping_->convert_GID_to_EID(mapping::THREE_WIRES_TRACKER_MODE, geom_id, electronic_id);
+      // for (std::size_t i = 0; i < number_of_hits; i++)
+      // 	{
+      // 	  const mctools::signal::base_signal & a_geiger_signal  = SSD_.get_geiger_signals()[i].get();
+      // 	  const geomtools::geom_id & geom_id       = a_geiger_signal.get_geom_id();
+      // 	  const datatools::properties & properties = a_geiger_signal.get_auxiliaries();
+      // 	  geomtools::geom_id electronic_id;
 
-	  double relative_time = a_geiger_signal.get_anode_avalanche_time() - first_geiger_time_reference ;
-	  uint32_t a_geiger_signal_clocktick = std::floor(first_geiger_time_reference/800) +  _clocktick_ref_ + clock_utils::TRACKER_FEB_SHIFT_CLOCKTICK_NUMBER;
+      // 	  _electronic_mapping_->convert_GID_to_EID(mapping::THREE_WIRES_TRACKER_MODE, geom_id, electronic_id);
 
-	  if (relative_time > 800)
-	    {
-	      a_geiger_signal_clocktick += static_cast<int32_t>(relative_time) / 800;
-	    }
+      // 	  double relative_time = a_geiger_signal.get_anode_avalanche_time() - first_geiger_time_reference ;
+      // 	  uint32_t a_geiger_signal_clocktick = std::floor(first_geiger_time_reference/800) +  _clocktick_ref_ + clock_utils::TRACKER_FEB_SHIFT_CLOCKTICK_NUMBER;
 
-	  signal_to_tp_working_data a_working_data;
-	  a_working_data.signal_ref    = & a_geiger_signal;
-	  a_working_data.feb_id        = electronic_id;
-	  a_working_data.auxiliaries   = properties;
-	  a_working_data.clocktick_800 = a_geiger_signal_clocktick;
-	  wd_collection_.push_back(a_working_data);
-	}
+      // 	  if (relative_time > 800)
+      // 	    {
+      // 	      a_geiger_signal_clocktick += static_cast<int32_t>(relative_time) / 800;
+      // 	    }
 
+      // 	  signal_to_tp_working_data a_working_data;
+      // 	  a_working_data.signal_ref    = & a_geiger_signal;
+      // 	  a_working_data.feb_id        = electronic_id;
+      // 	  a_working_data.auxiliaries   = properties;
+      // 	  a_working_data.clocktick_800 = a_geiger_signal_clocktick;
+      // 	  wd_collection_.push_back(a_working_data);
+      // 	}
+
+      // Build the shape for each signal and give the unary function promoted with numeric derivative to the working data:
+      for (std::size_t i = 0; i < number_of_hits; i++) {
+	const mctools::signal::base_signal a_signal = SSD_.get_signals(get_signal_category())[i].get();
+	a_signal.tree_dump(std::clog, "A signal");
+
+	mctools::signal::build_shape(*_ssb_, a_signal);
+
+	signal_to_tp_working_data a_wd;
+	a_wd.signal_ref = & a_signal;
+
+	const mygsl::i_unary_function * signal_functor = & a_signal.get_shape();
+	a_wd.signal_deriv.set_functor(*signal_functor);
+
+	double xmin = a_wd.signal_deriv.get_non_zero_domain_min();
+	double xmax = a_wd.signal_deriv.get_non_zero_domain_max();
+	unsigned int nsamples = 1000;
+
+	std::clog << "Xmin = " << xmin << " Xmax = " << xmax << std::endl;
+
+	bool first_trigger = false;
+	for (double x = xmin; x < xmax; x+= xmin / nsamples)
+	  {
+	    double y = a_wd.signal_deriv.eval_df(x);
+	    std::clog << x << ' ' << y << std::endl;
+
+	    // if (y >= ANODIC_THRESHOLD) firt_trigger = true;
+
+	  }
+
+      }
+
+      std::set<std::string> fkeys;
+      _ssb_->build_list_of_functors(fkeys);
+      _ssb_->tree_dump(std::clog);
       return ;
     }
 

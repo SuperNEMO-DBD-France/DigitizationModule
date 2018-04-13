@@ -100,7 +100,7 @@ int main( int  argc_ , char ** argv_ )
 
     if( signal_data.has_geiger_signals())
       {
-	signal_2_geiger_tp.process(signal_data, my_geiger_tp_data);
+	// signal_2_geiger_tp.process(signal_data, my_geiger_tp_data);
 	my_geiger_tp_data.tree_dump(std::clog, "Geiger TP(s) data : ", "INFO : ");
       }
 

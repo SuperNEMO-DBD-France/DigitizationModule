@@ -460,7 +460,7 @@ int main( int  argc_ , char **argv_  )
 		    signal_2_geiger_tp.set_clocktick_reference(clocktick_800_reference);
 		    signal_2_geiger_tp.set_clocktick_shift(clocktick_800_shift);
 		    // Signal to geiger TP process
-		    signal_2_geiger_tp.process(signal_data, my_geiger_tp_data);
+		    // signal_2_geiger_tp.process(signal_data, my_geiger_tp_data);
 
 		    // Geiger TP to geiger CTW process
 		    geiger_tp_2_ctw.process(my_geiger_tp_data, my_geiger_ctw_data);

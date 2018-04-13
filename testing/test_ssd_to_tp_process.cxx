@@ -1,18 +1,18 @@
-//test_signal_to_tp_process.cxx
+// test_ssd_to_tp_process.cxx
+
 // Standard libraries :
 #include <iostream>
-
-// GSL:
-#include <bayeux/mygsl/rng.h>
 
 // - Bayeux/datatools:
 #include <datatools/utils.h>
 #include <datatools/io_factory.h>
 #include <datatools/clhep_units.h>
 // - Bayeux/mctools:
-#include <mctools/simulated_data.h>
+#include <mctools/signal/signal_data.h>
 // - Bayeux/dpp:
 #include <dpp/input_module.h>
+// - Bayeux/mygsl:
+#include <bayeux/mygsl/rng.h>
 
 // Falaise:
 #include <falaise/falaise.h>
@@ -23,14 +23,10 @@
 
 // This project :
 #include <snemo/digitization/clock_utils.h>
-#include <snemo/digitization/sd_to_geiger_signal_algo.h>
-#include <snemo/digitization/sd_to_calo_signal_algo.h>
 #include <snemo/digitization/signal_to_calo_tp_algo.h>
 #include <snemo/digitization/signal_to_geiger_tp_algo.h>
-#include <snemo/digitization/geiger_tp_to_ctw_algo.h>
-#include <snemo/digitization/calo_tp_to_ctw_algo.h>
 
-int main( int argc_ , char ** argv_  )
+int main(int argc_, char** argv_)
 {
   falaise::initialize(argc_, argv_);
   int error_code = EXIT_SUCCESS;
@@ -67,7 +63,7 @@ int main( int argc_ , char ** argv_  )
   }
 
   try {
-    std::clog << "Test program for class 'snemo::digitization::sd_to_ctw_process' !" << std::endl;
+    std::clog << "Test program for class 'snemo::digitization::ssd_to_tp_process' !" << std::endl;
     int32_t seed = 314159;
     mygsl::rng random_generator;
     random_generator.initialize(seed);
@@ -80,6 +76,7 @@ int main( int argc_ , char ** argv_  )
     datatools::properties::read_config (manager_config_file,
 					manager_config);
     geomtools::manager my_manager;
+
     manager_config.update ("build_mapping", true);
     if (manager_config.has_key ("mapping.excluded_categories"))
       {
@@ -88,14 +85,15 @@ int main( int argc_ , char ** argv_  )
     my_manager.initialize (manager_config);
 
     std::string pipeline_simulated_data_filename;
-    std::string SD_bank_label = "SD";
+    std::string SSD_bank_label = "SSD";
+    std::string tracker_signal_category = "sigtracker";
+    std::string calo_signal_category = "sigcalo";
 
     if(!input_filename.empty()){
       pipeline_simulated_data_filename = input_filename;
     }else{
-      pipeline_simulated_data_filename = "${FALAISE_DIGITIZATION_TESTING_DIR}/data/Se82_0nubb-source_strips_bulk_SD_10_events.brio";
+      pipeline_simulated_data_filename = "${FALAISE_DIGITIZATION_TESTING_DIR}/data/Se82_0nubb-source_strips_bulk_SSD_10_events.brio";
     }
-
 
     dpp::input_module reader;
     datatools::properties reader_config;
@@ -120,16 +118,10 @@ int main( int argc_ , char ** argv_  )
       {
 	reader.process(ER);
 	// A plain `mctools::simulated_data' object is stored here :
-	if (ER.has(SD_bank_label) && ER.is_a<mctools::simulated_data>(SD_bank_label))
+	if (ER.has(SSD_bank_label) && ER.is_a<mctools::signal::signal_data>(SSD_bank_label))
 	  {
 	    // Access to the "SD" bank with a stored `mctools::simulated_data' :
-	    const mctools::simulated_data & SD = ER.get<mctools::simulated_data>(SD_bank_label);
-
-	    snemo::digitization::sd_to_geiger_signal_algo sd_2_geiger_signal(my_manager);
-	    sd_2_geiger_signal.initialize();
-
-	    snemo::digitization::sd_to_calo_signal_algo sd_2_calo_signal(my_manager);
-	    sd_2_calo_signal.initialize();
+	    const mctools::signal::signal_data & SSD = ER.get<mctools::signal::signal_data>(SSD_bank_label);
 
 	    my_clock_manager.compute_clockticks_ref(random_generator);
 	    int32_t clocktick_25_reference  = my_clock_manager.get_clocktick_25_ref();
@@ -147,50 +139,26 @@ int main( int argc_ , char ** argv_  )
 	    signal_2_geiger_tp.set_clocktick_reference(clocktick_800_reference);
 	    signal_2_geiger_tp.set_clocktick_shift(clocktick_800_shift);
 
-	    snemo::digitization::signal_data signal_data;
-	    if( SD.has_step_hits("gg"))
-	      {
-		sd_2_geiger_signal.process(SD, signal_data);
-	      }
-	    if( SD.has_step_hits("calo"))
-	      {
-		sd_2_calo_signal.process(SD, signal_data);
-	      }
-	    signal_data.tree_dump(std::clog, "Signal data : ", "INFO : ");
-
 	    snemo::digitization::geiger_tp_data my_geiger_tp_data;
 	    snemo::digitization::calo_tp_data my_calo_tp_data;
 
-	    if( signal_data.has_geiger_signals())
+	    if(SSD.has_signals(tracker_signal_category))
 	      {
-	    	// signal_2_geiger_tp.process(signal_data, my_geiger_tp_data);
+	    	signal_2_geiger_tp.process(SSD, my_geiger_tp_data);
 	    	my_geiger_tp_data.tree_dump(std::clog, "Geiger TP(s) data : ", "INFO : ");
 	      }
 
-	    if( signal_data.has_calo_signals())
+	    if(SSD.has_signals(calo_signal_category))
 	      {
-		signal_2_calo_tp.process(signal_data, my_calo_tp_data);
+		// signal_2_calo_tp.process(SSD, my_calo_tp_data);
 		my_calo_tp_data.tree_dump(std::clog, "Calorimeter TP(s) data : ", "INFO : ");
 	      }
 
-	    snemo::digitization::geiger_ctw_data my_geiger_ctw_data;
-	    snemo::digitization::calo_ctw_data my_calo_ctw_data;
-
-	    snemo::digitization::geiger_tp_to_ctw_algo geiger_tp_2_ctw;
-	    geiger_tp_2_ctw.initialize();
-
-	    snemo::digitization::calo_tp_to_ctw_algo calo_tp_2_ctw;
-	    calo_tp_2_ctw.set_crate_number(0);
-	    calo_tp_2_ctw.initialize();
-
-	    geiger_tp_2_ctw.process(my_geiger_tp_data, my_geiger_ctw_data);
-	    my_geiger_ctw_data.tree_dump(std::clog, "Geiger CTW(s) data : ", "INFO : ");
-	    calo_tp_2_ctw.process(my_calo_tp_data, my_calo_ctw_data);
-	    my_calo_ctw_data.tree_dump(std::clog, "Calorimeter CTW(s) data : ", "INFO : ");
-	    std::clog << "DEBUG : clock25ref    = " << clocktick_25_reference << std::endl;
-	    std::clog << "DEBUG : clock25shift  = " << clocktick_25_shift << std::endl;
-	    std::clog << "DEBUG : clock800ref   = " << clocktick_800_reference << std::endl;
-	    std::clog << "DEBUG : clock800shift = " << clocktick_800_shift << std::endl;
+	    // std::clog << "DEBUG : clock25ref    = " << clocktick_25_reference << std::endl;
+	    // std::clog << "DEBUG : clock25shift  = " << clocktick_25_shift << std::endl;
+	    // std::clog << "DEBUG : clock800ref   = " << clocktick_800_reference << std::endl;
+	    // std::clog << "DEBUG : clock800shift = " << clocktick_800_shift << std::endl;
+	    std::clog << std::endl;
 	  }
 	// CF README.RST pour display graphique avec loader de manager.conf
 	// -> /home/guillaume/data/Bayeux/Bayeux-trunk/source/bxmctools/examples/ex00
@@ -203,6 +171,7 @@ int main( int argc_ , char ** argv_  )
 
     std::clog << "The end." << std::endl;
   }
+
   catch (std::exception & error) {
     DT_LOG_FATAL(logging, error.what());
     error_code = EXIT_FAILURE;

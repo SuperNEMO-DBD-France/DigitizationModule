@@ -109,11 +109,11 @@ namespace snemo {
 
       /// Process digitization algorithms ('SSD' to trigger for the moment)
       void _process_digitization_algorithms(const mctools::signal::signal_data & SSD_,
-                                           snemo::datamodel::sim_digi_data & SDD_);
+																						snemo::datamodel::sim_digi_data & SDD_);
 
       /// Process readout algorithms (TO DO)
       void _process_readout_algorithms(const mctools::signal::signal_data & SSD_,
-																			snemo::datamodel::sim_digi_data & SDD_);
+																			 snemo::datamodel::sim_digi_data & SDD_);
 
     private:
 

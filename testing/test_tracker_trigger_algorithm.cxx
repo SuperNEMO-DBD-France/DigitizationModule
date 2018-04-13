@@ -190,7 +190,8 @@ int main(int  argc_ , char ** argv_)
 		    signal_2_geiger_tp.initialize(my_e_mapping);
 		    signal_2_geiger_tp.set_clocktick_reference(clocktick_800_reference);
 		    signal_2_geiger_tp.set_clocktick_shift(clocktick_800_shift);
-		    signal_2_geiger_tp.process(signal_data, my_geiger_tp_data);
+		    // signal_2_geiger_tp.process(signal_data, my_geiger_tp_data);
+
 		    // my_geiger_tp_data.tree_dump(std::clog, "Geiger TP(s) data : ", "INFO : ");
 
 		    // Creation of a geiger CTW data object to store geiger CTW :
