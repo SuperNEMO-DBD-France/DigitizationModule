@@ -187,9 +187,7 @@ int main(int  argc_ , char ** argv_)
 
 		    // Initializing and processing Geiger signal to Geiger TP :
 		    snemo::digitization::signal_to_geiger_tp_algo signal_2_geiger_tp;
-		    signal_2_geiger_tp.initialize(my_e_mapping);
-		    signal_2_geiger_tp.set_clocktick_reference(clocktick_800_reference);
-		    signal_2_geiger_tp.set_clocktick_shift(clocktick_800_shift);
+		    signal_2_geiger_tp.initialize(my_e_mapping, my_clock_manager);
 		    // signal_2_geiger_tp.process(signal_data, my_geiger_tp_data);
 
 		    // my_geiger_tp_data.tree_dump(std::clog, "Geiger TP(s) data : ", "INFO : ");

@@ -259,7 +259,7 @@ int main( int  argc_ , char **argv_  )
 
     // Initializing signal to geiger tp algo :
     snemo::digitization::signal_to_geiger_tp_algo signal_2_geiger_tp;
-    signal_2_geiger_tp.initialize(my_e_mapping);
+    signal_2_geiger_tp.initialize(my_e_mapping, my_clock_manager);
 
     // Initializing calo tp to calo ctw algorithms for each crate :
     snemo::digitization::calo_tp_to_ctw_algo calo_tp_2_ctw_0;
@@ -493,8 +493,7 @@ int main( int  argc_ , char **argv_  )
 		if (signal_data.has_geiger_signals())
 		  {
 		    // Set geiger clockticks :
-		    signal_2_geiger_tp.set_clocktick_reference(clocktick_800_reference);
-		    signal_2_geiger_tp.set_clocktick_shift(clocktick_800_shift);
+
 		    // Signal to geiger TP process
 		    // signal_2_geiger_tp.process(signal_data, my_geiger_tp_data);
 

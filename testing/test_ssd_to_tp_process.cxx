@@ -113,6 +113,16 @@ int main(int argc_, char** argv_)
     snemo::digitization::clock_utils my_clock_manager;
     my_clock_manager.initialize();
 
+    mctools::signal::signal_shape_builder gg_ssb;
+    gg_ssb.set_logging_priority(datatools::logger::PRIO_DEBUG);
+    gg_ssb.set_category("sigtracker");
+    gg_ssb.add_registered_shape_type_id("mctools::signal::triangle_signal_shape");
+    gg_ssb.add_registered_shape_type_id("mctools::signal::triangle_gate_signal_shape");
+    gg_ssb.add_registered_shape_type_id("mctools::signal::multi_signal_shape");
+    gg_ssb.add_registered_shape_type_id("mygsl::linear_combination_function");
+    gg_ssb.initialize_simple();
+    // gg_ssb.tree_dump(std::clog, "Signal shape builder 1", "[info] ");
+
     int psd_count = 0;
     while (!reader.is_terminated())
       {
@@ -122,12 +132,11 @@ int main(int argc_, char** argv_)
 	  {
 	    // Access to the "SD" bank with a stored `mctools::simulated_data' :
 	    const mctools::signal::signal_data & SSD = ER.get<mctools::signal::signal_data>(SSD_bank_label);
+	    SSD.tree_dump(std::clog, "SSD");
 
 	    my_clock_manager.compute_clockticks_ref(random_generator);
 	    int32_t clocktick_25_reference  = my_clock_manager.get_clocktick_25_ref();
 	    double  clocktick_25_shift      = my_clock_manager.get_shift_25();
-	    int32_t clocktick_800_reference = my_clock_manager.get_clocktick_800_ref();
-	    double  clocktick_800_shift     = my_clock_manager.get_shift_800();
 
 	    snemo::digitization::signal_to_calo_tp_algo signal_2_calo_tp;
 	    signal_2_calo_tp.initialize(my_e_mapping);
@@ -135,21 +144,27 @@ int main(int argc_, char** argv_)
 	    signal_2_calo_tp.set_clocktick_shift(clocktick_25_shift);
 
 	    snemo::digitization::signal_to_geiger_tp_algo signal_2_geiger_tp;
-	    signal_2_geiger_tp.initialize(my_e_mapping);
-	    signal_2_geiger_tp.set_clocktick_reference(clocktick_800_reference);
-	    signal_2_geiger_tp.set_clocktick_shift(clocktick_800_shift);
+	    signal_2_geiger_tp.initialize(my_e_mapping,
+					  my_clock_manager,
+					  gg_ssb);
 
 	    snemo::digitization::geiger_tp_data my_geiger_tp_data;
 	    snemo::digitization::calo_tp_data my_calo_tp_data;
 
-	    if(SSD.has_signals(tracker_signal_category))
+	    if (SSD.has_signals(tracker_signal_category))
 	      {
+		mctools::signal::base_signal a_signal = SSD.get_signal(tracker_signal_category, 0);
+		// a_signal.tree_dump(std::clog, "A GG signal");
+
 	    	signal_2_geiger_tp.process(SSD, my_geiger_tp_data);
 	    	my_geiger_tp_data.tree_dump(std::clog, "Geiger TP(s) data : ", "INFO : ");
 	      }
 
-	    if(SSD.has_signals(calo_signal_category))
+	    if (SSD.has_signals(calo_signal_category))
 	      {
+		mctools::signal::base_signal a_signal = SSD.get_signal(calo_signal_category, 0);
+		// a_signal.tree_dump(std::clog, "A Calo signal");
+
 		// signal_2_calo_tp.process(SSD, my_calo_tp_data);
 		my_calo_tp_data.tree_dump(std::clog, "Calorimeter TP(s) data : ", "INFO : ");
 	      }

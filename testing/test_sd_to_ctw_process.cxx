@@ -143,9 +143,7 @@ int main( int argc_ , char ** argv_  )
 	    signal_2_calo_tp.set_clocktick_shift(clocktick_25_shift);
 
 	    snemo::digitization::signal_to_geiger_tp_algo signal_2_geiger_tp;
-	    signal_2_geiger_tp.initialize(my_e_mapping);
-	    signal_2_geiger_tp.set_clocktick_reference(clocktick_800_reference);
-	    signal_2_geiger_tp.set_clocktick_shift(clocktick_800_shift);
+	    signal_2_geiger_tp.initialize(my_e_mapping, my_clock_manager);
 
 	    snemo::digitization::signal_data signal_data;
 	    if( SD.has_step_hits("gg"))

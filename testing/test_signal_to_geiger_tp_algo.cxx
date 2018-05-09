@@ -58,8 +58,6 @@ int main( int  argc_ , char ** argv_ )
     snemo::digitization::clock_utils my_clock_manager;
     my_clock_manager.initialize();
     my_clock_manager.compute_clockticks_ref(random_generator);
-    uint32_t clocktick_800_reference = my_clock_manager.get_clocktick_800_ref();
-    double  clocktick_800_shift     = my_clock_manager.get_shift_800();
 
     datatools::things ER;
 
@@ -70,9 +68,7 @@ int main( int  argc_ , char ** argv_ )
     my_e_mapping.initialize();
 
     snemo::digitization::signal_to_geiger_tp_algo signal_2_geiger_tp;
-    signal_2_geiger_tp.initialize(my_e_mapping);
-    signal_2_geiger_tp.set_clocktick_reference(clocktick_800_reference);
-    signal_2_geiger_tp.set_clocktick_shift(clocktick_800_shift);
+    signal_2_geiger_tp.initialize(my_e_mapping, my_clock_manager);
 
     const geomtools::geom_id GID1(1204, 0, 0, 3, 106);
     const geomtools::geom_id GID2(1204, 0, 0, 6, 95);

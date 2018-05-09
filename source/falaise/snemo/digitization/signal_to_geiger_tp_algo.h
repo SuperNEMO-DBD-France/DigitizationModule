@@ -23,9 +23,11 @@
 #include <mygsl/i_unary_function_with_derivative.h>
 
 // This project :
-#include <snemo/digitization/geiger_tp_data.h>
 #include <snemo/digitization/electronic_mapping.h>
+#include <snemo/digitization/tempo_utils.h>
 #include <snemo/digitization/mapping.h>
+#include <snemo/digitization/clock_utils.h>
+#include <snemo/digitization/geiger_tp_data.h>
 #include <snemo/digitization/geiger_tp_constants.h>
 
 namespace snemo {
@@ -61,7 +63,13 @@ namespace snemo {
       virtual ~signal_to_geiger_tp_algo();
 
       /// Initializing
-      void initialize(electronic_mapping & my_electronic_mapping_);
+      void initialize(electronic_mapping & my_electronic_mapping_,
+											const clock_utils & my_clock_utils_);
+
+      /// Initializing
+      void initialize(electronic_mapping & my_electronic_mapping_,
+											const clock_utils & my_clock_utils_,
+											mctools::signal::signal_shape_builder & my_ssb_);
 
       /// Check if the algorithm is initialized
       bool is_initialized() const;
@@ -100,6 +108,9 @@ namespace snemo {
 
     protected:
 
+			/// Set internal parameters to default values
+			void _set_defaults();
+
 			/// Prepare the working data collection (sort by clocktick)
 			void _prepare_working_data(const mctools::signal::signal_data & SSD_,
 																 working_data_collection_type & wd_collection_);
@@ -119,7 +130,8 @@ namespace snemo {
 
 			// Configuration :
       bool    _initialized_;      //!< Initialization flag
-			electronic_mapping * _electronic_mapping_; //!< Convert geometric ID into electronic ID
+			electronic_mapping * _electronic_mapping_;     //!< Convert geometric ID into electronic ID
+			const clock_utils * _clock_utils_;             //!< An external clock manager
 			mctools::signal::signal_shape_builder * _ssb_; //!< An external shape builder
 
 			std::string _signal_category_; //!< Identifier of the input tracker signal category

@@ -50,12 +50,61 @@ namespace snemo {
       return *_geometry_manager_;
     }
 
+    bool digitization_driver::has_electronic_mapping() const
+    {
+      return _electronic_mapping_ != 0;
+    }
+
+    void digitization_driver::set_electronic_mapping(electronic_mapping & emap_)
+    {
+      DT_THROW_IF (is_initialized(), std::logic_error, "Already initialized/locked !");
+      _electronic_mapping_ = & emap_;
+      return;
+    }
+
+    const electronic_mapping & digitization_driver::get_electronic_mapping() const
+    {
+      DT_THROW_IF (!has_electronic_mapping(), std::logic_error, "No electronic mapping is setup !");
+      return *_electronic_mapping_;
+    }
+
+    electronic_mapping & digitization_driver::grab_electronic_mapping() const
+    {
+      DT_THROW_IF (!has_electronic_mapping(), std::logic_error, "No electronic mapping is setup !");
+      return *_electronic_mapping_;
+    }
+
+    bool digitization_driver::has_clock_utils() const
+    {
+      return _clock_utils_ != 0;
+    }
+
+    void digitization_driver::set_clock_utils(const clock_utils & cu_)
+    {
+      DT_THROW_IF (is_initialized(), std::logic_error, "Already initialized/locked !");
+      _clock_utils_ = & cu_;
+      return;
+    }
+
+    const clock_utils & digitization_driver::get_clock_utils() const
+    {
+      DT_THROW_IF (!has_clock_utils(), std::logic_error, "No clock utils is setup !");
+      return *_clock_utils_;
+    }
+
     void digitization_driver::initialize(const datatools::properties & /* setup_ */ )
     {
-      DT_THROW_IF (is_initialized(), std::logic_error, "Driver is already initialized !");
-      DT_THROW_IF (!has_geometry_manager(), std::logic_error, "No geometry manager is setup !");
+      DT_THROW_IF (is_initialized(),          std::logic_error, "Driver is already initialized !");
+      DT_THROW_IF (!has_geometry_manager(),   std::logic_error, "No geometry manager is setup !");
+      DT_THROW_IF (!has_electronic_mapping(), std::logic_error, "No electronic mapping is setup !");
+      DT_THROW_IF (!has_clock_utils(),        std::logic_error, "No clock utils is setup !");
 
       // do something
+
+      // Initialized signal to TP algos:
+      _geiger_signal_to_tp_algo_.initialize(grab_electronic_mapping(), get_clock_utils());
+
+
 
       _initialized_ = true;
       return;

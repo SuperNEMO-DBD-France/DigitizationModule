@@ -55,14 +55,29 @@ namespace snemo {
       return;
     }
 
-    void signal_to_geiger_tp_algo::initialize(electronic_mapping & my_electronic_mapping_)
+    void signal_to_geiger_tp_algo::initialize(electronic_mapping & my_electronic_mapping_,
+					      const clock_utils & my_clock_utils_)
+    {
+      mctools::signal::signal_shape_builder dummy_ssb;
+      initialize(my_electronic_mapping_, my_clock_utils_, dummy_ssb);
+    }
+
+    void signal_to_geiger_tp_algo::initialize(electronic_mapping & my_electronic_mapping_,
+					      const clock_utils & my_clock_utils_,
+					      mctools::signal::signal_shape_builder & my_ssb_)
     {
       DT_THROW_IF(is_initialized(), std::logic_error, "Signal to geiger tp algorithm is already initialized ! ");
       _electronic_mapping_ = & my_electronic_mapping_;
-      for (unsigned int i = 0; i < geiger::tp::TP_SIZE; i++)
-	{
-	  _activated_bits_[i] = 0;
-	}
+      _clock_utils_ = & my_clock_utils_;
+      _ssb_ = & my_ssb_;
+
+      int32_t clocktick_800_reference = _clock_utils_->get_clocktick_800_ref();
+      double  clocktick_800_shift     = _clock_utils_->get_shift_800();
+
+      set_clocktick_reference(clocktick_800_reference);
+      set_clocktick_shift(clocktick_800_shift);
+
+      _set_defaults();
       _initialized_ = true;
       return;
     }
@@ -143,6 +158,17 @@ namespace snemo {
       return;
     }
 
+    void signal_to_geiger_tp_algo::_set_defaults()
+    {
+      for (unsigned int i = 0; i < geiger::tp::TP_SIZE; i++)
+	{
+	  _activated_bits_[i] = 0;
+	}
+      _signal_category_ = "sigtracker";
+
+      return;
+    }
+
     void signal_to_geiger_tp_algo::_prepare_working_data(const mctools::signal::signal_data & SSD_,
 							 working_data_collection_type & wd_collection_)
     {
@@ -187,37 +213,76 @@ namespace snemo {
       // Build the shape for each signal and give the unary function promoted with numeric derivative to the working data:
       for (std::size_t i = 0; i < number_of_hits; i++) {
 	const mctools::signal::base_signal a_signal = SSD_.get_signals(get_signal_category())[i].get();
-	a_signal.tree_dump(std::clog, "A signal");
 
-	mctools::signal::build_shape(*_ssb_, a_signal);
+	mctools::signal::base_signal a_mutable_signal = a_signal;
+	std::string signal_name;
+	snemo::digitization::build_signal_name(a_mutable_signal.get_hit_id(),
+					       signal_name);
+
+	a_mutable_signal.build_signal_shape(*_ssb_,
+					    signal_name,
+					    a_mutable_signal);
+	_ssb_->tree_dump(std::clog, "SSB after");
+	a_mutable_signal.tree_dump(std::clog, "Mutable signal with shape instatiated");
 
 	signal_to_tp_working_data a_wd;
-	a_wd.signal_ref = & a_signal;
+	a_wd.signal_ref = & a_mutable_signal;
 
-	const mygsl::i_unary_function * signal_functor = & a_signal.get_shape();
+	const mygsl::i_unary_function * signal_functor = & a_mutable_signal.get_shape();
 	a_wd.signal_deriv.set_functor(*signal_functor);
 
+	unsigned int nsamples = 1000;
 	double xmin = a_wd.signal_deriv.get_non_zero_domain_min();
 	double xmax = a_wd.signal_deriv.get_non_zero_domain_max();
-	unsigned int nsamples = 1000;
 
 	std::clog << "Xmin = " << xmin << " Xmax = " << xmax << std::endl;
 
+	std::string d_r_filename = "/tmp/deriv_signal.dat";
+	std::ofstream derivstream;
+	derivstream.open(d_r_filename);
 	bool first_trigger = false;
-	for (double x = xmin; x < xmax; x+= xmin / nsamples)
+	double trigger_time;
+	datatools::invalidate(trigger_time);
+
+	double ANODIC_NEGATIVE_LOW_THRESHOLD = -0.02;
+
+	for (double x = xmin - (50 * xmin / nsamples); x < xmax + (50 * xmin / nsamples); x+= xmin / nsamples)
 	  {
 	    double y = a_wd.signal_deriv.eval_df(x);
-	    std::clog << x << ' ' << y << std::endl;
+	    y *= CLHEP::meter / CLHEP::volt;
+	    derivstream << x / CLHEP::microsecond << ' ' << y << std::endl;
 
-	    // if (y >= ANODIC_THRESHOLD) firt_trigger = true;
+	    if (y <= ANODIC_NEGATIVE_LOW_THRESHOLD) {
+	      first_trigger = true;
+	      trigger_time = x;
+	    }
+	    if (first_trigger) break;
 
 	  }
 
+	derivstream.close();
+	std::clog << "Trigger time = " << trigger_time << std::endl;
+
+	/** Derivative of GG signals
+	    std::string key = "shape.2";
+	    mygsl::unary_function_promoted_with_numeric_derivative deriv_signal;
+	    deriv_signal.set_functor(ssb1.grab_functor(key));
+	    // deriv_signal.tree_dump(std::clog);
+	    for (double t = 0; t <= 50*CLHEP::microsecond; t+=0.1*CLHEP::microsecond)
+	    {
+	    double d_amp = deriv_signal.eval_df(t);
+	    derivstream << t / CLHEP::microsecond	 << ' ' << d_amp * CLHEP::meter / CLHEP::volt << std::endl;
+	    }
+	    derivstream.close();
+	    ssb1.tree_dump(std::clog, "Signal shape builder 1", "[info] ");
+	**/
+
+	std::clog << "Signal number #" << i << std::endl;
       }
 
-      std::set<std::string> fkeys;
-      _ssb_->build_list_of_functors(fkeys);
-      _ssb_->tree_dump(std::clog);
+      // std::set<std::string> fkeys;
+      // _ssb_->build_list_of_functors(fkeys);
+      // _ssb_->tree_dump(std::clog);
       return ;
     }
 
@@ -298,17 +363,15 @@ namespace snemo {
 
 
       // // Check if some 'simulated_data' are available in the data model:
-      // if (SSD_.has("SSD")) {
-      // 	if (
-      // 	    /********************
-      // 	     * Process the data *
-      //  ********************/
+      if (SSD_.has_signals(get_signal_category())) {
+	/********************
+	 * Process the data *
+	 ********************/
 
-      // // Main processing method :
-      // _process(SSD_, my_geiger_tp_data_);
+	// Main processing method :
+	_process(SSD_, my_geiger_tp_data_);
 
-
-      // }
+      }
 
     }
 

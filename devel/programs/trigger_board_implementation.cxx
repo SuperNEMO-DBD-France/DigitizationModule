@@ -182,7 +182,7 @@ int main( int  argc_ , char **argv_  )
 
     // Initializing signal to geiger tp algo :
     snemo::digitization::signal_to_geiger_tp_algo signal_2_geiger_tp;
-    signal_2_geiger_tp.initialize(my_e_mapping);
+    signal_2_geiger_tp.initialize(my_e_mapping, my_clock_manager);
 
     // Initializing calo tp to calo ctw algorithms for each crate :
     snemo::digitization::calo_tp_to_ctw_algo calo_tp_2_ctw_0;

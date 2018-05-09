@@ -83,6 +83,27 @@ namespace snemo {
       /// Return a non-mutable reference to the geometry manager
       const geomtools::manager & get_geometry_manager() const;
 
+			/// Check the electronic mapping
+      bool has_electronic_mapping() const;
+
+      /// Address the electronic mapping
+      void set_electronic_mapping(electronic_mapping & emap_);
+
+      /// Return a non-mutable reference to the electronic mapping
+      const electronic_mapping & get_electronic_mapping() const;
+
+			/// Return a mutable reference to the electronic mapping
+			electronic_mapping & grab_electronic_mapping() const;
+
+			/// Check the clock utils
+      bool has_clock_utils() const;
+
+      /// Address the clock utils
+      void set_clock_utils(const clock_utils & cu_);
+
+      /// Return a non-mutable reference to the clock utils
+      const clock_utils & get_clock_utils() const;
+
       /// Initialize the digitization driver through configuration properties
 			virtual void initialize(const datatools::properties & config_);
 
@@ -124,8 +145,11 @@ namespace snemo {
 
       // Configuration:
       bool _initialized_; //!< Initialization status
-      datatools::logger::priority _logging_priority_; //!< Logging priority
-      const geomtools::manager * _geometry_manager_;  //!< The SuperNEMO geometry manager
+      datatools::logger::priority _logging_priority_;  //!< Logging priority
+      const geomtools::manager * _geometry_manager_;   //!< The SuperNEMO geometry manager
+			electronic_mapping * _electronic_mapping_; //!< The SuperNEMO electronic mapping
+			const clock_utils * _clock_utils_;               //!< The SuperNEMO digitization clock utils
+
 
       // Algorithms:
       snemo::digitization::signal_to_calo_tp_algo   _calo_signal_to_tp_algo_;   //!< Calo signal to calo trigger primitive (TP) algo

@@ -88,7 +88,7 @@ list(APPEND FalaiseDigitizationPlugin_HEADERS
   ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/resource.h
   ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/fldigi.h
   ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/detail/fldigi_sys.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/calo_ctw_constants.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/tempo_utils.h
   ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/calo_ctw_data.h
   ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/calo_ctw.h
   ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/calo_signal.h
@@ -149,6 +149,7 @@ list(APPEND FalaiseDigitizationPlugin_SOURCES
   ${CMAKE_CURRENT_BINARY_DIR}/source/falaise/snemo/digitization/resource.cc
   ${CMAKE_CURRENT_BINARY_DIR}/source/falaise/snemo/digitization/fldigi.cc
   ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/detail/fldigi_sys.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/tempo_utils.cc
   ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/calo_ctw.cc
   ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/calo_ctw_data.cc
   ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/calo_signal.cc

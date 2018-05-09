@@ -194,29 +194,6 @@ int main( int  argc_ , char **argv_  )
     snemo::digitization::sd_to_geiger_signal_algo sd_2_geiger_signal(my_manager);
     sd_2_geiger_signal.initialize();
 
-    // Initializing signal to calo_tp algo :
-    snemo::digitization::signal_to_calo_tp_algo signal_2_calo_tp;
-    signal_2_calo_tp.initialize(my_e_mapping);
-
-    // Initializing signal to geiger_tp algo :
-    snemo::digitization::signal_to_geiger_tp_algo signal_2_geiger_tp;
-    signal_2_geiger_tp.initialize(my_e_mapping);
-
-    // Initializing calo_tp to calo_ctw algorithms for each crate :
-    snemo::digitization::calo_tp_to_ctw_algo calo_tp_2_ctw_0;
-    calo_tp_2_ctw_0.set_crate_number(snemo::digitization::mapping::MAIN_CALO_SIDE_0_CRATE);
-    calo_tp_2_ctw_0.initialize();
-    snemo::digitization::calo_tp_to_ctw_algo calo_tp_2_ctw_1;
-    calo_tp_2_ctw_1.set_crate_number(snemo::digitization::mapping::MAIN_CALO_SIDE_1_CRATE);
-    calo_tp_2_ctw_1.initialize();
-    snemo::digitization::calo_tp_to_ctw_algo calo_tp_2_ctw_2;
-    calo_tp_2_ctw_2.set_crate_number(snemo::digitization::mapping::XWALL_GVETO_CALO_CRATE);
-    calo_tp_2_ctw_2.initialize();
-
-    // Initializing geiger_tp to geiger_ctw :
-    snemo::digitization::geiger_tp_to_ctw_algo geiger_tp_2_ctw;
-    geiger_tp_2_ctw.initialize();
-
     // Multi properties to configure trigger algorithm :
     datatools::multi_properties trigger_config("name", "type", "Trigger parameters multi section configuration");
     if (trigger_config_filename.empty()) trigger_config_filename = "$FALAISE_DIGITIZATION_DIR/resources/config/snemo/common/1.0/trigger_parameters.conf";
