@@ -45,13 +45,17 @@ namespace snemo {
         signal_to_tp_working_data();
 				void reset();
  				bool operator<(const signal_to_tp_working_data &) const;
+				void tree_dump(std::ostream & out_         = std::clog,
+											 const std::string & title_  = "",
+											 bool dump_signal_           = false,
+											 const std::string & indent_ = "",
+											 bool inherit_               = false) const;
 
 				const mctools::signal::base_signal * signal_ref;
 				mygsl::unary_function_promoted_with_numeric_derivative signal_deriv;
 				geomtools::geom_id    feb_id;
-				datatools::properties auxiliaries;
+				double                trigger_time;
 				uint32_t              clocktick_800;
-				double                shift_800;
 			};
 
 			typedef std::vector<signal_to_tp_working_data> working_data_collection_type;
@@ -63,12 +67,8 @@ namespace snemo {
       virtual ~signal_to_geiger_tp_algo();
 
       /// Initializing
-      void initialize(electronic_mapping & my_electronic_mapping_,
-											const clock_utils & my_clock_utils_);
-
-      /// Initializing
-      void initialize(electronic_mapping & my_electronic_mapping_,
-											const clock_utils & my_clock_utils_,
+      void initialize(const datatools::properties & config_,
+											electronic_mapping & my_electronic_mapping_,
 											mctools::signal::signal_shape_builder & my_ssb_);
 
       /// Check if the algorithm is initialized
@@ -131,12 +131,15 @@ namespace snemo {
 			// Configuration :
       bool    _initialized_;      //!< Initialization flag
 			electronic_mapping * _electronic_mapping_;     //!< Convert geometric ID into electronic ID
-			const clock_utils * _clock_utils_;             //!< An external clock manager
 			mctools::signal::signal_shape_builder * _ssb_; //!< An external shape builder
 
 			std::string _signal_category_; //!< Identifier of the input tracker signal category
 			uint32_t _clocktick_ref_;      //!< Clocktick reference of the algorithm
       double   _clocktick_shift_;    //!< Clocktick shift between [0:800]
+
+			double _VLNT_; //!< Anodic low negative threshold in Volts
+			double _VHNT_; //!< Anodic high negative threshold in Volts
+			double _VHPT_; //!< Anodic high positive threshold in Volts
 
 			// Data :
 			bool _activated_bits_[geiger::tp::TP_SIZE]; //!< Table of booleans to see which bits were activated

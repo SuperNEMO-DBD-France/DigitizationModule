@@ -136,7 +136,7 @@ int main(int argc_, char** argv_)
 	    double  clocktick_800_shift     = my_clock_manager.get_shift_800();
 
 	    snemo::digitization::signal_to_calo_tp_algo signal_2_calo_tp;
-	    signal_2_calo_tp.initialize(my_e_mapping);
+	    // signal_2_calo_tp.initialize(my_e_mapping);
 	    signal_2_calo_tp.set_clocktick_reference(clocktick_25_reference);
 	    signal_2_calo_tp.set_clocktick_shift(clocktick_25_shift);
 
@@ -167,7 +167,7 @@ int main(int argc_, char** argv_)
 
 	    if( signal_data.has_calo_signals())
 	      {
-		signal_2_calo_tp.process(signal_data, my_calo_tp_data);
+		// signal_2_calo_tp.process(signal_data, my_calo_tp_data);
 		my_calo_tp_data.tree_dump(std::clog, "Calorimeter TP(s) data : ", "INFO : ");
 	      }
 

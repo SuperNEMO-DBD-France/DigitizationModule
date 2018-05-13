@@ -6,14 +6,14 @@
 #include <snemo/digitization/calo_tp.h>
 
 // Third party:
-// - Bayeux/datatools: 
+// - Bayeux/datatools:
 #include <datatools/exception.h>
 
 // This project :
 #include <snemo/digitization/clock_utils.h>
 
 namespace snemo {
-  
+
   namespace digitization {
 
     // Serial tag for datatools::serialization::i_serializable interface :
@@ -41,52 +41,52 @@ namespace snemo {
 			     const geomtools::geom_id & electronic_id_,
 			     uint32_t clocktick_25ns_)
     {
-      set_hit_id(hit_id_);    
+      set_hit_id(hit_id_);
       set_geom_id(electronic_id_);
       set_clocktick_25ns(clocktick_25ns_);
       return;
     }
-    
-    void calo_tp::set_data(const double amplitude_,
-			   const bool xt_bit_,
-			   const bool spare_bit_)
-    {
-      // To check :
-      if (amplitude_ > HIGH_THRESHOLD)
-	{
-	  unsigned int multiplicity = 1;
-	  set_htm(multiplicity);
-	  set_xt_bit(xt_bit_);
-	  set_spare_bit(spare_bit_);
-	}
-      else if (amplitude_ >= LOW_THRESHOLD && amplitude_ <= HIGH_THRESHOLD)
-	{
-	  set_lto_bit(true);
-	  set_xt_bit(xt_bit_);
-	  set_spare_bit(spare_bit_);
-	}
-      return;
-    }
 
-    void calo_tp::update_data(const double amplitude_,	
-			      const bool xt_bit_,
-			      const bool spare_bit_)
-    {
-      unsigned int existing_multiplicity = get_htm();
-      if (amplitude_ > HIGH_THRESHOLD)
-	{
-	  existing_multiplicity += 1;
-	  set_htm(existing_multiplicity);
-	}
-      else if (amplitude_ >= LOW_THRESHOLD && amplitude_ <= HIGH_THRESHOLD)
-	{
-	  set_lto_bit(1);
-	}
-      set_xt_bit(xt_bit_);
-      set_spare_bit(spare_bit_);
-      return;
-    }
-    
+    // void calo_tp::set_data(const double amplitude_,
+    // 			   const bool xt_bit_,
+    // 			   const bool spare_bit_)
+    // {
+    //   // To check :
+    //   if (amplitude_ > HIGH_THRESHOLD)
+    // 	{
+    // 	  unsigned int multiplicity = 1;
+    // 	  set_htm(multiplicity);
+    // 	  set_xt_bit(xt_bit_);
+    // 	  set_spare_bit(spare_bit_);
+    // 	}
+    //   else if (amplitude_ >= LOW_THRESHOLD && amplitude_ <= HIGH_THRESHOLD)
+    // 	{
+    // 	  set_lto_bit(true);
+    // 	  set_xt_bit(xt_bit_);
+    // 	  set_spare_bit(spare_bit_);
+    // 	}
+    //   return;
+    // }
+
+    // void calo_tp::update_data(const double amplitude_,
+    // 			      const bool xt_bit_,
+    // 			      const bool spare_bit_)
+    // {
+    //   unsigned int existing_multiplicity = get_htm();
+    //   if (amplitude_ > HIGH_THRESHOLD)
+    // 	{
+    // 	  existing_multiplicity += 1;
+    // 	  set_htm(existing_multiplicity);
+    // 	}
+    //   else if (amplitude_ >= LOW_THRESHOLD && amplitude_ <= HIGH_THRESHOLD)
+    // 	{
+    // 	  set_lto_bit(1);
+    // 	}
+    //   set_xt_bit(xt_bit_);
+    //   set_spare_bit(spare_bit_);
+    //   return;
+    // }
+
     uint32_t calo_tp::get_clocktick_25ns() const
     {
       return _clocktick_25ns_;
@@ -106,7 +106,7 @@ namespace snemo {
     bool calo_tp::has_clocktick_25ns() const
     {
       return _clocktick_25ns_ != clock_utils::INVALID_CLOCKTICK;
-    } 
+    }
 
     void calo_tp::reset_clocktick_25ns()
     {
@@ -119,7 +119,7 @@ namespace snemo {
     {
       return _tp_;
     }
-    
+
     void calo_tp::reset_tp_bitset()
     {
       _tp_ = 0x0;
@@ -133,33 +133,33 @@ namespace snemo {
 
       switch (multiplicity_)
 	{
-	case 0 :	  
+	case 0 :
 	  _tp_.set(HTM_BIT0, 0);
 	  _tp_.set(HTM_BIT1, 0);
 	  break;
-	  
+
 	case 1 :
 	  _tp_.set(HTM_BIT0, 1);
 	  _tp_.set(HTM_BIT1, 0);
 	  break;
-	  
+
 	case 2 :
 	  _tp_.set(HTM_BIT0, 0);
 	  _tp_.set(HTM_BIT1, 1);
 	  break;
-	  
+
 	default :
 	  _tp_.set(HTM_BIT0, 1);
-	  _tp_.set(HTM_BIT1, 1); 
+	  _tp_.set(HTM_BIT1, 1);
 	}
       _store |= STORE_TP;
       return;
     }
-    
+
     unsigned int calo_tp::get_htm() const
     {
       if(_tp_.test(HTM_BIT0) == 0 && _tp_.test(HTM_BIT1) == 0)
-	{           
+	{
 	  return 0;
 	}
       else if(_tp_.test(HTM_BIT0) == 1 && _tp_.test(HTM_BIT1) == 0)
@@ -198,7 +198,7 @@ namespace snemo {
       _store |= STORE_TP;
       return;
     }
-    
+
     bool calo_tp::is_lto() const
     {
       return _tp_.test(LTO_BIT);
@@ -210,7 +210,7 @@ namespace snemo {
       _store |= STORE_TP;
       return;
     }
-    
+
     bool calo_tp::is_xt() const
     {
       return _tp_.test(XT_BIT);
@@ -222,7 +222,7 @@ namespace snemo {
       _store |= STORE_TP;
       return;
     }
-    
+
     bool calo_tp::is_spare() const
     {
       return _tp_.test(SPARE_BIT);
@@ -255,7 +255,7 @@ namespace snemo {
            << "TP (5 bits) : " << _tp_  << std::endl;
       return;
     }
-    
+
   } // end of namespace digitization
 
 } // end of namespace snemo

@@ -167,30 +167,24 @@ int main( int  argc_ , char **argv_  )
 
     // Initializing signal to calo_tp algo :
     snemo::digitization::signal_to_calo_tp_algo signal_2_calo_tp;
-    signal_2_calo_tp.initialize(my_e_mapping);
+    // signal_2_calo_tp.initialize(my_e_mapping);
 
     // Initializing signal to geiger_tp algo :
     snemo::digitization::signal_to_geiger_tp_algo signal_2_geiger_tp;
-    signal_2_geiger_tp.initialize(my_e_mapping, my_clock_manager);
+    // signal_2_geiger_tp.initialize(my_e_mapping, my_clock_manager);
+
+    datatools::properties dummy_config;
 
     // Initializing calo_tp to calo_ctw algorithms for each crate :
-    snemo::digitization::calo_tp_to_ctw_algo calo_tp_2_ctw_0;
-    calo_tp_2_ctw_0.set_crate_number(snemo::digitization::mapping::MAIN_CALO_SIDE_0_CRATE);
-    calo_tp_2_ctw_0.initialize();
-    snemo::digitization::calo_tp_to_ctw_algo calo_tp_2_ctw_1;
-    calo_tp_2_ctw_1.set_crate_number(snemo::digitization::mapping::MAIN_CALO_SIDE_1_CRATE);
-    calo_tp_2_ctw_1.initialize();
-    snemo::digitization::calo_tp_to_ctw_algo calo_tp_2_ctw_2;
-    calo_tp_2_ctw_2.set_crate_number(snemo::digitization::mapping::XWALL_GVETO_CALO_CRATE);
-    calo_tp_2_ctw_2.initialize();
+    snemo::digitization::calo_tp_to_ctw_algo calo_tp_2_ctw;
+    calo_tp_2_ctw.initialize(dummy_config);
 
     // Initializing geiger_tp to geiger_ctw :
     snemo::digitization::geiger_tp_to_ctw_algo geiger_tp_2_ctw;
-    geiger_tp_2_ctw.initialize();
+    geiger_tp_2_ctw.initialize(dummy_config);
 
     // Creation and initialization of trigger algorithm :
     snemo::digitization::trigger_algorithm my_trigger_algo;
-    my_trigger_algo.set_electronic_mapping(my_e_mapping);
     my_trigger_algo.set_clock_manager(my_clock_manager);
     my_trigger_algo.initialize(trigger_config);
 
@@ -233,11 +227,9 @@ int main( int  argc_ , char **argv_  )
 	    signal_2_calo_tp.set_clocktick_reference(clocktick_25_reference);
 	    signal_2_calo_tp.set_clocktick_shift(clocktick_25_shift);
 
-	    signal_2_calo_tp.process(signal_data, my_calo_tp_data);
+	    // signal_2_calo_tp.process(signal_data, my_calo_tp_data);
 
-	    calo_tp_2_ctw_0.process(my_calo_tp_data, my_calo_ctw_data);
-	    calo_tp_2_ctw_1.process(my_calo_tp_data, my_calo_ctw_data);
-	    calo_tp_2_ctw_2.process(my_calo_tp_data, my_calo_ctw_data);
+	    calo_tp_2_ctw.process(my_calo_tp_data, my_calo_ctw_data);
 
 	  } // end of if has calo signal
 

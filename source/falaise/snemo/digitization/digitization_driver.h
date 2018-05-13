@@ -86,20 +86,14 @@ namespace snemo {
 			/// Check the electronic mapping
       bool has_electronic_mapping() const;
 
-      /// Address the electronic mapping
-      void set_electronic_mapping(electronic_mapping & emap_);
-
       /// Return a non-mutable reference to the electronic mapping
       const electronic_mapping & get_electronic_mapping() const;
 
 			/// Return a mutable reference to the electronic mapping
-			electronic_mapping & grab_electronic_mapping() const;
+			electronic_mapping & grab_electronic_mapping();
 
 			/// Check the clock utils
       bool has_clock_utils() const;
-
-      /// Address the clock utils
-      void set_clock_utils(const clock_utils & cu_);
 
       /// Return a non-mutable reference to the clock utils
       const clock_utils & get_clock_utils() const;
@@ -145,11 +139,13 @@ namespace snemo {
 
       // Configuration:
       bool _initialized_; //!< Initialization status
-      datatools::logger::priority _logging_priority_;  //!< Logging priority
-      const geomtools::manager * _geometry_manager_;   //!< The SuperNEMO geometry manager
-			electronic_mapping * _electronic_mapping_; //!< The SuperNEMO electronic mapping
-			const clock_utils * _clock_utils_;               //!< The SuperNEMO digitization clock utils
-
+      datatools::logger::priority _logging_priority_; //!< Logging priority
+      const geomtools::manager * _geometry_manager_;  //!< The SuperNEMO geometry manager
+			electronic_mapping _electronic_mapping_;        //!< The SuperNEMO electronic mapping
+			mygsl::rng  _rdm_gen_;                           //!< Internal random generator for clock manager
+			clock_utils _clock_utils_;                     //!< The SuperNEMO digitization clock utils
+			mctools::signal::signal_shape_builder _gg_ssb_;	 //!< The Tracker signal shape builder
+			mctools::signal::signal_shape_builder _calo_ssb_; //!< The Calorimeter signal shape builder
 
       // Algorithms:
       snemo::digitization::signal_to_calo_tp_algo   _calo_signal_to_tp_algo_;   //!< Calo signal to calo trigger primitive (TP) algo

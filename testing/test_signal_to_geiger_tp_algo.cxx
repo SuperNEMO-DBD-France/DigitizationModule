@@ -68,7 +68,7 @@ int main( int  argc_ , char ** argv_ )
     my_e_mapping.initialize();
 
     snemo::digitization::signal_to_geiger_tp_algo signal_2_geiger_tp;
-    signal_2_geiger_tp.initialize(my_e_mapping, my_clock_manager);
+    // signal_2_geiger_tp.initialize(my_e_mapping, my_clock_manager);
 
     const geomtools::geom_id GID1(1204, 0, 0, 3, 106);
     const geomtools::geom_id GID2(1204, 0, 0, 6, 95);

@@ -187,7 +187,7 @@ int main(int  argc_ , char ** argv_)
 
 		    // Initializing and processing Geiger signal to Geiger TP :
 		    snemo::digitization::signal_to_geiger_tp_algo signal_2_geiger_tp;
-		    signal_2_geiger_tp.initialize(my_e_mapping, my_clock_manager);
+		    // signal_2_geiger_tp.initialize(my_e_mapping, my_clock_manager);
 		    // signal_2_geiger_tp.process(signal_data, my_geiger_tp_data);
 
 		    // my_geiger_tp_data.tree_dump(std::clog, "Geiger TP(s) data : ", "INFO : ");
@@ -196,8 +196,9 @@ int main(int  argc_ , char ** argv_)
 		    snemo::digitization::geiger_ctw_data my_geiger_ctw_data;
 
 		    // Initializing and processing Geiger TP to Geiger CTW :
+		    datatools::properties dummy_config;
 		    snemo::digitization::geiger_tp_to_ctw_algo geiger_tp_2_ctw;
-		    geiger_tp_2_ctw.initialize();
+		    geiger_tp_2_ctw.initialize(dummy_config);
 		    geiger_tp_2_ctw.process(my_geiger_tp_data, my_geiger_ctw_data);
 		    my_geiger_ctw_data.tree_dump(std::clog, "Geiger CTW(s) data : ", "INFO : ");
 

@@ -15,7 +15,6 @@
 #include <snemo/digitization/calo_trigger_algorithm.h>
 #include <snemo/digitization/tracker_trigger_algorithm.h>
 #include <snemo/digitization/coincidence_trigger_algorithm.h>
-#include <snemo/digitization/electronic_mapping.h>
 #include <snemo/digitization/clock_utils.h>
 #include <snemo/digitization/trigger_display_manager.h>
 
@@ -46,9 +45,6 @@ namespace snemo {
 
 			/// Reset internal datas
 			void reset_data();
-
-      /// Set the electronic mapping object
-      void set_electronic_mapping(const electronic_mapping & my_electronic_mapping_);
 
 			/// Set the clock manager object
 			void set_clock_manager(const clock_utils & my_clock_manager_);
@@ -143,7 +139,6 @@ namespace snemo {
 
       // Configuration :
       bool _initialized_; //!< Initialization flag
-      const electronic_mapping * _electronic_mapping_; //!< Convert geometric ID into electronic ID
 			const clock_utils * _clock_manager_; //!< Pointer to a clock manager useful for clockticks
 			unsigned int _coincidence_calorimeter_gate_size_; //!< Size of calorimeter gate for extension of calo records during X CT 1600ns
 			unsigned int _L2_decision_coincidence_gate_size_; //!< Size of the L2 decision coincidence gate (typically 5 x 1600 ns)

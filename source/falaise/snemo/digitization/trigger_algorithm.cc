@@ -14,7 +14,6 @@ namespace snemo {
     trigger_algorithm::trigger_algorithm()
     {
       _initialized_ = false;
-      _electronic_mapping_ = nullptr;
       _coincidence_calorimeter_gate_size_ = 0;
       _L2_decision_coincidence_gate_size_ = 0;
       _previous_event_circular_buffer_depth_ = 0;
@@ -51,7 +50,6 @@ namespace snemo {
     {
       DT_THROW_IF(!is_initialized(), std::logic_error, "Trigger algorithm is not initialized, it can't be reset ! ");
       _initialized_ = false;
-      _electronic_mapping_ = nullptr;
       _coincidence_calorimeter_gate_size_ = 0;
       _L2_decision_coincidence_gate_size_ = 0;
       _previous_event_circular_buffer_depth_ = 0;
@@ -91,14 +89,6 @@ namespace snemo {
       _L1_calo_decision_records_.clear();
       _L2_decision_records_.clear();
       _finale_trigger_decision_ = false;
-      return;
-    }
-
-    void trigger_algorithm::set_electronic_mapping(const electronic_mapping & my_electronic_mapping_)
-    {
-      DT_THROW_IF(is_initialized(), std::logic_error, "Trigger algorithm is already initialized, electronic mapping can't be set ! ");
-      _electronic_mapping_ = & my_electronic_mapping_;
-      _tracker_algo_.set_electronic_mapping(my_electronic_mapping_);
       return;
     }
 
@@ -170,7 +160,6 @@ namespace snemo {
     void trigger_algorithm::initialize(const datatools::multi_properties & mconfig_)
     {
       DT_THROW_IF(is_initialized(), std::logic_error, "Trigger algorithm is already initialized ! ");
-      DT_THROW_IF(_electronic_mapping_ == 0, std::logic_error, "Missing electronic mapping ! " );
       DT_THROW_IF(_clock_manager_ == 0, std::logic_error, "Missing clock manager ! " );
 
       datatools::properties general_config;

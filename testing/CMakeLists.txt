@@ -29,6 +29,7 @@ set(FalaiseDigitizationPlugin_TESTS
   test_tracker_trigger_algorithm.cxx
   test_trigger_algorithm.cxx
   test_trigger_algorithm_test_fake_ctw.cxx
+  test_digitization_driver.cxx
  )
 
 # # - Use C++11

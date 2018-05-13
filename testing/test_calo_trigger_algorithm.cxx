@@ -147,30 +147,22 @@ int main( int  argc_ , char **argv_  )
 		if( signal_data.has_calo_signals())
 		  {
 		    snemo::digitization::signal_to_calo_tp_algo signal_2_calo_tp;
-		    signal_2_calo_tp.initialize(my_e_mapping);
+		    // signal_2_calo_tp.initialize(my_e_mapping);
 		    signal_2_calo_tp.set_clocktick_reference(clocktick_25_reference);
 		    signal_2_calo_tp.set_clocktick_shift(clocktick_25_shift);
 
 		    snemo::digitization::calo_tp_data my_calo_tp_data;
 
-		    signal_2_calo_tp.process(signal_data, my_calo_tp_data);
+		    // signal_2_calo_tp.process(signal_data, my_calo_tp_data);
 
 		    my_calo_tp_data.tree_dump(std::clog, "Calorimeter TP(s) data : ", "INFO : ");
 
-		    snemo::digitization::calo_ctw_data my_calo_ctw_data;
-		    snemo::digitization::calo_tp_to_ctw_algo calo_tp_2_ctw_0;
-		    calo_tp_2_ctw_0.set_crate_number(snemo::digitization::mapping::MAIN_CALO_SIDE_0_CRATE);
-		    calo_tp_2_ctw_0.initialize();
-		    snemo::digitization::calo_tp_to_ctw_algo calo_tp_2_ctw_1;
-		    calo_tp_2_ctw_1.set_crate_number(snemo::digitization::mapping::MAIN_CALO_SIDE_1_CRATE);
-		    calo_tp_2_ctw_1.initialize();
-		    snemo::digitization::calo_tp_to_ctw_algo calo_tp_2_ctw_2;
-		    calo_tp_2_ctw_2.set_crate_number(snemo::digitization::mapping::XWALL_GVETO_CALO_CRATE);
-		    calo_tp_2_ctw_2.initialize();
+		    datatools::properties dummy_config;
 
-		    calo_tp_2_ctw_0.process(my_calo_tp_data, my_calo_ctw_data);
-		    calo_tp_2_ctw_1.process(my_calo_tp_data, my_calo_ctw_data);
-		    calo_tp_2_ctw_2.process(my_calo_tp_data, my_calo_ctw_data);
+		    snemo::digitization::calo_ctw_data my_calo_ctw_data;
+		    snemo::digitization::calo_tp_to_ctw_algo calo_tp_2_ctw;
+		    calo_tp_2_ctw.initialize(dummy_config);
+		    calo_tp_2_ctw.process(my_calo_tp_data, my_calo_ctw_data);
 
 		    snemo::digitization::calo_trigger_algorithm my_calo_algo;
 		    unsigned int calo_circular_buffer_depth = 4;

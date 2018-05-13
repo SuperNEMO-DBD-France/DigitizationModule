@@ -138,12 +138,14 @@ int main( int argc_ , char ** argv_  )
 	    double  clocktick_800_shift     = my_clock_manager.get_shift_800();
 
 	    snemo::digitization::signal_to_calo_tp_algo signal_2_calo_tp;
-	    signal_2_calo_tp.initialize(my_e_mapping);
+	    // signal_2_calo_tp.initialize(my_e_mapping);
 	    signal_2_calo_tp.set_clocktick_reference(clocktick_25_reference);
 	    signal_2_calo_tp.set_clocktick_shift(clocktick_25_shift);
 
 	    snemo::digitization::signal_to_geiger_tp_algo signal_2_geiger_tp;
-	    signal_2_geiger_tp.initialize(my_e_mapping, my_clock_manager);
+	    // signal_2_geiger_tp.initialize(my_e_mapping, my_clock_manager);
+	    signal_2_geiger_tp.set_clocktick_reference(clocktick_800_reference);
+	    signal_2_geiger_tp.set_clocktick_shift(clocktick_800_shift);
 
 	    snemo::digitization::signal_data signal_data;
 	    if( SD.has_step_hits("gg"))
@@ -167,19 +169,20 @@ int main( int argc_ , char ** argv_  )
 
 	    if( signal_data.has_calo_signals())
 	      {
-		signal_2_calo_tp.process(signal_data, my_calo_tp_data);
+		// signal_2_calo_tp.process(signal_data, my_calo_tp_data);
 		my_calo_tp_data.tree_dump(std::clog, "Calorimeter TP(s) data : ", "INFO : ");
 	      }
 
 	    snemo::digitization::geiger_ctw_data my_geiger_ctw_data;
 	    snemo::digitization::calo_ctw_data my_calo_ctw_data;
 
+	    datatools::properties dummy_config;
+
 	    snemo::digitization::geiger_tp_to_ctw_algo geiger_tp_2_ctw;
-	    geiger_tp_2_ctw.initialize();
+	    geiger_tp_2_ctw.initialize(dummy_config);
 
 	    snemo::digitization::calo_tp_to_ctw_algo calo_tp_2_ctw;
-	    calo_tp_2_ctw.set_crate_number(0);
-	    calo_tp_2_ctw.initialize();
+	    calo_tp_2_ctw.initialize(dummy_config);
 
 	    geiger_tp_2_ctw.process(my_geiger_tp_data, my_geiger_ctw_data);
 	    my_geiger_ctw_data.tree_dump(std::clog, "Geiger CTW(s) data : ", "INFO : ");

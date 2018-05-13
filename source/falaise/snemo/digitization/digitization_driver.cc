@@ -2,6 +2,10 @@
 
 // Ourselves:
 #include <snemo/digitization/digitization_driver.h>
+// #include <snemo/digitization/geiger_tp_data.h>
+// #include <snemo/digitization/calo_tp_data.h>
+// #include <snemo/digitization/geiger_ctw_data.h>
+// #include <snemo/digitization/calo_ctw_data.h>
 
 namespace snemo {
 
@@ -52,59 +56,110 @@ namespace snemo {
 
     bool digitization_driver::has_electronic_mapping() const
     {
-      return _electronic_mapping_ != 0;
-    }
-
-    void digitization_driver::set_electronic_mapping(electronic_mapping & emap_)
-    {
-      DT_THROW_IF (is_initialized(), std::logic_error, "Already initialized/locked !");
-      _electronic_mapping_ = & emap_;
-      return;
+      return _electronic_mapping_.is_initialized();
     }
 
     const electronic_mapping & digitization_driver::get_electronic_mapping() const
     {
       DT_THROW_IF (!has_electronic_mapping(), std::logic_error, "No electronic mapping is setup !");
-      return *_electronic_mapping_;
+      return _electronic_mapping_;
     }
 
-    electronic_mapping & digitization_driver::grab_electronic_mapping() const
+    electronic_mapping & digitization_driver::grab_electronic_mapping()
     {
       DT_THROW_IF (!has_electronic_mapping(), std::logic_error, "No electronic mapping is setup !");
-      return *_electronic_mapping_;
+      return _electronic_mapping_;
     }
 
     bool digitization_driver::has_clock_utils() const
     {
-      return _clock_utils_ != 0;
-    }
-
-    void digitization_driver::set_clock_utils(const clock_utils & cu_)
-    {
-      DT_THROW_IF (is_initialized(), std::logic_error, "Already initialized/locked !");
-      _clock_utils_ = & cu_;
-      return;
+      return _clock_utils_.is_initialized();
     }
 
     const clock_utils & digitization_driver::get_clock_utils() const
     {
       DT_THROW_IF (!has_clock_utils(), std::logic_error, "No clock utils is setup !");
-      return *_clock_utils_;
+      return _clock_utils_;
     }
 
-    void digitization_driver::initialize(const datatools::properties & /* setup_ */ )
+    void digitization_driver::initialize(const datatools::properties & config_)
     {
       DT_THROW_IF (is_initialized(),          std::logic_error, "Driver is already initialized !");
       DT_THROW_IF (!has_geometry_manager(),   std::logic_error, "No geometry manager is setup !");
-      DT_THROW_IF (!has_electronic_mapping(), std::logic_error, "No electronic mapping is setup !");
-      DT_THROW_IF (!has_clock_utils(),        std::logic_error, "No clock utils is setup !");
 
-      // do something
+      _logging_priority_ = datatools::logger::extract_logging_configuration(config_);
 
-      // Initialized signal to TP algos:
-      _geiger_signal_to_tp_algo_.initialize(grab_electronic_mapping(), get_clock_utils());
+      // Fetch configuration
+      int32_t prng_seed = 0;
+
+      if (config_.has_key("prng_seed")) {
+	prng_seed = config_.fetch_integer("prng_seed");
+      }
 
 
+
+      // std::string key_prefix = "driver." + driver_name + ".";
+      // std::string type_id_key = key_prefix + "type_id";
+      // std::string config_key_prefix = key_prefix + "config.";
+      // DT_THROW_IF(!config_.has_key(type_id_key),
+      //             std::logic_error,
+      //             "Missing type ID for signal generator driver '" << driver_name << "'!");
+      // std::string driver_type_id = config_.fetch_string(type_id_key);
+      // DT_THROW_IF(driver_type_id.empty(),
+      //             std::logic_error,
+      //             "Empty type ID for signal generator driver '" << driver_name << "'!");
+      // datatools::properties driver_config;
+      // config_.export_and_rename_starting_with(driver_config, config_key_prefix, "");
+      // add_driver(driver_name, driver_type_id, driver_config);
+
+
+      // Initialize internal object
+      _rdm_gen_.initialize(prng_seed);
+      _clock_utils_.initialize();
+
+      _electronic_mapping_.set_geo_manager(get_geometry_manager());
+      _electronic_mapping_.set_module_number(mapping::DEMONSTRATOR_MODULE_NUMBER);
+      _electronic_mapping_.initialize();
+
+      _gg_ssb_.set_logging_priority(_logging_priority_);
+      _calo_ssb_.set_logging_priority(_logging_priority_);
+
+      std::string gg_ssb_key = "gg_ssb.config.";
+      datatools::properties gg_ssb_config;
+      config_.export_and_rename_starting_with(gg_ssb_config, gg_ssb_key, "");
+      _gg_ssb_.initialize(gg_ssb_config);
+      _gg_ssb_.tree_dump(std::clog, "Geiger Signal Shape Builder");
+
+      std::string calo_ssb_key = "calo_ssb.config.";
+      datatools::properties calo_ssb_config;
+      config_.export_and_rename_starting_with(calo_ssb_config, calo_ssb_key, "");
+      _calo_ssb_.initialize(calo_ssb_config);
+      _calo_ssb_.tree_dump(std::clog, "Calo Signal Shape Builder");
+
+      std::string gg_to_tp_algo_key = "gg_to_tp_algo.config.";
+      datatools::properties gg_to_tp_algo_config;
+      config_.export_and_rename_starting_with(gg_to_tp_algo_config, gg_to_tp_algo_key, "");
+      _geiger_signal_to_tp_algo_.initialize(gg_to_tp_algo_config,
+					    grab_electronic_mapping(),
+					    _gg_ssb_);
+
+      std::string calo_to_tp_algo_key = "calo_to_tp_algo.config.";
+      datatools::properties calo_to_tp_algo_config;
+      config_.export_and_rename_starting_with(calo_to_tp_algo_config, calo_to_tp_algo_key, "");
+      _calo_signal_to_tp_algo_.initialize(calo_to_tp_algo_config,
+					  grab_electronic_mapping(),
+					  _calo_ssb_);
+
+      std::string calo_tp_to_ctw_algo_key = "calo_tp_to_ctw_algo.config.";
+      datatools::properties calo_tp_to_ctw_algo_config;
+      config_.export_and_rename_starting_with(calo_tp_to_ctw_algo_config, calo_tp_to_ctw_algo_key, "");
+      _calo_tp_to_ctw_algo_.initialize(calo_tp_to_ctw_algo_config);
+
+
+      std::string geiger_tp_to_ctw_algo_key = "geiger_tp_to_ctw_algo.config.";
+      datatools::properties geiger_tp_to_ctw_algo_config;
+      config_.export_and_rename_starting_with(geiger_tp_to_ctw_algo_config, geiger_tp_to_ctw_algo_key, "");
+      _geiger_tp_to_ctw_algo_.initialize(geiger_tp_to_ctw_algo_config);
 
       _initialized_ = true;
       return;
@@ -120,6 +175,16 @@ namespace snemo {
       DT_THROW_IF (!is_initialized(), std::logic_error, "Driver is not initialized !");
       _initialized_ = false;
       _geometry_manager_ = nullptr;
+      _electronic_mapping_.reset();
+      _rdm_gen_.reset();
+      _clock_utils_.reset();
+      _gg_ssb_.reset();
+      _calo_ssb_.reset();
+      _calo_signal_to_tp_algo_.reset();
+      _geiger_signal_to_tp_algo_.reset();
+      _calo_tp_to_ctw_algo_.reset();
+      _geiger_tp_to_ctw_algo_.reset();
+      // _trigger_algo_.reset();
       return;
     }
 
@@ -127,18 +192,53 @@ namespace snemo {
 				      snemo::datamodel::sim_digi_data & SDD_)
     {
       DT_THROW_IF(!is_initialized(), std::logic_error, "Not initialized !");
+
+
       _process_digitization_algorithms(SSD_, SDD_);
       _process_readout_algorithms(SSD_, SDD_);
+
+
+      _gg_ssb_.clear_functors();
+      _calo_ssb_.clear_functors();
 
       return;
     }
 
-    void digitization_driver::_process_digitization_algorithms(const mctools::signal::signal_data & /*SSD_*/,
-                                                              snemo::datamodel::sim_digi_data & /*SDD_*/)
+    void digitization_driver::_process_digitization_algorithms(const mctools::signal::signal_data & SSD_,
+							       snemo::datamodel::sim_digi_data & /*SDD_*/)
     {
       DT_THROW_IF(!is_initialized(), std::logic_error, "Not initialized !");
 
-      // todo
+      // For each event, clocktick reference and shifts have to be recalculated and set in the algos:
+      _clock_utils_.compute_clockticks_ref(_rdm_gen_);
+      // _clock_utils_.tree_dump(std::clog, "Clock utils");
+
+      // For the moment only CT ref are used. Shifts plays the role of a new '0'. It will be add later:
+      int32_t clocktick_25_reference  = _clock_utils_.get_clocktick_25_ref();
+      // double  clocktick_25_shift      = _clock_utils_.get_shift_25();
+      _calo_signal_to_tp_algo_.set_clocktick_reference(clocktick_25_reference);
+
+      calo_tp_data calo_tp_data;
+      _calo_signal_to_tp_algo_.process(SSD_, calo_tp_data);
+
+      calo_ctw_data calo_ctw_data;
+      _calo_tp_to_ctw_algo_.process(calo_tp_data,
+				    calo_ctw_data);
+
+      calo_tp_data.tree_dump(std::clog, "Calorimeter TP(s) data : ", "INFO : ");
+      calo_ctw_data.tree_dump(std::clog, "Calorimeter CTW(s) data : ", "INFO : ");
+
+      int32_t clocktick_800_reference = _clock_utils_.get_clocktick_800_ref();
+      // double  clocktick_800_shift     = _clock_utils_.get_shift_800();
+      _geiger_signal_to_tp_algo_.set_clocktick_reference(clocktick_800_reference);
+
+      geiger_tp_data gg_tp_data;
+      _geiger_signal_to_tp_algo_.process(SSD_,
+					 gg_tp_data);
+
+      geiger_ctw_data gg_ctw_data;
+      _geiger_tp_to_ctw_algo_.process(gg_tp_data, gg_ctw_data);
+
 
 
       return;
@@ -150,7 +250,6 @@ namespace snemo {
       DT_THROW_IF(!is_initialized(), std::logic_error, "Not initialized !");
 
       // todo
-
 
       return;
     }
@@ -177,6 +276,27 @@ namespace snemo {
         out_ << "<no>";
       }
       out_ << std::endl;
+
+      out_ << indent_ << datatools::i_tree_dumpable::tag
+           << "Random generator initialized : ";
+      if (_rdm_gen_.is_initialized()) {
+	out_ << "<yes>";
+      } else {
+	out_ << "<no>";
+      }
+      out_ << std::endl;
+
+      out_ << indent_ << datatools::i_tree_dumpable::tag
+           << "Electronic mapping initialized : ";
+      if (_electronic_mapping_.is_initialized()) {
+	out_ << "<yes>";
+      } else {
+	out_ << "<no>";
+      }
+      out_ << std::endl;
+
+
+
 
       out_ << indent_ << datatools::i_tree_dumpable::inherit_tag(inherit_)
            << "Initialized : " << std::boolalpha << is_initialized() << std::endl;

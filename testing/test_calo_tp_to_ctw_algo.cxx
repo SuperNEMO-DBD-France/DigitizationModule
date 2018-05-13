@@ -96,12 +96,10 @@ int main(int  argc_, char ** argv_)
     snemo::digitization::calo_ctw_data my_calo_ctw_data;
     snemo::digitization::calo_tp_to_ctw_algo algo;
 
+    datatools::properties dummy_config;
+
     // Algo take a list of calo tp to fill a list of calo ctw data
-
-    std::size_t crate_number = 0;
-
-    algo.set_crate_number(crate_number);
-    algo.initialize();
+    algo.initialize(dummy_config);
     algo.process(my_calo_tp_data, my_calo_ctw_data);
 
     my_calo_ctw_data.tree_dump(std::clog, "my_calo_ctw_data : ", "INFO : ");

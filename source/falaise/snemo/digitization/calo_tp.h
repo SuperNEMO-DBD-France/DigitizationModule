@@ -20,13 +20,13 @@
 #include <snemo/digitization/mapping.h>
 
 namespace snemo {
-  
+
   namespace digitization {
 
     /// \brief The calorimeter trigger primitive for a single channel
     class calo_tp : public geomtools::base_hit
     {
-    public : 
+    public :
 
       /// \brief Masks to automatically tag the attributes to be stored
       enum store_mask_type {
@@ -36,8 +36,8 @@ namespace snemo {
 
       /// \brief Masks to select specific bits in the trigger primitive bitset
       enum tp_mask_type {
-				TP_HTM        = datatools::bit_mask::bit00 | datatools::bit_mask::bit01,  //!< High threshold multiplicity (HTM) bit mask 
-				TP_LTO        = datatools::bit_mask::bit02, //!< Low threshold only (LTO) bit mask 
+				TP_HTM        = datatools::bit_mask::bit00 | datatools::bit_mask::bit01,  //!< High threshold multiplicity (HTM) bit mask
+				TP_LTO        = datatools::bit_mask::bit02, //!< Low threshold only (LTO) bit mask
 				TP_EXT_TRIG   = datatools::bit_mask::bit03, //!< External trigger bit mask
 				TP_SPARE      = datatools::bit_mask::bit04  //!< Spare bit mask
       };
@@ -50,15 +50,15 @@ namespace snemo {
 				XT_BIT    = 3,
 				SPARE_BIT = 4
 			};
-			
+
       /// Maximum number of channels by front-end board (FEB)
 			static const unsigned int MAX_NUMBER_OF_CHANNELS = 16;
-			
+
 			/// Full size for the calorimter TP bitset
 			static const unsigned int FULL_SIZE = 5;
-			
+
 			/// Size of htm bitset for calorimeter TP
-			static const unsigned int HTM_SIZE  = 2;			
+			static const unsigned int HTM_SIZE  = 2;
 
 			/// Value of the low threshold to set bits
 			static constexpr double LOW_THRESHOLD = 10.0; // (mV units problem maybe)
@@ -77,22 +77,22 @@ namespace snemo {
 											const geomtools::geom_id & electronic_id_,
 											uint32_t clocktick_25ns_);
 
-			/// Set the data with valid values
-			void set_data(const double amplitude,
-										const bool xt_bit_,
-										const bool spare_bit);
-			
-			/// Update data when a second calo hit is in the same calo TP
-			void update_data(const double amplitude,
-											 const bool xt_bit_,
-											 const bool spare_bit);
-  
+			// /// Set the data with valid values
+			// void set_data(const double amplitude,
+			// 							const bool xt_bit_,
+			// 							const bool spare_bit);
+
+			// /// Update data when a second calo hit is in the same calo TP
+			// void update_data(const double amplitude,
+			// 								 const bool xt_bit_,
+			// 								 const bool spare_bit);
+
       /// Return the timestamp of the trigger primitive
       uint32_t get_clocktick_25ns() const;
 
       /// Set the timestamp of the trigger primitive
       void set_clocktick_25ns(const uint32_t clocktick_25_);
-			
+
 			/// Check if a clocktick is defined
 			bool has_clocktick_25ns() const;
 
@@ -104,7 +104,7 @@ namespace snemo {
 
       /// Reset the TP bitset
       void reset_tp_bitset();
-			
+
 			/// Set the high threshold multiplicity (HTM) bits
 			void set_htm(const unsigned int multiplicity_);
 
@@ -113,8 +113,8 @@ namespace snemo {
 
 			/// Get the high threshold multiplicity (HTM) word (2 bits)
 			std::bitset<HTM_SIZE> get_htm_bits() const;
-			
-			/// Check if the htm bits are set 
+
+			/// Check if the htm bits are set
 			bool is_htm() const;
 
 			/// Set the low threshold only (LTO) bit
@@ -147,7 +147,7 @@ namespace snemo {
 														 const std::string & a_indent = "",
 														 bool a_inherit               = false) const;
 
-    private : 
+    private :
 
       uint32_t _clocktick_25ns_;    //!< The timestamp of the trigger primitive in main clock units (40 MHz)
       std::bitset<FULL_SIZE> _tp_; //!< The trigger primitive bitset
@@ -162,7 +162,7 @@ namespace snemo {
 
 #endif /* FALAISE_DIGITIZATION_PLUGIN_SNEMO_DIGITIZATION_CALO_TP_H */
 
-/* 
+/*
 ** Local Variables: --
 ** mode: c++ --
 ** c-file-style: "gnu" --

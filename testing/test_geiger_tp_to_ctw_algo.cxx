@@ -9,6 +9,7 @@
 // - Bayeux/datatools:
 #include <datatools/logger.h>
 #include <datatools/io_factory.h>
+#include <datatools/properties.h>
 
 // Falaise:
 #include <falaise/falaise.h>
@@ -42,9 +43,11 @@ int main( int  argc_ , char **argv_ )
     snemo::digitization::geiger_ctw_data my_geiger_ctw_data;
     snemo::digitization::geiger_tp_to_ctw_algo algo;
 
+    datatools::properties dummy_config;
+
     // Algo take a list of geiger tp to fill a list of geiger ctw data
 
-    algo.initialize();
+    algo.initialize(dummy_config);
     algo.process(my_geiger_tp_data, my_geiger_ctw_data);
 
     my_geiger_ctw_data.tree_dump(std::clog, "my_geiger_ctw_data : ", "INFO : ");

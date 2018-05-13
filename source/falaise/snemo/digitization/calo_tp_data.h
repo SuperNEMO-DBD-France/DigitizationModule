@@ -19,14 +19,14 @@
 #include <snemo/digitization/calo_tp.h>
 
 namespace snemo {
-  
-  namespace digitization {		
+
+  namespace digitization {
 
     /// \brief Collection of calorimeter trigger primitive (calo_tp)
     class calo_tp_data : public datatools::i_serializable // or DATATOOLS_SERIALIZABLE_CLASS
     {
-    public : 
- 
+    public :
+
       /// Default constructor
       calo_tp_data();
 
@@ -38,27 +38,38 @@ namespace snemo {
 
 			/// Collection of handles of calorimeter trigger primitive
 			typedef std::vector<calo_tp_handle_type> calo_tp_collection_type;
-			
+
 			/// Return the index of the calo TP with minimum clocktick
 			unsigned int get_clocktick_min_index() const;
-			
+
 			/// Return the index of the calo TP with maximum clocktick
 			unsigned int get_clocktick_max_index() const;
-			
+
 			/// Return the clocktick min for the calo TP with minimum clocktick (thanks to his index)
 			uint32_t get_clocktick_min() const;
 
 			/// Return the clocktick max for the calo TP with maximum clocktick (thanks to his index)
 			uint32_t get_clocktick_max() const;
-			
+
 			/// Return the range between the clocktick min and the clocktick max
 			uint32_t get_clocktick_range() const;
-			
+
 			/// Get a list of calo trigger primitive which are in the same clocktick
-			void get_list_of_tp_per_clocktick(uint32_t clocktick_25ns_, calo_tp_collection_type & my_list_of_tps_per_clocktick_) const;
-			
+			void get_list_of_tp_per_clocktick(uint32_t clocktick_25ns_,
+																				calo_tp_collection_type & my_list_of_tps_per_clocktick_) const;
+
 			/// Get a list of calo trigger primitive which are in the same clocktick and in the same crate
-			void get_list_of_tp_per_clocktick_per_crate(uint32_t clocktick_25ns_, unsigned int crate_number_, calo_tp_collection_type & my_list_of_tps_per_clocktick_per_crate_ ) const;
+			void get_list_of_tp_per_clocktick_per_crate(uint32_t clocktick_25ns_,
+																									unsigned int crate_number_,
+																									calo_tp_collection_type & my_list_of_tps_per_clocktick_per_crate_) const;
+
+			/// Return an existing calo TP from the collection with specific EID and CT 25
+			unsigned int get_existing_tp_index(const geomtools::geom_id electronic_id_,
+																				 const uint32_t clocktick_25ns_) const;
+
+			/// Return if an given calo TP with specific EID and CT 25 already exists in the collection
+			bool existing_tp(const geomtools::geom_id electronic_id_,
+											 const uint32_t clocktick_25ns_) const;
 
 			/// Reset the list of tps
 			void reset_tps();
@@ -81,11 +92,11 @@ namespace snemo {
 														 const std::string & a_indent = "",
 														 bool a_inherit               = false) const;
 
-		protected : 
+		protected :
 			/// Check if two calo TPs do not have the same clocktick AND the same geom ID
 			void _check();
-			
-    private : 
+
+    private :
 
 			calo_tp_collection_type _calo_tps_; //!< Collection of calorimeters tracker primitive
 
@@ -104,7 +115,7 @@ BOOST_CLASS_EXPORT_KEY2(snemo::digitization::calo_tp_data,
 
 #endif /* FALAISE_DIGITIZATION_PLUGIN_SNEMO_DIGITIZATION_CALO_TP_DATA_H */
 
-/* 
+/*
 ** Local Variables: --
 ** mode: c++ --
 ** c-file-style: "gnu" --

@@ -10,7 +10,7 @@
 #include <datatools/exception.h>
 
 namespace snemo {
-  
+
   namespace digitization {
 
     // Serial tag for datatools::serialization::i_serializable interface :
@@ -22,11 +22,11 @@ namespace snemo {
     }
 
     calo_tp_data::~calo_tp_data()
-    {   
+    {
       reset();
       return;
     }
-    
+
     unsigned int calo_tp_data::get_clocktick_min_index() const
     {
 			if(_calo_tps_.size() == 0)
@@ -36,7 +36,7 @@ namespace snemo {
       unsigned int index_with_min = 0;
 
       uint32_t clocktick_min = _calo_tps_[0].get().get_clocktick_25ns();
-      
+
       for (unsigned int i = 1; i < _calo_tps_.size(); i++)
 				{
 					if (_calo_tps_[i].get().get_clocktick_25ns() < clocktick_min)
@@ -47,7 +47,7 @@ namespace snemo {
 				}
       return index_with_min;
     }
-			
+
     unsigned int calo_tp_data::get_clocktick_max_index() const
     {
 			if(_calo_tps_.size() == 0)
@@ -57,7 +57,7 @@ namespace snemo {
       unsigned int index_with_max = 0;
 
       uint32_t clocktick_max = _calo_tps_[0].get().get_clocktick_25ns();
-      
+
       for (unsigned int i = 1; i < _calo_tps_.size(); i++)
 				{
 					if (_calo_tps_[i].get().get_clocktick_25ns() > clocktick_max)
@@ -95,7 +95,7 @@ namespace snemo {
 				}
       return get_clocktick_max() - get_clocktick_min();
     }
-			
+
     void calo_tp_data::get_list_of_tp_per_clocktick(uint32_t clocktick_25ns_, calo_tp_collection_type & my_list_of_tps_per_clocktick_) const
     {
 			if(_calo_tps_.size() == 0)
@@ -128,12 +128,45 @@ namespace snemo {
       return;
     }
 
+		unsigned int calo_tp_data::get_existing_tp_index(const geomtools::geom_id electronic_id_,
+																										 const uint32_t clocktick_25ns_) const
+		{
+			unsigned int existing_tp_index;
+			for (unsigned int i = 0; i < get_calo_tps().size(); i++)
+				{
+					calo_tp a_tp = get_calo_tps()[i].get();
+					if (a_tp.get_geom_id() == electronic_id_
+							&& a_tp.get_clocktick_25ns() == clocktick_25ns_)
+						{
+							existing_tp_index = i;
+						}
+				}
+
+			return existing_tp_index;
+		}
+
+		bool calo_tp_data::existing_tp(const geomtools::geom_id electronic_id_,
+																	 const uint32_t clocktick_25ns_) const
+		{
+			bool existing_tp = false;
+			for (unsigned int i = 0; i < get_calo_tps().size(); i++)
+				{
+					const calo_tp a_tp = get_calo_tps()[i].get();
+					if (a_tp.get_geom_id() == electronic_id_
+							&& a_tp.get_clocktick_25ns() == clocktick_25ns_)
+						{
+							existing_tp = true;
+						}
+				}
+			return existing_tp;
+		}
+
     void calo_tp_data::reset_tps()
     {
       _calo_tps_.clear();
       return ;
     }
-		
+
     calo_tp & calo_tp_data::add()
     {
       {
@@ -150,7 +183,7 @@ namespace snemo {
       return _calo_tps_;
     }
 
-    calo_tp_data::calo_tp_collection_type & calo_tp_data::grab_calo_tps() 
+    calo_tp_data::calo_tp_collection_type & calo_tp_data::grab_calo_tps()
     {
       return _calo_tps_;
     }
@@ -166,12 +199,12 @@ namespace snemo {
 																	const std::string & indent_,
 																	bool inherit_) const
     {
-			
+
 			out_ << indent_ << title_ << std::endl;
-			
+
       out_ << indent_ << datatools::i_tree_dumpable::inherit_tag (inherit_)
 					 << "Calorimeter TP(s) : " << _calo_tps_.size() << std::endl;
-      
+
       return;
     }
 
@@ -185,11 +218,11 @@ namespace snemo {
 						{
 							const calo_tp & tp_b = _calo_tps_[j].get();
 
-							DT_THROW_IF(tp_a.get_clocktick_25ns() == tp_b.get_clocktick_25ns() 
+							DT_THROW_IF(tp_a.get_clocktick_25ns() == tp_b.get_clocktick_25ns()
 													&& tp_a.get_geom_id() == tp_b.get_geom_id(),
 													std::logic_error,
-													"Duplicate clocktick=" << tp_a.get_clocktick_25ns() 
-													<< " * " 
+													"Duplicate clocktick=" << tp_a.get_clocktick_25ns()
+													<< " * "
 													<< "GID=" << tp_b.get_geom_id());
 						}
 				}
@@ -200,7 +233,7 @@ namespace snemo {
 
 } // end of namespace snemo
 
-/* 
+/*
 ** Local Variables: --
 ** mode: c++ --
 ** c-file-style: "gnu" --

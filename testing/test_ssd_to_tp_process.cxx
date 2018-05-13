@@ -119,9 +119,18 @@ int main(int argc_, char** argv_)
     gg_ssb.add_registered_shape_type_id("mctools::signal::triangle_signal_shape");
     gg_ssb.add_registered_shape_type_id("mctools::signal::triangle_gate_signal_shape");
     gg_ssb.add_registered_shape_type_id("mctools::signal::multi_signal_shape");
-    gg_ssb.add_registered_shape_type_id("mygsl::linear_combination_function");
     gg_ssb.initialize_simple();
-    // gg_ssb.tree_dump(std::clog, "Signal shape builder 1", "[info] ");
+    // gg_ssb.tree_dump(std::clog, "Geiger signal shape builder", "[info] ");
+
+    mctools::signal::signal_shape_builder calo_ssb;
+    calo_ssb.set_logging_priority(datatools::logger::PRIO_DEBUG);
+    calo_ssb.set_category("sigcalo");
+    calo_ssb.add_registered_shape_type_id("mctools::signal::triangle_signal_shape");
+    calo_ssb.add_registered_shape_type_id("mctools::signal::multi_signal_shape");
+    calo_ssb.initialize_simple();
+    // calo_ssb.tree_dump(std::clog, "Calorimeter signal shape builder", "[info] ");
+
+    datatools::properties algos_config;
 
     int psd_count = 0;
     while (!reader.is_terminated())
@@ -139,13 +148,15 @@ int main(int argc_, char** argv_)
 	    double  clocktick_25_shift      = my_clock_manager.get_shift_25();
 
 	    snemo::digitization::signal_to_calo_tp_algo signal_2_calo_tp;
-	    signal_2_calo_tp.initialize(my_e_mapping);
+	    signal_2_calo_tp.initialize(algos_config,
+					my_e_mapping,
+					calo_ssb);
 	    signal_2_calo_tp.set_clocktick_reference(clocktick_25_reference);
 	    signal_2_calo_tp.set_clocktick_shift(clocktick_25_shift);
 
 	    snemo::digitization::signal_to_geiger_tp_algo signal_2_geiger_tp;
-	    signal_2_geiger_tp.initialize(my_e_mapping,
-					  my_clock_manager,
+	    signal_2_geiger_tp.initialize(algos_config,
+					  my_e_mapping,
 					  gg_ssb);
 
 	    snemo::digitization::geiger_tp_data my_geiger_tp_data;
@@ -157,7 +168,7 @@ int main(int argc_, char** argv_)
 		// a_signal.tree_dump(std::clog, "A GG signal");
 
 	    	signal_2_geiger_tp.process(SSD, my_geiger_tp_data);
-	    	my_geiger_tp_data.tree_dump(std::clog, "Geiger TP(s) data : ", "INFO : ");
+		my_geiger_tp_data.tree_dump(std::clog, "Geiger TP(s) data : ", "INFO : ");
 	      }
 
 	    if (SSD.has_signals(calo_signal_category))
@@ -166,7 +177,7 @@ int main(int argc_, char** argv_)
 		// a_signal.tree_dump(std::clog, "A Calo signal");
 
 		// signal_2_calo_tp.process(SSD, my_calo_tp_data);
-		my_calo_tp_data.tree_dump(std::clog, "Calorimeter TP(s) data : ", "INFO : ");
+		// my_calo_tp_data.tree_dump(std::clog, "Calorimeter TP(s) data : ", "INFO : ");
 	      }
 
 	    // std::clog << "DEBUG : clock25ref    = " << clocktick_25_reference << std::endl;

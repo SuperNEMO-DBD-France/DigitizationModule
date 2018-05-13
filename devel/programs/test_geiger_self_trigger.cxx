@@ -206,7 +206,6 @@ int main( int  argc_ , char **argv_  )
 
     // Creation and initialization of trigger algorithm :
     snemo::digitization::trigger_algorithm my_trigger_algo;
-    my_trigger_algo.set_electronic_mapping(my_e_mapping);
     my_trigger_algo.set_clock_manager(my_clock_manager);
     my_trigger_algo.initialize(trigger_config);
 
