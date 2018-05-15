@@ -23,15 +23,15 @@ int main( int  argc_ , char ** argv_  )
   datatools::logger::priority logging = datatools::logger::PRIO_FATAL;
   try {
     std::clog << "Test program for class 'snemo::digitization::test_memory' !" << std::endl;
-    
+
     // ******************************* WARNING ******************************
     // TRACKER TRIGGER MEM MAKER HAS CHANGED THE FOLLOWING CODE CAN'T PROCESS :
-    // ******************************* WARNING ****************************** 
+    // ******************************* WARNING ******************************
 
     // std::string production_file;
-    // production_file = "${FALAISE_DIGITIZATION_TESTING_DIR}/config/trigger/tracker/A6_D1_default_memory.data";
+    // production_file = "${FALAISE_DIGI_TESTING_DIR}/config/trigger/tracker/A6_D1_default_memory.data";
     // datatools::fetch_path_with_env(production_file);
-    
+
     // unsigned int min_multiplicity = 2;
     // unsigned int max_gap = 1;
     // snemo::digitization::tracker_trigger_mem_maker my_memory_maker;
@@ -47,17 +47,13 @@ int main( int  argc_ , char ** argv_  )
     DT_LOG_FATAL(logging, error.what());
     error_code = EXIT_FAILURE;
   }
-    
+
   catch (...) {
     DT_LOG_FATAL(logging, "Unexpected error!");
     error_code = EXIT_FAILURE;
   }
-    
+
   falaise::terminate();
   return error_code;
-  
+
 }
-
-
-
-   

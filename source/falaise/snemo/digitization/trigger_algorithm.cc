@@ -99,6 +99,14 @@ namespace snemo {
       return;
     }
 
+    void trigger_algorithm::set_electronic_mapping(const electronic_mapping& my_electronic_mapping_)
+    {
+      DT_THROW_IF(is_initialized(), std::logic_error,
+		  "Trigger algorithm is already initialized, electronic mapping can't be set ! ");
+      _tracker_algo_.set_electronic_mapping(my_electronic_mapping_);
+      return;
+    }
+
     bool trigger_algorithm::has_calorimeter_gate_size() const
     {
       return _coincidence_calorimeter_gate_size_ != 0;

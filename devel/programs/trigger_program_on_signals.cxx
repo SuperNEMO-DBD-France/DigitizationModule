@@ -94,7 +94,7 @@ int main( int  argc_ , char **argv_  )
 
     if (input_filename.empty()) {
       DT_LOG_WARNING(logging, "No input file(s) !");
-      input_filename = "${FALAISE_DIGITIZATION_TESTING_DIR}/data/calo_tracker_self_trigger_default.data.bz2";
+      input_filename = "${FALAISE_DIGI_TESTING_DIR}/data/calo_tracker_self_trigger_default.data.bz2";
       datatools::fetch_path_with_env(input_filename);
     }
 
@@ -147,7 +147,7 @@ int main( int  argc_ , char **argv_  )
     datatools::multi_properties trigger_config("name", "type", "Trigger parameters multi section configuration");
 
     if (trigger_config_filename.empty()) {
-      trigger_config_filename = "${FALAISE_DIGITIZATION_DIR}/resources/config/snemo/common/1.0/trigger_parameters.conf";
+      trigger_config_filename = "${FALAISE_DIGI_DIR}/resources/config/snemo/common/1.0/trigger_parameters.conf";
     }
     datatools::fetch_path_with_env(trigger_config_filename);
     trigger_config.read(trigger_config_filename);

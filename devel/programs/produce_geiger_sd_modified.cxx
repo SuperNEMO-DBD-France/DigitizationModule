@@ -101,7 +101,7 @@ int main( int  argc_ , char **argv_  )
 
     if (input_filenames.size() == 0) {
       DT_LOG_WARNING(logging, "No input file(s), default input file use : !");
-      std::string input_default_file = "${FALAISE_DIGITIZATION_TESTING_DIR}/data/Se82_0nubb-source_strips_bulk_SD_10_events.brio";
+      std::string input_default_file = "${FALAISE_DIGI_TESTING_DIR}/data/Se82_0nubb-source_strips_bulk_SD_10_events.brio";
       input_filenames.push_back(input_default_file);
       DT_LOG_WARNING(logging, "Default input file : " << input_filenames[0] << " !");
     }
@@ -171,7 +171,7 @@ int main( int  argc_ , char **argv_  )
     modif_sd_config.store ("files.incremental.increment", 1);
     modif_sd_config.store ("files.incremental.stop", 1000);
     modif_sd_writer.initialize_standalone(modif_sd_config);
-    
+
     // Event reader :
     dpp::input_module reader;
     datatools::properties reader_config;

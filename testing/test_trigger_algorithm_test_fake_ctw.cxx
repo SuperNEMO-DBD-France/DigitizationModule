@@ -158,11 +158,11 @@ int main( int  argc_ , char **argv_  )
       datatools::multi_properties::entry & tra_entry = trigger_config.grab("tracker");
 
       // Loading memory from external files
-      std::string mem1 = "${FALAISE_DIGITIZATION_TESTING_DIR}/config/trigger/tracker/mem1.conf";
-      std::string mem2 = "${FALAISE_DIGITIZATION_TESTING_DIR}/config/trigger/tracker/mem2.conf";
-      std::string mem3 = "${FALAISE_DIGITIZATION_TESTING_DIR}/config/trigger/tracker/mem3.conf";
-      std::string mem4 = "${FALAISE_DIGITIZATION_TESTING_DIR}/config/trigger/tracker/mem4.conf";
-      std::string mem5 = "${FALAISE_DIGITIZATION_TESTING_DIR}/config/trigger/tracker/mem5.conf";
+      std::string mem1 = "${FALAISE_DIGI_TESTING_DIR}/config/trigger/tracker/mem1.conf";
+      std::string mem2 = "${FALAISE_DIGI_TESTING_DIR}/config/trigger/tracker/mem2.conf";
+      std::string mem3 = "${FALAISE_DIGI_TESTING_DIR}/config/trigger/tracker/mem3.conf";
+      std::string mem4 = "${FALAISE_DIGI_TESTING_DIR}/config/trigger/tracker/mem4.conf";
+      std::string mem5 = "${FALAISE_DIGI_TESTING_DIR}/config/trigger/tracker/mem5.conf";
       datatools::fetch_path_with_env(mem1);
       datatools::fetch_path_with_env(mem2);
       datatools::fetch_path_with_env(mem3);

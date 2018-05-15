@@ -49,6 +49,9 @@ namespace snemo {
 			/// Set the clock manager object
 			void set_clock_manager(const clock_utils & my_clock_manager_);
 
+			/// Set the clock manager object
+			void set_electronic_mapping(const electronic_mapping& my_electronic_mapping_);
+
 			/// Check if calorimeter gate size is set
 			bool has_calorimeter_gate_size() const;
 

@@ -161,6 +161,25 @@ namespace snemo {
       config_.export_and_rename_starting_with(geiger_tp_to_ctw_algo_config, geiger_tp_to_ctw_algo_key, "");
       _geiger_tp_to_ctw_algo_.initialize(geiger_tp_to_ctw_algo_config);
 
+
+      std::string trigger_config_filename;
+      if (config_.has_key("trigger_filename")) {
+	trigger_config_filename = config_.fetch_string("trigger_filename");
+      }
+
+      datatools::fetch_path_with_env(trigger_config_filename);
+      std::clog << "Trigger configuration filename = " << trigger_config_filename << std::endl;
+
+      datatools::multi_properties trigger_multi_prop("name", "type", "Trigger parameters multi section configuration");
+      trigger_multi_prop.read(trigger_config_filename);
+
+      trigger_multi_prop.tree_dump(std::clog, "Trigger multi properties");
+
+      _trigger_algo_.set_clock_manager(_clock_utils_);
+      // Electronic mapping is needed for tracker trigger algorithm
+      _trigger_algo_.set_electronic_mapping(_electronic_mapping_);
+      _trigger_algo_.initialize(trigger_multi_prop);
+
       _initialized_ = true;
       return;
     }
@@ -184,7 +203,7 @@ namespace snemo {
       _geiger_signal_to_tp_algo_.reset();
       _calo_tp_to_ctw_algo_.reset();
       _geiger_tp_to_ctw_algo_.reset();
-      // _trigger_algo_.reset();
+      _trigger_algo_.reset();
       return;
     }
 
@@ -225,8 +244,6 @@ namespace snemo {
       _calo_tp_to_ctw_algo_.process(calo_tp_data,
 				    calo_ctw_data);
 
-      calo_tp_data.tree_dump(std::clog, "Calorimeter TP(s) data : ", "INFO : ");
-      calo_ctw_data.tree_dump(std::clog, "Calorimeter CTW(s) data : ", "INFO : ");
 
       int32_t clocktick_800_reference = _clock_utils_.get_clocktick_800_ref();
       // double  clocktick_800_shift     = _clock_utils_.get_shift_800();
@@ -238,6 +255,17 @@ namespace snemo {
 
       geiger_ctw_data gg_ctw_data;
       _geiger_tp_to_ctw_algo_.process(gg_tp_data, gg_ctw_data);
+
+
+      calo_tp_data.tree_dump(std::clog, "Calorimeter TP(s) data : ", "INFO : ");
+      calo_ctw_data.tree_dump(std::clog, "Calorimeter CTW(s) data : ", "INFO : ");
+
+      gg_tp_data.tree_dump(std::clog, "Geiger TP(s) data : ", "INFO : ");
+      gg_ctw_data.tree_dump(std::clog, "Geiger CTW(s) data : ", "INFO : ");
+
+      _trigger_algo_.process(calo_ctw_data,
+			     gg_ctw_data);
+
 
 
 

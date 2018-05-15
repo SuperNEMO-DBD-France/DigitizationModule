@@ -17,14 +17,17 @@ namespace snemo {
   namespace digitization {
 
     void build_signal_name(const int id_,
-			  std::string & name_);
+													 std::string & name_);
 
     void build_private_signal_name(const int id_, std::string & name_);
 
     bool is_private_signal_name(const std::string & name_);
 
     void build_shape(mctools::signal::signal_shape_builder & builder_,
-		     const mctools::signal::base_signal & signal_);
+										 const mctools::signal::base_signal & signal_);
+
+    void build_multi_signal(mctools::signal::base_signal & a_multi_signal_,
+														const std::vector<mctools::signal::base_signal> & list_of_atomic_signal_);
 
   } // end of namespace asb
 

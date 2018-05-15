@@ -32,6 +32,7 @@
 // - Bayeux/datatools :
 #include <bayeux/datatools/properties.h>
 #include <bayeux/datatools/exception.h>
+#include <bayeux/datatools/clhep_units.h>
 
 namespace snemo {
 
@@ -83,6 +84,49 @@ namespace snemo {
                                    signal_shape_params);
       return;
     }
+
+    void build_multi_signal(mctools::signal::base_signal & a_multi_signal_,
+			    const std::vector<mctools::signal::base_signal> & list_of_atomic_signal_)
+    {
+      datatools::properties multi_signal_config;
+      std::vector<std::string> component_labels;
+
+      for (unsigned int i = 0; i < list_of_atomic_signal_.size(); i++)
+	{
+	  const mctools::signal::base_signal atomic_signal = list_of_atomic_signal_[i];
+	  const int comp_sig_id    = atomic_signal.get_hit_id();
+	  std::string comp_sig_key = "sig" + boost::lexical_cast<std::string>(comp_sig_id);
+	  component_labels.push_back(comp_sig_key);
+	  std::string comp_sig_prefix = "components." + comp_sig_key + ".";
+	  std::string comp_sig_label;
+	  build_private_signal_name(comp_sig_id, comp_sig_label);
+
+	  datatools::properties comp_shape_parameters;
+	  atomic_signal.get_auxiliaries().export_and_rename_starting_with(comp_shape_parameters,
+									  mctools::signal::base_signal::shape_parameter_prefix(),
+									  "");
+	  a_multi_signal_.add_private_shape(comp_sig_label,
+					   atomic_signal.get_shape_type_id(),
+					   comp_shape_parameters);
+
+	  // Private shape
+	  std::string key_key        = comp_sig_prefix + "key";
+	  std::string time_shift_key = comp_sig_prefix + "time_shift";
+	  std::string scaling_key    = comp_sig_prefix + "scaling";
+	  multi_signal_config.store(key_key, comp_sig_label);
+	  multi_signal_config.store_real_with_explicit_unit(time_shift_key, 0.0 * CLHEP::ns);
+	  multi_signal_config.set_unit_symbol(time_shift_key, "ns");
+	  multi_signal_config.store_real(scaling_key, 1.0);
+
+	}
+
+      multi_signal_config.store("components", component_labels);
+      a_multi_signal_.set_shape_parameters(multi_signal_config);
+      a_multi_signal_.initialize(multi_signal_config);
+
+      return;
+    }
+
 
   } // end of namespace digitization
 

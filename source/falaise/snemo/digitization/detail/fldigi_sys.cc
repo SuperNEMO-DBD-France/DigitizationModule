@@ -244,7 +244,7 @@ namespace snemo {
                        "Registration of the Digitization Falaise plugin resource path : '"
                        << snemo::digitization::get_resource_dir() << "'");
           fldigi_lib_infos.store_string(datatools::library_info::keys::install_resource_dir(),
-                                       snemo::digitization::get_resource_dir());
+                                        snemo::digitization::get_resource_dir());
 
           // Would it be useful to add this ???
           // fldigi_lib_infos.store_string(datatools::library_info::keys::install_lib_dir(),
@@ -253,6 +253,8 @@ namespace snemo {
           // If the 'FALAISE_DIGI_RESOURCE_DIR' environment variable is set, it will supersede
           // the official registered resource path above through the 'datatools::fetch_path_with_env'
           // function:
+          DT_LOG_TRACE(_logging_,
+                       "Definition of the FALAISE_DIGI_RESOURCE_DIR env for the Digitization Falaise plugin resource path");
           fldigi_lib_infos.store_string(datatools::library_info::keys::env_resource_dir(),
                                        "FALAISE_DIGI_RESOURCE_DIR");
 

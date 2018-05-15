@@ -85,11 +85,11 @@ int main( int  argc_ , char **argv_  )
 		<< "-op [ --output path ]    set a path where all files are stored" << std::endl
 		<< "-n  [ --number ]         set the number of events" << std::endl
 		<< "Example : " << std::endl << std::endl
-		<< "$ BuildProducts/bin/falaisedigitizationplugin-test_tracker_trigger_algorithm_load_from_file --input ${FALAISE_DIGITIZATION_TESTING_DIR}/data/100_events_tracker_matrix_output.data -op ${FALAISE_DIGITIZATION_TESTING_DIR}/output_default"
+		<< "$ BuildProducts/bin/falaisedigitizationplugin-test_tracker_trigger_algorithm_load_from_file --input ${FALAISE_DIGI_TESTING_DIR}/data/100_events_tracker_matrix_output.data -op ${FALAISE_DIGI_TESTING_DIR}/output_default"
 		<< " --number 5" << std::endl << std::endl
 		<< "If no options are set, programs have default values :" << std::endl << std::endl
-		<< "input file           = ${FALAISE_DIGITIZATION_TESTING_DIR}/data/100_events_tracker_matrix_output.data" << std::endl
-		<< "output path          = ${FALAISE_DIGITIZATION_TESTING_DIR}/output_default/" << std::endl
+		<< "input file           = ${FALAISE_DIGI_TESTING_DIR}/data/100_events_tracker_matrix_output.data" << std::endl
+		<< "output path          = ${FALAISE_DIGI_TESTING_DIR}/output_default/" << std::endl
 		<< "number of events     = 10" << std::endl << std::endl;
       return 0;
     }
@@ -124,7 +124,7 @@ int main( int  argc_ , char **argv_  )
       datatools::fetch_path_with_env(input_filename);
       data_filename = input_filename;
     }else{
-      data_filename = "${FALAISE_DIGITIZATION_TESTING_DIR}/data/input_matrix_tracker.data";
+      data_filename = "${FALAISE_DIGI_TESTING_DIR}/data/input_matrix_tracker.data";
       datatools::fetch_path_with_env(data_filename);
       std::clog << "Missing input filename ! " << std::endl;
     }
@@ -144,11 +144,11 @@ int main( int  argc_ , char **argv_  )
     my_e_mapping.initialize();
 
     // Loading memory from external files :
-    std::string mem1 = "${FALAISE_DIGITIZATION_TESTING_DIR}/config/trigger/tracker/mem1.conf";
-    std::string mem2 = "${FALAISE_DIGITIZATION_TESTING_DIR}/config/trigger/tracker/mem2.conf";
-    std::string mem3 = "${FALAISE_DIGITIZATION_TESTING_DIR}/config/trigger/tracker/mem3.conf";
-    std::string mem4 = "${FALAISE_DIGITIZATION_TESTING_DIR}/config/trigger/tracker/mem4.conf";
-    std::string mem5 = "${FALAISE_DIGITIZATION_TESTING_DIR}/config/trigger/tracker/mem5.conf";
+    std::string mem1 = "${FALAISE_DIGI_TESTING_DIR}/config/trigger/tracker/mem1.conf";
+    std::string mem2 = "${FALAISE_DIGI_TESTING_DIR}/config/trigger/tracker/mem2.conf";
+    std::string mem3 = "${FALAISE_DIGI_TESTING_DIR}/config/trigger/tracker/mem3.conf";
+    std::string mem4 = "${FALAISE_DIGI_TESTING_DIR}/config/trigger/tracker/mem4.conf";
+    std::string mem5 = "${FALAISE_DIGI_TESTING_DIR}/config/trigger/tracker/mem5.conf";
 
     datatools::fetch_path_with_env(mem1);
     datatools::fetch_path_with_env(mem2);
@@ -169,7 +169,7 @@ int main( int  argc_ , char **argv_  )
     my_tracker_trigger_algo.set_electronic_mapping(my_e_mapping);
     // Open an output
     bool tmp_file_delete = true;
-    std::string path = "/tmp/; //${FALAISE_DIGITIZATION_TESTING_DIR}/output_default";
+    std::string path = "/tmp/; //${FALAISE_DIGI_TESTING_DIR}/output_default";
     std::string prefix = "temp_";
     my_tracker_trigger_algo.set_tmp_file(path, prefix, tmp_file_delete);
     my_tracker_trigger_algo.initialize(tracker_config);

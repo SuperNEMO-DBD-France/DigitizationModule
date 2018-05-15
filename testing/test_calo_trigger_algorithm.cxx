@@ -92,7 +92,7 @@ int main( int  argc_ , char **argv_  )
     if(!input_filename.empty()){
       pipeline_simulated_data_filename = input_filename;
     }else{
-      //pipeline_simulated_data_filename = "${FALAISE_DIGITIZATION_TESTING_DIR}/data/Se82_0nubb-source_strips_bulk_SD_10_events.brio";
+      //pipeline_simulated_data_filename = "${FALAISE_DIGI_TESTING_DIR}/data/Se82_0nubb-source_strips_bulk_SD_10_events.brio";
       pipeline_simulated_data_filename = "${DATA_NEMO_PERSO_DIR}/trigger/simulated_data_brio/Se82_0nubb_500000-source_strips_bulk_SD.brio";
     }
     datatools::fetch_path_with_env(pipeline_simulated_data_filename);
@@ -110,7 +110,7 @@ int main( int  argc_ , char **argv_  )
     datatools::things ER;
 
     // Loading memory from external files
-    // std::string memory_mult_layer   = "${FALAISE_DIGITIZATION_TESTING_DIR}/config/trigger/tracker/A5_D1_default_min_mult_memory.data";
+    // std::string memory_mult_layer   = "${FALAISE_DIGI_TESTING_DIR}/config/trigger/tracker/A5_D1_default_min_mult_memory.data";
     // datatools::fetch_path_with_env(memory_lvl1_to_lvl2);
 
     snemo::digitization::electronic_mapping my_e_mapping;

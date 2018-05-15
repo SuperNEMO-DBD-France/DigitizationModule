@@ -202,7 +202,7 @@ target_include_directories(Falaise_Digitization
 target_link_libraries(Falaise_Digitization PUBLIC Falaise::FalaiseModule)
 
 # target_compile_features(Falaise_Digitization PUBLIC ${FALAISE_CXX_COMPILE_FEATURES})
-# target_compile_definitions(Falaise_Digitization PRIVATE ENABLE_BINRELOC)
+target_compile_definitions(Falaise_Digitization PRIVATE ENABLE_BINRELOC)
 # target_include_directories(Falaise_Digitization PUBLIC
 #   $<BUILD_INTERFACE:${FALAISE_BUILD_INCLUDEDIR}>
 #   $<BUILD_INTERFACE:${PROJECT_BUILD_INCLUDEDIR}/falaise>

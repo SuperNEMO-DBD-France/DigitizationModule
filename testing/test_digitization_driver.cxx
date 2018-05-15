@@ -38,6 +38,7 @@
 #include <falaise/snemo/datamodels/sim_digi_data.h>
 
 // This project :
+#include <snemo/digitization/fldigi.h>
 #include <snemo/digitization/digitization_driver.h>
 
 struct params_type
@@ -55,6 +56,7 @@ void test_driver_1(const params_type &);
 int main( int  argc_ , char **argv_  )
 {
   falaise::initialize(argc_, argv_);
+  snemo::digitization::initialize(argc_, argv_);
   int error_code = EXIT_SUCCESS;
   try {
     std::clog << "Test program for class 'snemo::asb::analog_signal_builder_module'!" << std::endl;
@@ -116,6 +118,7 @@ int main( int  argc_ , char **argv_  )
     std::cerr << "error: " << "Unexpected error!" << std::endl;
     error_code = EXIT_FAILURE;
   }
+  snemo::digitization::terminate();
   falaise::terminate();
   return (error_code);
 }
@@ -128,7 +131,7 @@ void test_driver_1(const params_type & params_)
   std::string SDD_bank_label   = "SDD"; // Simulated Digitized Data "SDD" bank label
 
   std::string SSD_filename = "";
-  if (params_.input_filename.empty()) SSD_filename = "${FALAISE_DIGITIZATION_TESTING_DIR}/data/Se82_0nubb-source_strips_bulk_SSD_10_events.brio";
+  if (params_.input_filename.empty()) SSD_filename = "${FALAISE_DIGI_TESTING_DIR}/data/Se82_0nubb-source_strips_bulk_SSD_10_events.brio";
   else SSD_filename = params_.input_filename;
   datatools::fetch_path_with_env(SSD_filename);
 
@@ -162,9 +165,11 @@ void test_driver_1(const params_type & params_)
   datatools::things ER;
 
   std::string digi_config_filename = "";
-  if (params_.config_filename.empty()) digi_config_filename =  "${FALAISE_DIGITIZATION_RESOURCES_DIR}/modules/Digitization/config/snemo/demonstrator/simulation/digitization/0.1/digitization.conf";
+  if (params_.config_filename.empty()) digi_config_filename =  "${FALAISE_DIGI_RESOURCE_DIR}/config/snemo/demonstrator/simulation/digitization/0.1/digitization.conf";
   else digi_config_filename = params_.config_filename;
   datatools::fetch_path_with_env(digi_config_filename);
+
+  std::clog << "Digi config filename = " << digi_config_filename << std::endl;
 
   datatools::properties general_config;
   general_config.read_configuration(digi_config_filename);

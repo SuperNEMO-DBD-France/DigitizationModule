@@ -18,30 +18,115 @@ namespace snemo {
 
   namespace digitization {
 
-    signal_to_geiger_tp_algo::signal_to_tp_working_data::signal_to_tp_working_data()
+    signal_to_geiger_tp_algo::geiger_feb_config::geiger_feb_config()
     {
       reset();
     }
 
-    void signal_to_geiger_tp_algo::signal_to_tp_working_data::reset()
+    signal_to_geiger_tp_algo::geiger_feb_config::~geiger_feb_config()
+    {
+      if (is_initialized())
+	{
+	  reset();
+	}
+    }
+
+    void signal_to_geiger_tp_algo::geiger_feb_config::initialize(const datatools::properties & config_)
+    {
+      _set_defaults();
+
+      if (config_.has_key("VLNT")) {
+        double VLNT_ = config_.fetch_real_with_explicit_dimension("VLNT", "electric_potential");
+        this->VLNT = VLNT_;
+      }
+
+      if (config_.has_key("VHNT")) {
+        double VHNT_ = config_.fetch_real_with_explicit_dimension("VHNT", "electric_potential");
+        this->VHNT = VHNT_;
+      }
+
+      if (config_.has_key("VHPT")) {
+        double VHPT_ = config_.fetch_real_with_explicit_dimension("VHPT", "electric_potential");
+        this->VHPT = VHPT_;
+      }
+
+      initialized = true;
+
+      return;
+    }
+
+    bool signal_to_geiger_tp_algo::geiger_feb_config::is_initialized() const
+    {
+      return initialized;
+    }
+
+    void signal_to_geiger_tp_algo::geiger_feb_config::reset()
+    {
+      datatools::invalidate(VLNT);
+      datatools::invalidate(VHNT);
+      datatools::invalidate(VHPT);
+      initialized = false;
+      return;
+    }
+
+    void signal_to_geiger_tp_algo::geiger_feb_config::_set_defaults()
+    {
+      this->VLNT = -0.015 * CLHEP::volt;
+      this->VHNT = -0.12 * CLHEP::volt;
+      this->VHPT = +0.12 * CLHEP::volt;
+      return;
+    }
+
+    void signal_to_geiger_tp_algo::geiger_feb_config::tree_dump(std::ostream & out_,
+							    const std::string & title_,
+							    const std::string & indent_,
+							    bool inherit_) const
+    {
+      if (!title_.empty()) out_ << indent_ << title_ << std::endl;
+
+      out_ << indent_ << datatools::i_tree_dumpable::tag
+           << "VLNT : " << this->VLNT << std::endl;
+
+      out_ << indent_ << datatools::i_tree_dumpable::tag
+           << "VHNT : " << this->VHNT << std::endl;
+
+      out_ << indent_ << datatools::i_tree_dumpable::tag
+           << "VHPT  : " << this->VHPT << std::endl;
+
+      return;
+    }
+
+    signal_to_geiger_tp_algo::geiger_digi_working_data::geiger_digi_working_data()
+    {
+      reset();
+    }
+
+
+    signal_to_geiger_tp_algo::geiger_digi_working_data::~geiger_digi_working_data()
+    {
+      reset();
+      return;
+    }
+
+    void signal_to_geiger_tp_algo::geiger_digi_working_data::reset()
     {
       signal_ref = 0;
       signal_deriv.reset();
-      feb_id.reset();
+      cell_electronic_id.reset();
       clocktick_800 = clock_utils::INVALID_CLOCKTICK;
       datatools::invalidate(trigger_time);
     }
 
-    bool signal_to_geiger_tp_algo::signal_to_tp_working_data::operator<(const signal_to_tp_working_data & other_) const
+    bool signal_to_geiger_tp_algo::geiger_digi_working_data::operator<(const geiger_digi_working_data & other_) const
     {
       return this-> clocktick_800 < other_.clocktick_800;
     }
 
-    void signal_to_geiger_tp_algo::signal_to_tp_working_data::tree_dump(std::ostream & out_,
-									const std::string & title_,
-									bool dump_signal_,
-									const std::string & indent_,
-									bool inherit_) const
+    void signal_to_geiger_tp_algo::geiger_digi_working_data::tree_dump(std::ostream & out_,
+								       const std::string & title_,
+								       bool dump_signal_,
+								       const std::string & indent_,
+								       bool inherit_) const
     {
 
       if (!title_.empty()) out_ << indent_ << title_ << std::endl;
@@ -55,7 +140,7 @@ namespace snemo {
            << "Geometric ID     : " << signal_ref->get_geom_id() << std::endl;
 
       out_ << indent_ << datatools::i_tree_dumpable::tag
-           << "Electronic ID    : " << feb_id << std::endl;
+           << "Electronic cell ID    : " << cell_electronic_id << std::endl;
 
       out_ << indent_ << datatools::i_tree_dumpable::tag
            << "Trigger time     : " << trigger_time << std::endl;
@@ -101,20 +186,8 @@ namespace snemo {
         _signal_category_ = signal_category;
       }
 
-      if (config_.has_key("VLNT")) {
-        double VLNT = config_.fetch_real_with_explicit_dimension("VLNT", "electric_potential");
-        _VLNT_ = VLNT;
-      }
-
-      if (config_.has_key("VHNT")) {
-        double VHNT = config_.fetch_real_with_explicit_dimension("VHNT", "electric_potential");
-        _VHNT_ = VHNT;
-      }
-
-      if (config_.has_key("VHPT")) {
-        double VHPT = config_.fetch_real_with_explicit_dimension("VHPT", "electric_potential");
-        _VHPT_ = VHPT;
-      }
+      _gg_feb_config_.initialize(config_);
+      _gg_feb_config_.tree_dump(std::clog, "Geiger FEB configuration");
 
       _initialized_ = true;
       return;
@@ -163,35 +236,35 @@ namespace snemo {
       return;
     }
 
-    void signal_to_geiger_tp_algo::add_geiger_tp(const signal_to_tp_working_data & my_wd_data_,
+    void signal_to_geiger_tp_algo::add_geiger_tp(const geiger_digi_working_data & my_wd_data_,
 						 uint32_t signal_clocktick_,
  						 int32_t hit_id_,
 						 geiger_tp_data & my_geiger_tp_data_)
     {
       snemo::digitization::geiger_tp & gg_tp = my_geiger_tp_data_.add();
       geomtools::geom_id temporary_feb_id;
-      temporary_feb_id.set_type(my_wd_data_.feb_id.get_type());
+      temporary_feb_id.set_type(my_wd_data_.cell_electronic_id.get_type());
       temporary_feb_id.set_depth(mapping::BOARD_DEPTH);
-      my_wd_data_.feb_id.extract_to(temporary_feb_id);
+      my_wd_data_.cell_electronic_id.extract_to(temporary_feb_id);
       gg_tp.set_header(hit_id_,
 		       temporary_feb_id,
 		       signal_clocktick_,
 		       mapping::THREE_WIRES_TRACKER_MODE,
 		       mapping::SIDE_MODE,
 		       mapping::NUMBER_OF_CONNECTED_ROWS);
-      gg_tp.set_gg_tp_active_bit(my_wd_data_.feb_id.get(mapping::CHANNEL_INDEX));
+      gg_tp.set_gg_tp_active_bit(my_wd_data_.cell_electronic_id.get(mapping::CHANNEL_INDEX));
       // gg_tp.set_auxiliaries(my_wd_data_.auxiliaries);
-      _activated_bits_[my_wd_data_.feb_id.get(mapping::CHANNEL_INDEX)] = 1;
+      _activated_bits_[my_wd_data_.cell_electronic_id.get(mapping::CHANNEL_INDEX)] = 1;
       // gg_tp.tree_dump(std::clog, "***** Geiger TP creation : *****", "INFO : ");
 
       return;
     }
 
-    void signal_to_geiger_tp_algo::update_gg_tp(const signal_to_tp_working_data & my_wd_data_,
+    void signal_to_geiger_tp_algo::update_gg_tp(const geiger_digi_working_data & my_wd_data_,
 						geiger_tp & my_geiger_tp_)
     {
-      my_geiger_tp_.set_gg_tp_active_bit(my_wd_data_.feb_id.get(mapping::CHANNEL_INDEX));
-      _activated_bits_[my_wd_data_.feb_id.get(mapping::CHANNEL_INDEX)] = 1;
+      my_geiger_tp_.set_gg_tp_active_bit(my_wd_data_.cell_electronic_id.get(mapping::CHANNEL_INDEX));
+      _activated_bits_[my_wd_data_.cell_electronic_id.get(mapping::CHANNEL_INDEX)] = 1;
       // my_geiger_tp_.tree_dump(std::clog, "***** Geiger TP Update : *****", "INFO : ");
       return;
     }
@@ -204,14 +277,11 @@ namespace snemo {
 	}
       _signal_category_ = "sigtracker";
 
-      _VLNT_ = -0.02 * CLHEP::volt;
-      _VHNT_ = -0.11 * CLHEP::volt;
-      _VHPT_ = +0.11 * CLHEP::volt;
       return;
     }
 
     void signal_to_geiger_tp_algo::_prepare_working_data(const mctools::signal::signal_data & SSD_,
-							 working_data_collection_type & wd_collection_)
+							gg_digi_working_data_collection_type & wd_collection_)
     {
       DT_THROW_IF(!is_initialized(), std::logic_error, "Signal to geiger TP algorithm is not initialized ! ");
       std::size_t number_of_hits = SSD_.get_number_of_signals(get_signal_category());
@@ -234,12 +304,10 @@ namespace snemo {
 						a_mutable_signal);
 	    // a_mutable_signal.tree_dump(std::clog, "Mutable signal with shape instatiated");
 
-	    signal_to_tp_working_data a_wd;
+	    geiger_digi_working_data a_wd;
 	    a_wd.signal_ref = & a_mutable_signal;
 
 	    double event_time_ref = a_wd.signal_ref->get_time_ref();
-
-	    a_mutable_signal.tree_dump(std::clog, "Mutable signal");
 
 	    const mygsl::i_unary_function * signal_functor = & a_mutable_signal.get_shape();
 	    a_wd.signal_deriv.set_functor(*signal_functor);
@@ -260,7 +328,7 @@ namespace snemo {
 
 		y *= CLHEP::meter / CLHEP::volt;
 
-		if (y <= _VLNT_ / CLHEP::volt)
+		if (y <= _gg_feb_config_.VLNT / CLHEP::volt)
 		  {
 		    first_trigger = true;
 		    trigger_time = x;
@@ -285,7 +353,7 @@ namespace snemo {
 
 
 	    a_wd.trigger_time = trigger_time;
-	    a_wd.feb_id        = electronic_id;
+	    a_wd.cell_electronic_id        = electronic_id;
 	    a_wd.clocktick_800 = a_geiger_signal_clocktick;
 
 	    // a_wd.tree_dump(std::clog, "A working data #" + std::to_string(i));
@@ -323,13 +391,13 @@ namespace snemo {
       return ;
     }
 
-    void signal_to_geiger_tp_algo::_sort_working_data(working_data_collection_type & wd_collection_)
+    void signal_to_geiger_tp_algo::_sort_working_data(gg_digi_working_data_collection_type & wd_collection_)
     {
       std::sort(wd_collection_.begin(), wd_collection_.end());
       return;
     }
 
-    void signal_to_geiger_tp_algo::_geiger_tp_process(const working_data_collection_type & wd_collection_,
+    void signal_to_geiger_tp_algo::_geiger_tp_process(const gg_digi_working_data_collection_type & wd_collection_,
 						      geiger_tp_data & my_geiger_tp_data_)
     {
       DT_THROW_IF(!is_initialized(), std::logic_error, "Signal to geiger TP algorithm is not initialized ! ");
@@ -345,7 +413,7 @@ namespace snemo {
 	      bool existing_ct = false;
 	      std::vector<datatools::handle<geiger_tp> > my_list_of_gg_tp_per_eid;
 
-	      my_geiger_tp_data_.get_list_of_gg_tp_per_eid(wd_collection_[i].feb_id , my_list_of_gg_tp_per_eid);
+	      my_geiger_tp_data_.get_list_of_gg_tp_per_eid(wd_collection_[i].cell_electronic_id , my_list_of_gg_tp_per_eid);
 
 	      if (my_list_of_gg_tp_per_eid.empty())
 		{
@@ -414,10 +482,9 @@ namespace snemo {
 					    geiger_tp_data & my_geiger_tp_data_)
     {
       DT_THROW_IF(!is_initialized(), std::logic_error, "Signal to geiger TP algorithm is not initialized ! ");
-      working_data_collection_type my_wd_collection;
-      _prepare_working_data(SSD_, my_wd_collection);
-      _sort_working_data(my_wd_collection);
-      _geiger_tp_process(my_wd_collection, my_geiger_tp_data_);
+      _prepare_working_data(SSD_, _gg_digi_data_collection_);
+      _sort_working_data(_gg_digi_data_collection_);
+      _geiger_tp_process(_gg_digi_data_collection_, my_geiger_tp_data_);
 
       // my_geiger_tp_data_.tree_dump(std::clog, "GG TP DATA");
 

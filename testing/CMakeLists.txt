@@ -25,6 +25,7 @@ set(FalaiseDigitizationPlugin_TESTS
   # test_sd_to_tp_process.cxx
   test_ssd_to_tp_process.cxx
   test_signal_to_geiger_tp_algo.cxx
+  test_signal_to_calo_tp_algo.cxx
   test_simulated_data_reading.cxx
   test_tracker_trigger_algorithm.cxx
   test_trigger_algorithm.cxx
@@ -37,9 +38,9 @@ set(FalaiseDigitizationPlugin_TESTS
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 set(_FalaiseDigitizationPlugin_TEST_ENVIRONMENT
-  "FALAISE_DIGITIZATION_RESOURCE_DIR=${PROJECT_SOURCE_DIR}/resources/modules/Digitization "
-  "FALAISE_DIGITIZATION_TESTING_DIR=${CMAKE_CURRENT_SOURCE_DIR}"
-  "FALAISE_DIGITIZATION_SYS_LOGGING=trace"
+  "FALAISE_DIGI_RESOURCE_DIR=${PROJECT_SOURCE_DIR}/resources/modules/Digitization "
+  "FALAISE_DIGI_TESTING_DIR=${CMAKE_CURRENT_SOURCE_DIR}"
+  "FALAISE_DIGI_SYS_LOGGING=trace"
   )
 
 message(STATUS "[DEBUG] TEST_ENVIRONMENT= ${_FalaiseDigitizationPlugin_TEST_ENVIRONMENT}")

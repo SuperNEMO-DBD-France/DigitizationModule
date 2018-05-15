@@ -39,12 +39,36 @@ namespace snemo {
     {
     public :
 
-			class signal_to_tp_working_data
+			class geiger_feb_config
 			{
 			public:
-        signal_to_tp_working_data();
+				geiger_feb_config();
+				virtual ~geiger_feb_config();
+				void initialize(const datatools::properties & config_);
+				bool is_initialized() const;
 				void reset();
- 				bool operator<(const signal_to_tp_working_data &) const;
+				virtual void tree_dump(std::ostream & out_         = std::clog,
+															 const std::string & title_  = "",
+															 const std::string & indent_ = "",
+															 bool inherit_               = false) const;
+
+				bool   initialized;    //!< Initialization flag
+				double VLNT; //!< Anodic low negative threshold in Volts
+				double VHNT; //!< Anodic high negative threshold in Volts
+				double VHPT; //!< Anodic high positive threshold in Volts
+
+			protected :
+				void _set_defaults();
+
+			};
+
+			class geiger_digi_working_data
+			{
+			public:
+				geiger_digi_working_data();
+        virtual ~geiger_digi_working_data();
+				void reset();
+ 				bool operator<(const geiger_digi_working_data &) const;
 				void tree_dump(std::ostream & out_         = std::clog,
 											 const std::string & title_  = "",
 											 bool dump_signal_           = false,
@@ -53,12 +77,22 @@ namespace snemo {
 
 				const mctools::signal::base_signal * signal_ref;
 				mygsl::unary_function_promoted_with_numeric_derivative signal_deriv;
-				geomtools::geom_id    feb_id;
-				double                trigger_time;
-				uint32_t              clocktick_800;
+				int32_t            hit_id;
+				geomtools::geom_id geom_id;
+				geomtools::geom_id cell_electronic_id;
+				double trigger_time;
+				double anodic_R0;
+				double anodic_R1;
+				double anodic_R2;
+				double anodic_R3;
+				double anodic_R4;
+				double cathodic_R5;
+				double cathodic_R6;
+
+				uint32_t  clocktick_800;
 			};
 
-			typedef std::vector<signal_to_tp_working_data> working_data_collection_type;
+			typedef std::vector<geiger_digi_working_data> gg_digi_working_data_collection_type;
 
       /// Default constructor
       signal_to_geiger_tp_algo();
@@ -93,13 +127,13 @@ namespace snemo {
       void set_clocktick_shift(double clocktick_shift_);
 
 			/// Add a geiger tp from a working data
-			void add_geiger_tp(const signal_to_tp_working_data & my_wd_data_,
+			void add_geiger_tp(const geiger_digi_working_data & my_wd_data_,
 												 uint32_t signal_clocktick_,
 												 int32_t hit_id_,
 												 geiger_tp_data & my_geiger_tp_data_);
 
 			/// Update a geiger tp
-			void update_gg_tp(const signal_to_tp_working_data & my_wd_data_,
+			void update_gg_tp(const geiger_digi_working_data & my_wd_data_,
 												geiger_tp & my_geiger_tp_);
 
       /// Process to fill a geiger tp data object from simulated data
@@ -113,13 +147,13 @@ namespace snemo {
 
 			/// Prepare the working data collection (sort by clocktick)
 			void _prepare_working_data(const mctools::signal::signal_data & SSD_,
-																 working_data_collection_type & wd_collection_);
+																 gg_digi_working_data_collection_type & wd_collection_);
 
 			/// Sort working data by clocktick
-			void _sort_working_data(working_data_collection_type & wd_collection_);
+			void _sort_working_data(gg_digi_working_data_collection_type & wd_collection_);
 
 			/// Create geiger tp from working data collection
-			void _geiger_tp_process(const working_data_collection_type & wd_collection_,
+			void _geiger_tp_process(const gg_digi_working_data_collection_type & wd_collection_,
 															geiger_tp_data & my_geiger_tp_data_);
 
       ///  Process to fill a geiger tp data object from signal data
@@ -130,19 +164,20 @@ namespace snemo {
 
 			// Configuration :
       bool    _initialized_;      //!< Initialization flag
+
+			uint32_t _clocktick_ref_;      //!< Clocktick reference of the algorithm
+      double   _clocktick_shift_;    //!< Clocktick shift between [0:800]
 			electronic_mapping * _electronic_mapping_;     //!< Convert geometric ID into electronic ID
 			mctools::signal::signal_shape_builder * _ssb_; //!< An external shape builder
 
-			std::string _signal_category_; //!< Identifier of the input tracker signal category
-			uint32_t _clocktick_ref_;      //!< Clocktick reference of the algorithm
-      double   _clocktick_shift_;    //!< Clocktick shift between [0:800]
 
-			double _VLNT_; //!< Anodic low negative threshold in Volts
-			double _VHNT_; //!< Anodic high negative threshold in Volts
-			double _VHPT_; //!< Anodic high positive threshold in Volts
+			std::string _signal_category_; //!< Identifier of the input tracker signal category
+			geiger_feb_config _gg_feb_config_; //!< The Geiger FEB configuration
 
 			// Data :
 			bool _activated_bits_[geiger::tp::TP_SIZE]; //!< Table of booleans to see which bits were activated
+
+			gg_digi_working_data_collection_type _gg_digi_data_collection_; //!< Temporary collection of tracker digitized data
     };
 
   } // end of namespace digitization

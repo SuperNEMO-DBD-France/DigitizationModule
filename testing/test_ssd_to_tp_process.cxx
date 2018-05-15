@@ -69,14 +69,12 @@ int main(int argc_, char** argv_)
     random_generator.initialize(seed);
 
     std::string manager_config_file;
-
     manager_config_file = "@falaise:config/snemo/demonstrator/geometry/4.0/manager.conf";
     datatools::fetch_path_with_env (manager_config_file);
     datatools::properties manager_config;
     datatools::properties::read_config (manager_config_file,
 					manager_config);
     geomtools::manager my_manager;
-
     manager_config.update ("build_mapping", true);
     if (manager_config.has_key ("mapping.excluded_categories"))
       {
@@ -92,7 +90,7 @@ int main(int argc_, char** argv_)
     if(!input_filename.empty()){
       pipeline_simulated_data_filename = input_filename;
     }else{
-      pipeline_simulated_data_filename = "${FALAISE_DIGITIZATION_TESTING_DIR}/data/Se82_0nubb-source_strips_bulk_SSD_10_events.brio";
+      pipeline_simulated_data_filename = "${FALAISE_DIGI_TESTING_DIR}/data/Se82_0nubb-source_strips_bulk_SSD_10_events.brio";
     }
 
     dpp::input_module reader;
@@ -174,10 +172,17 @@ int main(int argc_, char** argv_)
 	    if (SSD.has_signals(calo_signal_category))
 	      {
 		mctools::signal::base_signal a_signal = SSD.get_signal(calo_signal_category, 0);
-		// a_signal.tree_dump(std::clog, "A Calo signal");
+		a_signal.tree_dump(std::clog, "A Calo signal");
 
 		// signal_2_calo_tp.process(SSD, my_calo_tp_data);
 		// my_calo_tp_data.tree_dump(std::clog, "Calorimeter TP(s) data : ", "INFO : ");
+
+
+		// Create fake calo signals :
+
+
+
+
 	      }
 
 	    // std::clog << "DEBUG : clock25ref    = " << clocktick_25_reference << std::endl;

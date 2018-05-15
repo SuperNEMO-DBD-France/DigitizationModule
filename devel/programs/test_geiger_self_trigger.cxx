@@ -109,7 +109,7 @@ int main( int  argc_ , char **argv_  )
     if (input_filenames.size() == 0) {
       DT_LOG_WARNING(logging, "No input file(s) !");
 
-      std::string input_default_file = "${FALAISE_DIGITIZATION_TESTING_DIR}/data/Se82_0nubb-source_strips_bulk_SD_10_events.brio";
+      std::string input_default_file = "${FALAISE_DIGI_TESTING_DIR}/data/Se82_0nubb-source_strips_bulk_SD_10_events.brio";
       input_filenames.push_back(input_default_file);
 
       DT_LOG_WARNING(logging, "Default input file : " << input_filenames[0] << " !");
@@ -196,7 +196,7 @@ int main( int  argc_ , char **argv_  )
 
     // Multi properties to configure trigger algorithm :
     datatools::multi_properties trigger_config("name", "type", "Trigger parameters multi section configuration");
-    if (trigger_config_filename.empty()) trigger_config_filename = "$FALAISE_DIGITIZATION_DIR/resources/config/snemo/common/1.0/trigger_parameters.conf";
+    if (trigger_config_filename.empty()) trigger_config_filename = "$FALAISE_DIGI_DIR/resources/config/snemo/common/1.0/trigger_parameters.conf";
 
     // Read trigger config from file
     datatools::fetch_path_with_env(trigger_config_filename);

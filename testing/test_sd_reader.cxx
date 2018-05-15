@@ -84,7 +84,7 @@ int main( int  argc_ , char **  argv_ )
     std::string pipeline_simulated_data_filename;
     std::string SD_bank_label = "SD";
 
-    if (input_filename.empty()) input_filename = "${FALAISE_DIGITIZATION_TESTING_DIR}/data/Se82_0nubb-source_strips_bulk_SD_10_events.brio";
+    if (input_filename.empty()) input_filename = "${FALAISE_DIGI_TESTING_DIR}/data/Se82_0nubb-source_strips_bulk_SD_10_events.brio";
 
     dpp::input_module reader;
     datatools::properties reader_config;
