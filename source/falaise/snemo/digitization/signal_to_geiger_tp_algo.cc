@@ -112,9 +112,18 @@ namespace snemo {
     {
       signal_ref = 0;
       signal_deriv.reset();
+      hit_id = -1;
+      geom_id.reset();
       cell_electronic_id.reset();
-      clocktick_800 = clock_utils::INVALID_CLOCKTICK;
       datatools::invalidate(trigger_time);
+      datatools::invalidate(anodic_R0);
+      datatools::invalidate(anodic_R1);
+      datatools::invalidate(anodic_R2);
+      datatools::invalidate(anodic_R3);
+      datatools::invalidate(anodic_R4);
+      datatools::invalidate(cathodic_R5);
+      datatools::invalidate(cathodic_R6);
+      clocktick_800 = clock_utils::INVALID_CLOCKTICK;
     }
 
     bool signal_to_geiger_tp_algo::geiger_digi_working_data::operator<(const geiger_digi_working_data & other_) const
@@ -134,19 +143,43 @@ namespace snemo {
       if (dump_signal_) signal_ref->tree_dump(out_, title_, indent_, inherit_);
 
       out_ << indent_ << datatools::i_tree_dumpable::tag
+           << "Hit ID               : " << hit_id << std::endl;
+
+      out_ << indent_ << datatools::i_tree_dumpable::tag
            << "Event time reference : " << signal_ref->get_time_ref() << std::endl;
 
       out_ << indent_ << datatools::i_tree_dumpable::tag
-           << "Geometric ID     : " << signal_ref->get_geom_id() << std::endl;
+           << "Geometric ID         : " << geom_id << std::endl;
 
       out_ << indent_ << datatools::i_tree_dumpable::tag
-           << "Electronic cell ID    : " << cell_electronic_id << std::endl;
+           << "Electronic cell ID   : " << cell_electronic_id << std::endl;
 
       out_ << indent_ << datatools::i_tree_dumpable::tag
-           << "Trigger time     : " << trigger_time << std::endl;
+           << "Trigger time         : " << trigger_time / CLHEP::microsecond << " us" << std::endl;
+
+      out_ << indent_ << datatools::i_tree_dumpable::tag
+           << "Anodic register 0    : " << anodic_R0 / CLHEP::microsecond << " us"  << std::endl;
+
+      out_ << indent_ << datatools::i_tree_dumpable::tag
+           << "Anodic register 1    : " << anodic_R1 / CLHEP::microsecond << " us"  << std::endl;
+
+      out_ << indent_ << datatools::i_tree_dumpable::tag
+           << "Anodic register 2    : " << anodic_R2 / CLHEP::microsecond << " us"  << std::endl;
+
+      out_ << indent_ << datatools::i_tree_dumpable::tag
+           << "Anodic register 3    : " << anodic_R3 / CLHEP::microsecond << " us"  << std::endl;
+
+      out_ << indent_ << datatools::i_tree_dumpable::tag
+           << "Anodic register 4    : " << anodic_R4 / CLHEP::microsecond << " us"  << std::endl;
+
+      out_ << indent_ << datatools::i_tree_dumpable::tag
+           << "Cathodic register 5  : " << cathodic_R5 / CLHEP::microsecond << " us"  << std::endl;
+
+      out_ << indent_ << datatools::i_tree_dumpable::tag
+           << "Cathodic register 6  : " << cathodic_R6 / CLHEP::microsecond << " us"  << std::endl;
 
       out_ << indent_ << datatools::i_tree_dumpable::inherit_tag (inherit_)
-           << "Clocktick 800 ns : " << clocktick_800  << std::endl;
+           << "Clocktick 800 ns     : " << clocktick_800  << std::endl;
 
       return;
     }
@@ -262,7 +295,14 @@ namespace snemo {
 	  _activated_bits_[i] = 0;
 	}
       _signal_category_ = "sigtracker";
+      _running_tp_id_   = -1;
 
+      return;
+    }
+
+    void signal_to_geiger_tp_algo::_increment_running_tp_id()
+    {
+      _running_tp_id_++;
       return;
     }
 
@@ -272,14 +312,14 @@ namespace snemo {
       DT_THROW_IF(!is_initialized(), std::logic_error, "Signal to geiger TP algorithm is not initialized ! ");
       std::size_t number_of_hits = SSD_.get_number_of_signals(get_signal_category());
 
-      // Build the shape for each signal and give the unary function promoted with numeric derivative to the working data:
+      // Build the shape for each anodic signal first to create working data:
       for (std::size_t i = 0; i < number_of_hits; i++)
 	{
 	  const mctools::signal::base_signal a_signal = SSD_.get_signals(get_signal_category())[i].get();
 
-	  // Process is only for anodic signals :
-	  if (a_signal.get_auxiliaries().fetch_string("subcategory") == "anodic") {
-
+	  // Process for an anodic signal :
+	  if (a_signal.get_auxiliaries().fetch_string("subcategory") == "anodic")
+	    {
 	    mctools::signal::base_signal a_mutable_signal = a_signal;
 	    std::string signal_name;
 	    snemo::digitization::build_signal_name(a_mutable_signal.get_hit_id(),
@@ -288,7 +328,7 @@ namespace snemo {
 	    a_mutable_signal.build_signal_shape(*_ssb_,
 						signal_name,
 						a_mutable_signal);
-	    // a_mutable_signal.tree_dump(std::clog, "Mutable signal with shape instatiated");
+	    //a_mutable_signal.tree_dump(std::clog, "Mutable anodic signal with shape instantiated");
 
 	    geiger_digi_working_data a_wd;
 	    a_wd.signal_ref = & a_mutable_signal;
@@ -302,25 +342,112 @@ namespace snemo {
 	    double xmin = a_wd.signal_deriv.get_non_zero_domain_min();
 	    double xmax = a_wd.signal_deriv.get_non_zero_domain_max();
 
-	    // std::clog << "Xmin = " << xmin << " Xmax = " << xmax << std::endl;
+	    if (i == 72) {
+	      const std::string filename = "/tmp/gg_signal.dat";
+	      a_wd.signal_deriv.write_ascii_file(filename, xmin, xmax, nsamples);
+	      std::ofstream gg_deriv_stream;
+	      const std::string gg_deriv_filename = "/tmp/gg_signal_deriv.dat";
+	      gg_deriv_stream.open(gg_deriv_filename);
+	      for (double x = xmin - (50 * xmin / nsamples); x < xmax + (50 * xmin / nsamples); x+= (xmax - xmin) / nsamples) {
+		double y = a_wd.signal_deriv.eval_df(x);
+		gg_deriv_stream << x  << ' ' << y << std::endl;
+	      }
+	      gg_deriv_stream.close();
+	    }
 
-	    bool first_trigger = false;
+	    // std::clog << "Xmin = " << xmin << " Xmax = " << xmax << " (Xmax - Xmin) / nsamples = " << (xmax - xmin) / nsamples << std::endl;
+
 	    double trigger_time;
 	    datatools::invalidate(trigger_time);
 
-	    for (double x = xmin - (50 * xmin / nsamples); x < xmax + (50 * xmin / nsamples); x+= xmin / nsamples)
+	    bool R0_crossed = false;
+	    bool R1_crossed = false;
+	    bool R2_crossed = false;
+	    bool R3_crossed = false;
+	    bool R4_crossed = false;
+
+	    double former_y = 0;
+
+	    std::size_t number_of_samples = 0;
+	    for (double x = xmin - (50 * xmin / nsamples); x < xmax + (50 * xmin / nsamples); x+= (xmax - xmin) / nsamples)
 	      {
 		double y = a_wd.signal_deriv.eval_df(x);
-
 		y *= CLHEP::meter / CLHEP::volt;
+		// if (i == 72) std::clog << "x = " << x << " y = " << y << " former y = " << former_y << std::endl;
 
-		if (y <= _gg_feb_config_.VLNT / CLHEP::volt)
+		if (y < 0
+		    && former_y >= _gg_feb_config_.VLNT / CLHEP::volt
+		    && y <= _gg_feb_config_.VLNT / CLHEP::volt
+		    && !R0_crossed)
 		  {
-		    first_trigger = true;
+		    R0_crossed = true;
 		    trigger_time = x;
+		    a_wd.anodic_R0 = x;
+		    former_y = y;
+		    number_of_samples++;
+		    continue;
 		  }
-		if (first_trigger) break;
+
+		if (y < 0
+		    && former_y >= _gg_feb_config_.VHNT / CLHEP::volt
+		    && y <= _gg_feb_config_.VHNT / CLHEP::volt
+		    && R0_crossed
+		    && !R1_crossed)
+		  {
+		    R1_crossed = true;
+		    a_wd.anodic_R1 = x;
+		    former_y = y;
+		    number_of_samples++;
+		    continue;
+		  }
+
+		if (y < 0
+		    && former_y >= _gg_feb_config_.VHNT / CLHEP::volt
+		    && y <= _gg_feb_config_.VHNT / CLHEP::volt
+		    && R0_crossed
+		    && R1_crossed
+		    && !R3_crossed)
+		  {
+		    R3_crossed = true;
+		    a_wd.anodic_R3 = x;
+		    former_y = y;
+		    number_of_samples++;
+		    continue;
+		  }
+
+		if (y > 0
+		    && former_y <= _gg_feb_config_.VHPT / CLHEP::volt
+		    && y >= _gg_feb_config_.VHPT / CLHEP::volt
+		    && R0_crossed
+		    && !R2_crossed)
+		  {
+		    R2_crossed = true;
+		    a_wd.anodic_R2 = x;
+		    former_y = y;
+		    number_of_samples++;
+		    continue;
+		  }
+
+		if (y > 0
+		    && former_y <= _gg_feb_config_.VHPT / CLHEP::volt
+		    && y >= _gg_feb_config_.VHPT / CLHEP::volt
+		    && R0_crossed
+		    && R2_crossed
+		    && !R4_crossed)
+		  {
+		    R4_crossed = true;
+		    a_wd.anodic_R4 = x;
+		    former_y = y;
+		    number_of_samples++;
+		    continue;
+		  }
+
+		// if (first_trigger) break;
+
+		former_y = y;
+		number_of_samples++;
 	      }
+	    // std::clog << "Number of samples = " << number_of_samples << std::endl;
 
 
 	    const geomtools::geom_id & geom_id = a_wd.signal_ref->get_geom_id();
@@ -340,40 +467,71 @@ namespace snemo {
 
 
 	    a_wd.trigger_time = trigger_time;
-	    a_wd.cell_electronic_id        = electronic_id;
+	    a_wd.geom_id      = geom_id;
+	    a_wd.cell_electronic_id = electronic_id;
 	    a_wd.clocktick_800 = a_geiger_signal_clocktick;
 
 	    // a_wd.tree_dump(std::clog, "A working data #" + std::to_string(i));
 	    wd_collection_.push_back(a_wd);
 
+	    } // end of anodic
 
-	    // // To check and see 1 anodic signal and it's first derivative :
-	    // if (i == 0) {
-	    //   std::string r_filename = "/tmp/anodic_signal.dat";
-	    //   std::ofstream sigstream;
-	    //   sigstream.open(r_filename);
+	} // end of number_of_hits
 
-	    //   std::string d_r_filename = "/tmp/deriv_anodic_signal.dat";
-	    //   std::ofstream derivstream;
-	    //   derivstream.open(d_r_filename);
 
-	    //   for (double x = 0; x < 100 * CLHEP::microsecond; x+= 0.02 * CLHEP::microsecond)
-	    //     {
-	    //       double y_sig = a_wd.signal_deriv.eval_f(x);
-	    //       y_sig *= 1 / CLHEP::volt;
-	    //       sigstream << x / CLHEP::microsecond << ' ' << y_sig << std::endl;
+      // Loop on cathodic signal once their GG WD anodic signal is already created
+      // Readout will be done on cathodic signals only if anodic exists:
+      for (std::size_t i = 0; i < number_of_hits; i++)
+	{
+	  const mctools::signal::base_signal a_signal = SSD_.get_signals(get_signal_category())[i].get();
 
-	    //       double y = a_wd.signal_deriv.eval_df(x);
-	    //       y *= CLHEP::meter / CLHEP::volt;
-	    //       derivstream << x / CLHEP::microsecond << ' ' << y << std::endl;
-	    //     }
-	    //   sigstream.close();
-	    //   derivstream.close();
-	    // }
+	  // Process for a cathodic :
+	  if (a_signal.get_auxiliaries().fetch_string("subcategory") == "cathodic")
+	    {
+	      // Find the anodic working data already created:
+	      geomtools::geom_id cathodic_reduced_gid;
+	      cathodic_reduced_gid.set_depth(4);
+	      cathodic_reduced_gid.set_type(mapping::GEIGER_CATEGORY_TYPE);
+	      a_signal.get_geom_id().extract_to(cathodic_reduced_gid);
+	      geomtools::geom_id electronic_id;
+	      _electronic_mapping_->convert_GID_to_EID(mapping::THREE_WIRES_TRACKER_MODE, cathodic_reduced_gid, electronic_id);
+	      std::clog << "GID = " << a_signal.get_geom_id() << " REDUCED_GID = " << cathodic_reduced_gid << " EID = " << electronic_id << std::endl;
 
-	    // std::clog << "Signal number #" << i << std::endl;
+
+
+
+
+
+
+	      mctools::signal::base_signal a_mutable_signal = a_signal;
+	      std::string signal_name;
+	      snemo::digitization::build_signal_name(a_mutable_signal.get_hit_id(),
+						     signal_name);
+
+	      a_mutable_signal.build_signal_shape(*_ssb_,
+						  signal_name,
+						  a_mutable_signal);
+
+	      // a_mutable_signal.tree_dump(std::clog, "Mutable cathodic signal with shape instantiated");
+
+	      const mygsl::i_unary_function * signal_functor = & a_mutable_signal.get_shape();
+
+	      bool R5_crossed = false;
+	      bool R6_crossed = false;
+
+	      unsigned int nsamples = 1000;
+	      double xmin = signal_functor->get_non_zero_domain_min();
+	      double xmax = signal_functor->get_non_zero_domain_max();
+
+	      if (i == 71) {
+		const std::string filename = "/tmp/gg_signal_cathodic.dat";
+		signal_functor->write_ascii_file(filename, xmin, xmax, nsamples);
+	      }
+
 	  }
-	}
+
+	} // end of number_of_hits
+
 
       return ;
     }

@@ -151,6 +151,9 @@ namespace snemo {
 			void _geiger_tp_process(const gg_digi_working_data_collection_type & wd_collection_,
 															geiger_tp_data & my_geiger_tp_data_);
 
+      // Increment the running digi ID assigned to the next signal
+      void _increment_running_tp_id();
+
       ///  Process to fill a geiger tp data object from signal data
       void _process(const mctools::signal::signal_data & SSD_,
 										geiger_tp_data & my_geiger_tp_data_);
@@ -160,7 +163,7 @@ namespace snemo {
 			// Configuration :
       bool    _initialized_;      //!< Initialization flag
 
-			clock_utils * _clock_utils_;                        //!< The SuperNEMO digitization clock utils
+			clock_utils * _clock_utils_;                   //!< The SuperNEMO digitization clock utils
 			electronic_mapping * _electronic_mapping_;     //!< Convert geometric ID into electronic ID
 			mctools::signal::signal_shape_builder * _ssb_; //!< An external shape builder
 
@@ -168,10 +171,11 @@ namespace snemo {
 			std::string _signal_category_; //!< Identifier of the input tracker signal category
 			geiger_feb_config _gg_feb_config_; //!< The Geiger FEB configuration
 
-			// Data :
+			// Working resources :
+			int _running_tp_id_ = -1; //!< Give a new unique hit ID to calo TP
 			bool _activated_bits_[geiger::tp::TP_SIZE]; //!< Table of booleans to see which bits were activated
-
 			gg_digi_working_data_collection_type _gg_digi_data_collection_; //!< Temporary collection of tracker digitized data
+
     };
 
   } // end of namespace digitization

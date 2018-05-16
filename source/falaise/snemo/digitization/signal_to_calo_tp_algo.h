@@ -164,8 +164,9 @@ namespace snemo {
 
 			// Working resources:
 			int _running_digi_id_ = -1; //!< Give a new unique hit ID to calo WD
-			std::vector<calo_digi_working_data> _calo_digi_data_collection_; //!< Temporary collection of calo digitized data
 			int _running_tp_id_ = -1; //!< Give a new unique hit ID to calo TP
+
+			std::vector<calo_digi_working_data> _calo_digi_data_collection_; //!< Temporary collection of calo digitized data
 
 
     };
