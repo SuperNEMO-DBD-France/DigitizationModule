@@ -134,8 +134,6 @@ int main( int  argc_ , char **argv_  )
 	    sd_2_calo_signal.initialize();
 
 	    my_clock_manager.compute_clockticks_ref(random_generator);
-	    uint32_t clocktick_25_reference  = my_clock_manager.get_clocktick_25_ref();
-	    double  clocktick_25_shift      = my_clock_manager.get_shift_25();
 
 	    snemo::digitization::signal_data signal_data;
 	    std::vector<snemo::digitization::trigger_structures::calo_summary_record> calo_collection_records;
@@ -148,8 +146,6 @@ int main( int  argc_ , char **argv_  )
 		  {
 		    snemo::digitization::signal_to_calo_tp_algo signal_2_calo_tp;
 		    // signal_2_calo_tp.initialize(my_e_mapping);
-		    signal_2_calo_tp.set_clocktick_reference(clocktick_25_reference);
-		    signal_2_calo_tp.set_clocktick_shift(clocktick_25_shift);
 
 		    snemo::digitization::calo_tp_data my_calo_tp_data;
 

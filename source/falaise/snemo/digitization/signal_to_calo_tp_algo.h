@@ -51,6 +51,8 @@ namespace snemo {
 															 const std::string & indent_ = "",
 															 bool inherit_               = false) const;
 
+				bool external_trigger; //!< External trigger activated
+				bool calo_tp_spare;    //!< Calo TP spare bit activated
 				int16_t acquisition_window_length; //<! Number of samples of the acquisition window
 				bool   initialized;    //!< Initialization flag
 				double low_threshold;  //!< Calorimeter Low threshold in Volts
@@ -87,7 +89,9 @@ namespace snemo {
 				double						 low_threshold_trigger_time;
 				bool							 is_high_threshold;
 				double						 high_threshold_trigger_time;
-				uint32_t					 clocktick_25;
+				uint32_t					 low_threshold_CT_25;
+				uint32_t					 high_threshold_CT_25;
+
 				circular_buffer    calo_digitized_signal;
 			};
 
@@ -99,6 +103,7 @@ namespace snemo {
 
       /// Initializing
       void initialize(const datatools::properties & config_,
+											clock_utils & my_clock_utils_,
 											electronic_mapping & my_electronic_mapping_,
 											mctools::signal::signal_shape_builder & my_ssb_);
 
@@ -117,11 +122,8 @@ namespace snemo {
       /// Return the signal category
       const std::string & get_signal_category() const;
 
-		  /// Set the clocktick reference for the algorithm
-			void set_clocktick_reference(uint32_t clocktick_ref_);
-
-		  /// Set the clocktick shift
-			void set_clocktick_shift(double clocktick_shift_);
+			/// Return the collection of calo digi working data
+			const std::vector<signal_to_calo_tp_algo::calo_digi_working_data> get_calo_digi_working_data_vector() const;
 
       /// Process to fill a calo tp data object from signal data
 			void process(const mctools::signal::signal_data & signal_data_,
@@ -135,8 +137,11 @@ namespace snemo {
 			/// Set defaults parameters
 			void _set_defaults();
 
-      // Increment the running signal ID assigned to the next signal
+      // Increment the running digi ID assigned to the next signal
       void _increment_running_digi_id();
+
+      // Increment the running digi ID assigned to the next signal
+      void _increment_running_tp_id();
 
 			///  Process to fill a calo tp data object from signal data
 			void _process(const mctools::signal::signal_data & signal_data_,
@@ -146,12 +151,11 @@ namespace snemo {
 
 			// Configuration:
       bool _initialized_;      //!< Initialization flag
-      bool _active_main_wall_; //!< Main wall activation flag
-      bool _active_xwall_;     //!< X-wall activation flag
-      bool _active_gveto_;     //!< Gamma-veto activation flag
+			bool _active_main_wall_; //!< Main wall activation flag
+			bool _active_xwall_;		 //!< X-wall activation flag
+			bool _active_gveto_;  	 //!< Gamma-veto activation flag
 
-			uint32_t _clocktick_ref_;  //!< Clocktick reference of the algorithm
-			double  _clocktick_shift_; //!< Clocktick shift between [0:25]
+			clock_utils * _clock_utils_;             //!< An external SuperNEMO digitization clock manager
 			electronic_mapping * _electronic_mapping_;     //!< Convert geometric ID into electronic ID
 			mctools::signal::signal_shape_builder * _ssb_; //!< An external shape builder
 
@@ -161,6 +165,7 @@ namespace snemo {
 			// Working resources:
 			int _running_digi_id_ = -1; //!< Give a new unique hit ID to calo WD
 			std::vector<calo_digi_working_data> _calo_digi_data_collection_; //!< Temporary collection of calo digitized data
+			int _running_tp_id_ = -1; //!< Give a new unique hit ID to calo TP
 
 
     };

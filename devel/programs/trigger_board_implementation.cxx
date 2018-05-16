@@ -379,10 +379,6 @@ int main( int  argc_ , char **argv_  )
 	    const mctools::simulated_data & SD = ER.get<mctools::simulated_data>(SD_bank_label);
 
 	    my_clock_manager.compute_clockticks_ref(random_generator);
-	    int32_t clocktick_25_reference  = my_clock_manager.get_clocktick_25_ref();
-	    double  clocktick_25_shift      = my_clock_manager.get_shift_25();
-	    int32_t clocktick_800_reference = my_clock_manager.get_clocktick_800_ref();
-	    double  clocktick_800_shift     = my_clock_manager.get_shift_800();
 
 	    // Creation of calo ctw data :
 	    snemo::digitization::calo_ctw_data my_calo_ctw_data;
@@ -405,9 +401,6 @@ int main( int  argc_ , char **argv_  )
 		// Calo signal to calo TP :
 		if (signal_data.has_calo_signals())
 		  {
-		    // Set calo clockticks :
-		    signal_2_calo_tp.set_clocktick_reference(clocktick_25_reference);
-		    signal_2_calo_tp.set_clocktick_shift(clocktick_25_shift);
 
 		    // Signal to calo TP process :
 		    // signal_2_calo_tp.process(signal_data, my_calo_tp_data);
@@ -420,9 +413,6 @@ int main( int  argc_ , char **argv_  )
 		snemo::digitization::geiger_tp_data my_geiger_tp_data;
 		if (signal_data.has_geiger_signals())
 		  {
-		    // Set geiger clockticks :
-		    signal_2_geiger_tp.set_clocktick_reference(clocktick_800_reference);
-		    signal_2_geiger_tp.set_clocktick_shift(clocktick_800_shift);
 		    // Signal to geiger TP process
 		    // signal_2_geiger_tp.process(signal_data, my_geiger_tp_data);
 

@@ -159,7 +159,7 @@ int main(int argc_, char** argv_)
     a_multi_signal.set_time_ref(event_time_ref);
     a_multi_signal.set_shape_type_id("mctools::signal::multi_signal_shape");
     snemo::digitization::build_multi_signal(a_multi_signal, atomic_signals);
-    a_multi_signal.tree_dump(std::clog, "A multi signal");
+    a_multi_signal.tree_dump(std::clog, "A multi calo signal");
 
     SSD.tree_dump(std::clog, "SSD");
 
@@ -171,18 +171,26 @@ int main(int argc_, char** argv_)
 
     snemo::digitization::signal_to_calo_tp_algo signal_2_calo_tp;
     signal_2_calo_tp.initialize(algos_config,
+				my_clock_manager,
 				my_e_mapping,
 				calo_ssb);
-    signal_2_calo_tp.set_clocktick_reference(clocktick_25_reference);
-    signal_2_calo_tp.set_clocktick_shift(clocktick_25_shift);
+    // signal_2_calo_tp.set_clocktick_reference(clocktick_25_reference);
+    // signal_2_calo_tp.set_clocktick_shift(clocktick_25_shift);
 
     snemo::digitization::calo_tp_data my_calo_tp_data;
-
     if (SSD.has_signals(calo_signal_category))
       {
 	signal_2_calo_tp.process(SSD, my_calo_tp_data);
-	my_calo_tp_data.tree_dump(std::clog, "Calorimeter TP(s) data : ", "INFO : ");
 
+	const std::vector<snemo::digitization::signal_to_calo_tp_algo::calo_digi_working_data> calo_digi_working_data_collection = signal_2_calo_tp.get_calo_digi_working_data_vector();
+
+	for (int i = 0; i < calo_digi_working_data_collection.size(); i++)
+	  {
+	    const snemo::digitization::signal_to_calo_tp_algo::calo_digi_working_data & a_calo_wd = calo_digi_working_data_collection[i];
+	    a_calo_wd.tree_dump(std::clog, "A calo Working Data", true);
+	  }
+
+	my_calo_tp_data.tree_dump(std::clog, "Calorimeter TP(s) data : ", "INFO : ");
 	for(uint32_t i = my_calo_tp_data.get_clocktick_min(); i <= my_calo_tp_data.get_clocktick_max(); i++)
 	  {
 	    for(unsigned int j = 0 ; j <= snemo::digitization::mapping::NUMBER_OF_CRATES ; j++)

@@ -102,6 +102,7 @@ namespace snemo {
 
       /// Initializing
       void initialize(const datatools::properties & config_,
+											clock_utils & my_clock_utils_,
 											electronic_mapping & my_electronic_mapping_,
 											mctools::signal::signal_shape_builder & my_ssb_);
 
@@ -119,12 +120,6 @@ namespace snemo {
 
       /// Return the signal category
       const std::string & get_signal_category() const;
-
-      /// Set the clocktick reference for the algorithm
-      void set_clocktick_reference(uint32_t clocktick_ref_);
-
-      /// Set the clocktick shift
-      void set_clocktick_shift(double clocktick_shift_);
 
 			/// Add a geiger tp from a working data
 			void add_geiger_tp(const geiger_digi_working_data & my_wd_data_,
@@ -165,8 +160,7 @@ namespace snemo {
 			// Configuration :
       bool    _initialized_;      //!< Initialization flag
 
-			uint32_t _clocktick_ref_;      //!< Clocktick reference of the algorithm
-      double   _clocktick_shift_;    //!< Clocktick shift between [0:800]
+			clock_utils * _clock_utils_;                        //!< The SuperNEMO digitization clock utils
 			electronic_mapping * _electronic_mapping_;     //!< Convert geometric ID into electronic ID
 			mctools::signal::signal_shape_builder * _ssb_; //!< An external shape builder
 

@@ -132,20 +132,12 @@ int main( int argc_ , char ** argv_  )
 	    sd_2_calo_signal.initialize();
 
 	    my_clock_manager.compute_clockticks_ref(random_generator);
-	    int32_t clocktick_25_reference  = my_clock_manager.get_clocktick_25_ref();
-	    double  clocktick_25_shift      = my_clock_manager.get_shift_25();
-	    int32_t clocktick_800_reference = my_clock_manager.get_clocktick_800_ref();
-	    double  clocktick_800_shift     = my_clock_manager.get_shift_800();
 
 	    snemo::digitization::signal_to_calo_tp_algo signal_2_calo_tp;
 	    // signal_2_calo_tp.initialize(my_e_mapping);
-	    signal_2_calo_tp.set_clocktick_reference(clocktick_25_reference);
-	    signal_2_calo_tp.set_clocktick_shift(clocktick_25_shift);
 
 	    snemo::digitization::signal_to_geiger_tp_algo signal_2_geiger_tp;
 	    // signal_2_geiger_tp.initialize(my_e_mapping, my_clock_manager);
-	    signal_2_geiger_tp.set_clocktick_reference(clocktick_800_reference);
-	    signal_2_geiger_tp.set_clocktick_shift(clocktick_800_shift);
 
 	    snemo::digitization::signal_data signal_data;
 	    if( SD.has_step_hits("gg"))
@@ -188,10 +180,6 @@ int main( int argc_ , char ** argv_  )
 	    my_geiger_ctw_data.tree_dump(std::clog, "Geiger CTW(s) data : ", "INFO : ");
 	    calo_tp_2_ctw.process(my_calo_tp_data, my_calo_ctw_data);
 	    my_calo_ctw_data.tree_dump(std::clog, "Calorimeter CTW(s) data : ", "INFO : ");
-	    std::clog << "DEBUG : clock25ref    = " << clocktick_25_reference << std::endl;
-	    std::clog << "DEBUG : clock25shift  = " << clocktick_25_shift << std::endl;
-	    std::clog << "DEBUG : clock800ref   = " << clocktick_800_reference << std::endl;
-	    std::clog << "DEBUG : clock800shift = " << clocktick_800_shift << std::endl;
 	  }
 	// CF README.RST pour display graphique avec loader de manager.conf
 	// -> /home/guillaume/data/Bayeux/Bayeux-trunk/source/bxmctools/examples/ex00

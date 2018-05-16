@@ -157,8 +157,6 @@ namespace snemo {
       _electronic_mapping_  = nullptr;
       _ssb_ = nullptr;
       _signal_category_ = "";
-      _clocktick_ref_ = clock_utils::INVALID_CLOCKTICK;
-      datatools::invalidate(_clocktick_shift_);
 
       return;
     }
@@ -173,11 +171,13 @@ namespace snemo {
     }
 
     void signal_to_geiger_tp_algo::initialize(const datatools::properties & config_,
+					      clock_utils & my_clock_utils_,
 					      electronic_mapping & my_electronic_mapping_,
 					      mctools::signal::signal_shape_builder & my_ssb_)
     {
       DT_THROW_IF(is_initialized(), std::logic_error, "Signal to geiger tp algorithm is already initialized ! ");
       _set_defaults();
+      _clock_utils_ = & my_clock_utils_;
       _electronic_mapping_ = & my_electronic_mapping_;
       _ssb_ = & my_ssb_;
 
@@ -203,7 +203,6 @@ namespace snemo {
       DT_THROW_IF(!is_initialized(), std::logic_error, "Signal to geiger tp algorithm is not initialized, it can't be reset ! ");
       _initialized_ = false;
       _electronic_mapping_ = 0;
-      _clocktick_ref_ = clock_utils::INVALID_CLOCKTICK;
       return;
     }
 
@@ -220,19 +219,6 @@ namespace snemo {
     void signal_to_geiger_tp_algo::set_signal_category(const std::string & category_)
     {
       _signal_category_ = category_;
-      return;
-    }
-
-
-    void signal_to_geiger_tp_algo::set_clocktick_reference(uint32_t clocktick_ref_)
-    {
-      _clocktick_ref_ = clocktick_ref_;
-      return;
-    }
-
-    void signal_to_geiger_tp_algo::set_clocktick_shift(double clocktick_shift_)
-    {
-      _clocktick_shift_ = clocktick_shift_;
       return;
     }
 
@@ -344,12 +330,13 @@ namespace snemo {
 	    // std::clog << "GID = " << geom_id << " EID = " << electronic_id << std::endl;
 
 	    double relative_time = trigger_time - event_time_ref ;
-	    uint32_t a_geiger_signal_clocktick = std::floor(event_time_ref / 800) +  _clocktick_ref_ + clock_utils::TRACKER_FEB_SHIFT_CLOCKTICK_NUMBER;
+	    uint32_t a_geiger_signal_clocktick = _clock_utils_->compute_clocktick_800ns_from_time(relative_time);
+	    //std::floor(event_time_ref / 800) +  _clocktick_ref_ + clock_utils::TRACKER_FEB_SHIFT_CLOCKTICK_NUMBER;
 
-	    if (relative_time > 800)
-	      {
-		a_geiger_signal_clocktick += static_cast<int32_t>(relative_time) / 800;
-	      }
+	    // if (relative_time > 800)
+	    //   {
+	    // 	a_geiger_signal_clocktick += static_cast<int32_t>(relative_time) / 800;
+	    //   }
 
 
 	    a_wd.trigger_time = trigger_time;

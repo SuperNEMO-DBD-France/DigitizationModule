@@ -6,13 +6,14 @@
 #include <math.h>
 
 // - Bayeux/datatools:
+#include <datatools/properties.h>
 #include <datatools/exception.h>
 
 // Ourselves
 #include <snemo/digitization/clock_utils.h>
 
 namespace snemo {
-  
+
   namespace digitization {
 
 
@@ -40,7 +41,7 @@ namespace snemo {
     }
 
     clock_utils::~clock_utils()
-    { 
+    {
       if (is_initialized())
 	{
 	  reset();
@@ -59,33 +60,33 @@ namespace snemo {
     {
       return _initialized_;
     }
-    
+
     void clock_utils::reset()
     {
       DT_THROW_IF(!is_initialized(), std::logic_error, "Clock utils is not initialized, it can't be reset ! ");
       _initialized_ = false;
       return;
     }
-    
+
     int32_t clock_utils::get_clocktick_ref() const
     {
       DT_THROW_IF(!is_initialized(), std::logic_error, "Clock utils is not initialized ! ");
       return _clocktick_ref_;
     }
-    
+
     double clock_utils::get_shift_1600() const
     {
       DT_THROW_IF(!is_initialized(), std::logic_error, "Clock utils is not initialized ! ");
       return _shift_1600_;
     }
-    
+
     int32_t clock_utils::get_clocktick_25_ref() const
     {
       DT_THROW_IF(!is_initialized(), std::logic_error, "Clock utils is not initialized ! ");
       return _clocktick_25_ref_;
     }
 
-    int32_t clock_utils::get_clocktick_800_ref() const 
+    int32_t clock_utils::get_clocktick_800_ref() const
     {
       DT_THROW_IF(!is_initialized(), std::logic_error, "Clock utils is not initialized ! ");
       return _clocktick_800_ref_;
@@ -100,14 +101,61 @@ namespace snemo {
       DT_THROW_IF(!is_initialized(), std::logic_error, "Clock utils is not initialized ! ");
       return _shift_800_;
     }
-    
+
+    int32_t clock_utils::compute_clocktick_25ns_from_time(const double time_)
+    {
+      // TO DO : add shift 25 ns to time and to compute CT 25.
+      // (not for the moment because it is easier to not use it for tests purpose
+      if (datatools::is_valid(time_)) {
+      	int32_t ct_25ns = _clocktick_25_ref_;
+
+	if (time_ > 25 * CLHEP::ns)
+	  {
+	    ct_25ns += static_cast<uint32_t>(time_ / 25);
+	  }
+
+	return ct_25ns;
+      }
+      else return INVALID_CLOCKTICK;
+    }
+
+    int32_t clock_utils::compute_clocktick_800ns_from_time(const double time_)
+    {
+      if (datatools::is_valid(time_)) {
+      	int32_t ct_800ns = _clocktick_800_ref_;
+
+	// if (time_ > 800 * CLHEP::ns)
+	//   {
+	//     ct_800ns += static_cast<uint32_t>(time_ / 800);
+	//   }
+
+	return ct_800ns;
+      }
+      else return INVALID_CLOCKTICK;
+    }
+
+    int32_t clock_utils::compute_clocktick_1600ns_from_time(const double time_)
+    {
+      if (datatools::is_valid(time_)) {
+      	int32_t ct_1600ns = _clocktick_ref_;
+
+	// if (time_ > 1600 * CLHEP::ns)
+	//   {
+	//     ct_1600ns += static_cast<uint32_t>(time_ / 1600);
+	//   }
+
+	return ct_1600ns;
+      }
+      else return INVALID_CLOCKTICK;
+    }
+
     void clock_utils::compute_clocktick_25ns_to_1600ns(const uint32_t clocktick_25ns_,
 						       uint32_t & clocktick_1600ns_) const
     {
       clocktick_1600ns_ = (clocktick_25ns_ * MAIN_CLOCKTICK) / TRIGGER_CLOCKTICK;
       clocktick_1600ns_ = clocktick_1600ns_ + TRIGGER_COMPUTING_SHIFT_CLOCKTICK_1600NS;
       return;
-    }  
+    }
 
     void clock_utils::compute_clocktick_800ns_to_1600ns(const uint32_t clocktick_800ns_,
 							uint32_t & clocktick_1600ns_) const
@@ -122,36 +170,36 @@ namespace snemo {
       DT_THROW_IF(!is_initialized(), std::logic_error, "Clock utils is not initialized ! ");
       _randomize_shift(prng_);
       _clocktick_25_ref_ = _shift_1600_ / MAIN_CLOCKTICK;
-      _shift_25_ = fmod(_shift_1600_, MAIN_CLOCKTICK);      
+      _shift_25_ = fmod(_shift_1600_, MAIN_CLOCKTICK);
       _clocktick_800_ref_ = _shift_1600_ / TRACKER_CLOCKTICK;
       _shift_800_ = fmod(_shift_1600_, TRACKER_CLOCKTICK);
       return;
     }
-    
+
     void clock_utils::_randomize_shift(mygsl::rng & prng_)
     {
       DT_THROW_IF(!is_initialized(), std::logic_error, "Clock utils is not initialized ! ");
       _shift_1600_ = prng_.flat(0.0, TRIGGER_CLOCKTICK);
       return;
-    }		
-    
+    }
+
     void clock_utils::tree_dump (std::ostream & out_,
 				 const std::string & title_,
 				 const std::string & indent_,
 				 bool /*inherit_*/) const
-    { 
+    {
 
       out_ << indent_ << title_ << std::endl;
 
       out_ << indent_ << datatools::i_tree_dumpable::tag
 	   << "Shift [0;1600] : " << _shift_1600_ << std::endl;
-      
+
       out_ << indent_ << datatools::i_tree_dumpable::tag
 	   << "CT Ref 25 : " << _clocktick_25_ref_ << std::endl;
 
       out_ << indent_ << datatools::i_tree_dumpable::tag
 	   << "Shift 25 : " << _shift_25_ << std::endl;
-  
+
       out_ << indent_ << datatools::i_tree_dumpable::tag
 	   << "CT Ref 800 : " << _clocktick_800_ref_ << std::endl;
 
@@ -160,7 +208,7 @@ namespace snemo {
 
       return;
     }
-	       
+
   } // end of namespace digitization
 
 } // end of namespace snemo

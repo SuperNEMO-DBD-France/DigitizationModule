@@ -139,12 +139,12 @@ namespace snemo {
 
       // Configuration:
       bool _initialized_; //!< Initialization status
-      datatools::logger::priority _logging_priority_; //!< Logging priority
-      const geomtools::manager * _geometry_manager_;  //!< The SuperNEMO geometry manager
-			electronic_mapping _electronic_mapping_;        //!< The SuperNEMO electronic mapping
-			mygsl::rng  _rdm_gen_;                           //!< Internal random generator for clock manager
-			clock_utils _clock_utils_;                     //!< The SuperNEMO digitization clock utils
-			mctools::signal::signal_shape_builder _gg_ssb_;	 //!< The Tracker signal shape builder
+      datatools::logger::priority _logging_priority_;   //!< Logging priority
+      const geomtools::manager * _geometry_manager_;    //!< The SuperNEMO geometry manager
+			electronic_mapping _electronic_mapping_;          //!< The SuperNEMO electronic mapping
+			mygsl::rng  _rdm_gen_;                            //!< Internal random generator for clock manager
+			clock_utils _clock_utils_;                        //!< The SuperNEMO digitization clock utils
+			mctools::signal::signal_shape_builder _gg_ssb_;	  //!< The Tracker signal shape builder
 			mctools::signal::signal_shape_builder _calo_ssb_; //!< The Calorimeter signal shape builder
 
       // Algorithms:

@@ -208,11 +208,6 @@ int main( int  argc_ , char **argv_  )
       }
 
       my_clock_manager.compute_clockticks_ref(random_generator);
-      int32_t clocktick_25_reference  = my_clock_manager.get_clocktick_25_ref();
-      double  clocktick_25_shift      = my_clock_manager.get_shift_25();
-      int32_t clocktick_800_reference = my_clock_manager.get_clocktick_800_ref();
-      double  clocktick_800_shift     = my_clock_manager.get_shift_800();
-
       snemo::digitization::signal_data signal_data;
 
       if (deserializer.record_tag_is(snemo::digitization::signal_data::SERIAL_TAG)) {
@@ -224,9 +219,6 @@ int main( int  argc_ , char **argv_  )
 	snemo::digitization::calo_ctw_data my_calo_ctw_data;
 	if (signal_data.has_calo_signals())
 	  {
-	    signal_2_calo_tp.set_clocktick_reference(clocktick_25_reference);
-	    signal_2_calo_tp.set_clocktick_shift(clocktick_25_shift);
-
 	    // signal_2_calo_tp.process(signal_data, my_calo_tp_data);
 
 	    calo_tp_2_ctw.process(my_calo_tp_data, my_calo_ctw_data);

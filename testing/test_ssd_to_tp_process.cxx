@@ -142,18 +142,16 @@ int main(int argc_, char** argv_)
 	    SSD.tree_dump(std::clog, "SSD");
 
 	    my_clock_manager.compute_clockticks_ref(random_generator);
-	    int32_t clocktick_25_reference  = my_clock_manager.get_clocktick_25_ref();
-	    double  clocktick_25_shift      = my_clock_manager.get_shift_25();
 
 	    snemo::digitization::signal_to_calo_tp_algo signal_2_calo_tp;
 	    signal_2_calo_tp.initialize(algos_config,
+					my_clock_manager,
 					my_e_mapping,
 					calo_ssb);
-	    signal_2_calo_tp.set_clocktick_reference(clocktick_25_reference);
-	    signal_2_calo_tp.set_clocktick_shift(clocktick_25_shift);
 
 	    snemo::digitization::signal_to_geiger_tp_algo signal_2_geiger_tp;
 	    signal_2_geiger_tp.initialize(algos_config,
+					  my_clock_manager,
 					  my_e_mapping,
 					  gg_ssb);
 
@@ -184,11 +182,6 @@ int main(int argc_, char** argv_)
 
 
 	      }
-
-	    // std::clog << "DEBUG : clock25ref    = " << clocktick_25_reference << std::endl;
-	    // std::clog << "DEBUG : clock25shift  = " << clocktick_25_shift << std::endl;
-	    // std::clog << "DEBUG : clock800ref   = " << clocktick_800_reference << std::endl;
-	    // std::clog << "DEBUG : clock800shift = " << clocktick_800_shift << std::endl;
 	    std::clog << std::endl;
 	  }
 	// CF README.RST pour display graphique avec loader de manager.conf

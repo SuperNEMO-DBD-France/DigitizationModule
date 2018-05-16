@@ -140,6 +140,7 @@ namespace snemo {
       datatools::properties gg_to_tp_algo_config;
       config_.export_and_rename_starting_with(gg_to_tp_algo_config, gg_to_tp_algo_key, "");
       _geiger_signal_to_tp_algo_.initialize(gg_to_tp_algo_config,
+					    _clock_utils_,
 					    grab_electronic_mapping(),
 					    _gg_ssb_);
 
@@ -147,6 +148,7 @@ namespace snemo {
       datatools::properties calo_to_tp_algo_config;
       config_.export_and_rename_starting_with(calo_to_tp_algo_config, calo_to_tp_algo_key, "");
       _calo_signal_to_tp_algo_.initialize(calo_to_tp_algo_config,
+					  _clock_utils_,
 					  grab_electronic_mapping(),
 					  _calo_ssb_);
 
@@ -233,9 +235,9 @@ namespace snemo {
       // _clock_utils_.tree_dump(std::clog, "Clock utils");
 
       // For the moment only CT ref are used. Shifts plays the role of a new '0'. It will be add later:
-      int32_t clocktick_25_reference  = _clock_utils_.get_clocktick_25_ref();
+      // int32_t clocktick_25_reference  = _clock_utils_.get_clocktick_25_ref();
       // double  clocktick_25_shift      = _clock_utils_.get_shift_25();
-      _calo_signal_to_tp_algo_.set_clocktick_reference(clocktick_25_reference);
+      // _calo_signal_to_tp_algo_.set_clocktick_reference(clocktick_25_reference);
 
       calo_tp_data calo_tp_data;
       _calo_signal_to_tp_algo_.process(SSD_, calo_tp_data);
@@ -245,9 +247,9 @@ namespace snemo {
 				    calo_ctw_data);
 
 
-      int32_t clocktick_800_reference = _clock_utils_.get_clocktick_800_ref();
+      // int32_t clocktick_800_reference = _clock_utils_.get_clocktick_800_ref();
       // double  clocktick_800_shift     = _clock_utils_.get_shift_800();
-      _geiger_signal_to_tp_algo_.set_clocktick_reference(clocktick_800_reference);
+      // _geiger_signal_to_tp_algo_.set_clocktick_reference(clocktick_800_reference);
 
       geiger_tp_data gg_tp_data;
       _geiger_signal_to_tp_algo_.process(SSD_,

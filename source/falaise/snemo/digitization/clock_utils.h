@@ -81,12 +81,25 @@ namespace snemo {
       /// Get the clocktick 800ns shift
 			double get_shift_800() const;
 
+			/// Compute clocktick 25ns from a given time
+			int32_t compute_clocktick_25ns_from_time(const double time_);
+
+			/// Compute clocktick 800ns from a given time
+			int32_t compute_clocktick_800ns_from_time(const double time_);
+
+			/// Compute clocktick 1600ns from a given time
+			int32_t compute_clocktick_1600ns_from_time(const double time_);
+
 			/// Compute a clocktick 25ns into a clocktick 1600ns
 			void compute_clocktick_25ns_to_1600ns(const uint32_t clocktick_25ns_,
-																						uint32_t & clocktick_1600ns_) const ;
+																						uint32_t & clocktick_1600ns_) const;
+
 			/// Compute a clocktick 800ns into a clocktick 1600ns
 			void compute_clocktick_800ns_to_1600ns(const uint32_t clocktick_800ns_,
-																						 uint32_t & clocktick_1600ns_) const ;
+																						 uint32_t & clocktick_1600ns_) const;
+
+			/// Compute clockticks reference
+			void compute_clockticks_ref(mygsl::rng & prng_);
 
       /// Display clockticks ref and shifts
       void tree_dump (std::ostream & out_ = std::clog,
@@ -94,22 +107,20 @@ namespace snemo {
 											const std::string & indent_ = "",
 											bool inherit_               = false) const;
 
-			/// Compute clockticks reference
-			void compute_clockticks_ref(mygsl::rng & prng_);
-
 		protected :
+
 			/// Clocktick shift uniform randomize for 25 and 800ns clockticks
 			void _randomize_shift(mygsl::rng & prng_);
 
 		private :
 
-			bool    _initialized_;        //!< Initialization flag
+			bool     _initialized_;       //!< Initialization flag
 			uint32_t _clocktick_ref_;     //!< Clocktick reference (0) for everyone
-			double  _shift_1600_;         //!< Shift between 0 and 1600 ns corresponding at the physical decay time
+			double   _shift_1600_;        //!< Shift between 0 and 1600 ns corresponding at the physical decay time
 			uint32_t _clocktick_25_ref_;  //!< Clocktick 25 ns reference
 			uint32_t _clocktick_800_ref_; //!< Clocktick 800 ns reference
-			double  _shift_25_;           //!< Shift 25 ns
-			double  _shift_800_;          //!< Shift 800 ns
+			double   _shift_25_;          //!< Shift 25 ns
+			double   _shift_800_;         //!< Shift 800 ns
 		};
 
   } // end of namespace digitization
