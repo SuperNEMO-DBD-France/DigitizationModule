@@ -29,7 +29,7 @@ int main(int argc_, char ** argv_)
       snemo::digitization::calo_ctw & my_calo_ctw = my_calo_ctw_data.add();
       geomtools::geom_id ctw_gid;
       ctw_gid.set_type(422);
-      ctw_gid.set_address(3,0,10); // address of geom id : RACK_INDEX, CRATE_INDEX, BOARD_INDEX.
+      ctw_gid.set_address(0,0,10); // address of geom id : MODULE_INDEX, CRATE_INDEX, BOARD_INDEX.
       int32_t hit_id = 42;
       uint32_t clocktick_25ns = 20;
       my_calo_ctw.set_header(hit_id,
@@ -46,7 +46,7 @@ int main(int argc_, char ** argv_)
       snemo::digitization::calo_ctw & my_calo_ctw = my_calo_ctw_data.add();
       geomtools::geom_id ctw_gid;
       ctw_gid.set_type(422);
-      ctw_gid.set_address(3,0,10); // address of geom id : RACK_INDEX, CRATE_INDEX, BOARD_INDEX.
+      ctw_gid.set_address(0,0,10); // address of geom id : MODULE_INDEX, CRATE_INDEX, BOARD_INDEX.
       int32_t hit_id = 42;
       uint32_t clocktick_25ns = 35;
       my_calo_ctw.set_header(hit_id,
@@ -63,7 +63,7 @@ int main(int argc_, char ** argv_)
       snemo::digitization::calo_ctw & my_calo_ctw = my_calo_ctw_data.add();
       geomtools::geom_id ctw_gid;
       ctw_gid.set_type(422);
-      ctw_gid.set_address(3,1,10); // address of geom id : RACK_INDEX, CRATE_INDEX, BOARD_INDEX.
+      ctw_gid.set_address(0,1,10); // address of geom id : MODULE_INDEX, CRATE_INDEX, BOARD_INDEX.
       int32_t hit_id = 42;
       uint32_t clocktick_25ns = 20;
       my_calo_ctw.set_header(hit_id,
@@ -80,7 +80,7 @@ int main(int argc_, char ** argv_)
       snemo::digitization::calo_ctw & my_calo_ctw = my_calo_ctw_data.add();
       geomtools::geom_id ctw_gid;
       ctw_gid.set_type(422);
-      ctw_gid.set_address(3,1,10); // address of geom id : RACK_INDEX, CRATE_INDEX, BOARD_INDEX.
+      ctw_gid.set_address(0,1,10); // address of geom id : MODULE_INDEX, CRATE_INDEX, BOARD_INDEX.
       int32_t hit_id = 42;
       uint32_t clocktick_25ns = 35;
       my_calo_ctw.set_header(hit_id,

@@ -9,11 +9,11 @@
 // - Bayeux/datatools:
 #include <datatools/exception.h>
 
-// This project : 
+// This project :
 #include <snemo/digitization/clock_utils.h>
 
 namespace snemo {
-  
+
   namespace digitization {
 
     // Serial tag for datatools::serialization::i_serializable interface :
@@ -36,9 +36,9 @@ namespace snemo {
 			       const geomtools::geom_id & electronic_id_,
 			       int32_t clocktick_800ns_,
 			       bool trigger_mode_,
-			       bool trigger_side_, 
+			       bool trigger_side_,
 			       unsigned int number_of_rows_)
-    {    
+    {
       DT_THROW_IF((electronic_id_.get(mapping::BOARD_INDEX) == 10), std::logic_error, "FEB ID 10 is dedicated to control board ! ");
       set_hit_id(hit_id_);
       set_geom_id(electronic_id_);
@@ -58,7 +58,7 @@ namespace snemo {
       set_gg_tp_bitset(gg_tp_word_);
       return;
     }
-			     
+
     uint32_t geiger_tp::get_clocktick_800ns() const
     {
       return _clocktick_800ns_;
@@ -86,7 +86,7 @@ namespace snemo {
     {
       return _gg_tp_;
     }
-      
+
     void geiger_tp::reset_gg_bitset()
     {
       _gg_tp_ = 0x0;
@@ -99,7 +99,7 @@ namespace snemo {
       extract_bitset_from_is_length(geiger::tp::TP_BEGIN, geiger::tp::TP_SIZE, gg_tp_word_);
       return;
     }
-    
+
     void geiger_tp::set_gg_tp_bitset(std::bitset<geiger::tp::TP_SIZE> & gg_tp_word_)
     {
       for (unsigned int i = 0; i < geiger::tp::TP_SIZE; i++)
@@ -108,11 +108,11 @@ namespace snemo {
 	    {
 	      _gg_tp_.set(i + geiger::tp::TP_BEGIN, 1);
 	    }
-	  else 
+	  else
 	    {
 	      _gg_tp_.set(i + geiger::tp::TP_BEGIN, 0);
 	    }
-	} 
+	}
       _store |= STORE_GG_TP;
       return;
     }
@@ -120,10 +120,10 @@ namespace snemo {
     void geiger_tp::set_gg_tp_active_bit(const int & bit_index_)
     {
       _gg_tp_.set(bit_index_, 1);
-      
+
       return;
     }
-    
+
     // void geiger_tp::get_thws_bitset(boost::dynamic_bitset<> & gg_thws_word_) const
     // {
     //   extract_bitset_from_is_length(THWS_BEGIN, THWS_SIZE, gg_thws_word_);
@@ -131,7 +131,7 @@ namespace snemo {
     // }
 
     void geiger_tp::get_hardware_status_bitset(std::bitset<geiger::tp::THWS_SIZE> & gg_hardware_status_) const
-    {   
+    {
 	for (unsigned int i = 0; i < geiger::tp::THWS_SIZE; i++)
 	  {
 	    if (_gg_tp_.test(i + geiger::tp::THWS_BEGIN) == 1)
@@ -153,7 +153,7 @@ namespace snemo {
     {
       DT_THROW_IF(number_of_rows_ > mapping::NUMBER_OF_CONNECTED_ROWS, std::range_error, "Unsupported number of rows ["<< number_of_rows_ <<"] ! ");
       std::bitset<geiger::tp::TRM_WORD_SIZE> row_tp_bitset(number_of_rows_);
-      
+
       for (unsigned int i = 0; i < row_tp_bitset.size(); i++)
 	{
 	  _gg_tp_.set(i + geiger::tp::TRM_BIT0, row_tp_bitset[i]);
@@ -185,7 +185,7 @@ namespace snemo {
     {
       return _gg_tp_.test(geiger::tp::TTM_BIT);
     }
-    
+
     void geiger_tp::set_tracker_trigger_mode(bool trigger_mode_)
     {
       if (trigger_mode_ == true)
@@ -202,7 +202,7 @@ namespace snemo {
 
     void geiger_tp::get_address_bitset(boost::dynamic_bitset<> & gg_address_word_) const
     {
-      extract_bitset_from_is_length(geiger::tp::ADDRESS_BEGIN, geiger::tp::ADDRESS_SIZE, gg_address_word_); 
+      extract_bitset_from_is_length(geiger::tp::ADDRESS_BEGIN, geiger::tp::ADDRESS_SIZE, gg_address_word_);
       return;
     }
 
@@ -222,9 +222,9 @@ namespace snemo {
 
     void geiger_tp::set_board_id(unsigned long board_id_)
     {
-      DT_THROW_IF(board_id_ > mapping::NUMBER_OF_FEBS_BY_CRATE, std::range_error, "Unsupported board ID ["<< board_id_ <<"] ! ");
+      DT_THROW_IF(board_id_ > mapping::NUMBER_OF_GEIGER_FEBS_PER_CRATE, std::range_error, "Unsupported board ID ["<< board_id_ <<"] ! ");
       std::bitset<geiger::tp::BOARD_ID_WORD_SIZE> board_id_bitset(board_id_);
-      
+
       for (unsigned int i = 0; i < board_id_bitset.size(); i++)
 	{
 	  _gg_tp_.set(i + geiger::tp::BOARD_ID_BIT0, board_id_bitset[i]);
@@ -247,9 +247,9 @@ namespace snemo {
 
     void geiger_tp::set_crate_id(unsigned long crate_id_)
     {
-      DT_THROW_IF(crate_id_ > mapping::NUMBER_OF_CRATES, std::range_error, "Unsupported crate ID ["<< crate_id_ <<"] ! ");
+      DT_THROW_IF(crate_id_ > mapping::NUMBER_OF_CRATES_PER_TYPE, std::range_error, "Unsupported crate ID ["<< crate_id_ <<"] ! ");
       std::bitset<geiger::tp::CRATE_ID_WORD_SIZE> crate_id_bitset(crate_id_);
-      
+
       for (unsigned int i = 0; i < crate_id_bitset.size(); i++)
 	{
 	  _gg_tp_.set(i + geiger::tp::CRATE_ID_BIT0, crate_id_bitset[i]);
@@ -270,11 +270,11 @@ namespace snemo {
       return;
     }
 
-    void geiger_tp::extract_bitset_from_to(unsigned int BIT_BEGIN_, 
-					   unsigned int BIT_END_, 
+    void geiger_tp::extract_bitset_from_to(unsigned int BIT_BEGIN_,
+					   unsigned int BIT_END_,
 					   boost::dynamic_bitset<> & my_bitset_word_) const
     {
-      unsigned int word_size = BIT_END_ - BIT_BEGIN_;     
+      unsigned int word_size = BIT_END_ - BIT_BEGIN_;
       for (unsigned int i = 0; i < word_size; i++)
 	{
 	  if (_gg_tp_.test(i + BIT_BEGIN_) == 1)
@@ -284,9 +284,9 @@ namespace snemo {
 	}
       return;
     }
-    
-    void geiger_tp::extract_bitset_from_is_length(unsigned int BIT_BEGIN_,  
-						  unsigned int word_size_, 
+
+    void geiger_tp::extract_bitset_from_is_length(unsigned int BIT_BEGIN_,
+						  unsigned int word_size_,
 						  boost::dynamic_bitset<> & my_bitset_word_) const
     {
       for (unsigned int i = 0; i < word_size_; i++)
@@ -326,7 +326,7 @@ namespace snemo {
            << "GG TP (100 bits) : " << _gg_tp_  << std::endl;
       return;
     }
-    
+
   } // end of namespace digitization
 
 } // end of namespace snemo

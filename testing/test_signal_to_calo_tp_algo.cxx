@@ -193,7 +193,7 @@ int main(int argc_, char** argv_)
 	my_calo_tp_data.tree_dump(std::clog, "Calorimeter TP(s) data : ", "INFO : ");
 	for(uint32_t i = my_calo_tp_data.get_clocktick_min(); i <= my_calo_tp_data.get_clocktick_max(); i++)
 	  {
-	    for(unsigned int j = 0 ; j <= snemo::digitization::mapping::NUMBER_OF_CRATES ; j++)
+	    for(unsigned int j = 0; j <= snemo::digitization::mapping::NUMBER_OF_CRATES_PER_TYPE; j++)
 	      {
 		std::vector<datatools::handle<snemo::digitization::calo_tp> > calo_tp_list_per_clocktick_per_crate;
 		my_calo_tp_data.get_list_of_tp_per_clocktick_per_crate(i, j, calo_tp_list_per_clocktick_per_crate);

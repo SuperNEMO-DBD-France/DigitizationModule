@@ -59,13 +59,13 @@ namespace snemo {
       temporary_feb_id.set_type(my_geiger_tp_.get_geom_id().get_type());
       temporary_feb_id.set_depth(mapping::BOARD_DEPTH);
       my_geiger_tp_.get_geom_id().extract_to(temporary_feb_id);
-      temporary_feb_id.set(mapping::BOARD_INDEX, mapping::CONTROL_BOARD_ID);
+      temporary_feb_id.set(mapping::BOARD_INDEX, mapping::CONTROL_BOARD_INDEX);
 
       a_geiger_ctw_.set_header(my_geiger_tp_.get_hit_id(),
 			       temporary_feb_id,
 			       my_geiger_tp_.get_clocktick_800ns() + clock_utils::TRACKER_FEB_TO_CB_SHIFT_CLOCKTICK_NUMBER);
       unsigned int block_index = my_geiger_tp_.get_geom_id().get(mapping::BOARD_INDEX);
-      if (block_index >  mapping::CONTROL_BOARD_ID) block_index -= 1;
+      if (block_index >  mapping::CONTROL_BOARD_INDEX) block_index -= 1;
       std::bitset<5> hardware_status = 0x0;
       std::bitset<2> crate_id = 0x0;
       my_geiger_tp_.get_hardware_status_bitset(hardware_status);
@@ -92,7 +92,7 @@ namespace snemo {
       DT_THROW_IF(!is_initialized(), std::logic_error, "Geiger tp to ctw algo is not initialized, it can't process ! ");
       for(uint32_t i = geiger_tp_data_.get_clocktick_min(); i <= geiger_tp_data_.get_clocktick_max(); i++)
       	{
-      	  for(unsigned int j = 0 ; j <= mapping::NUMBER_OF_CRATES ; j++)
+      	  for(unsigned int j = 0 ; j <= mapping::NUMBER_OF_CRATES_PER_TYPE; j++)
       	    {
       	      std::vector<datatools::handle<geiger_tp> > geiger_tp_list_per_clocktick_per_crate;
       	      geiger_tp_data_.get_list_of_gg_tp_per_clocktick_per_crate(i, j, geiger_tp_list_per_clocktick_per_crate);

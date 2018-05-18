@@ -3,7 +3,7 @@
 // Author(s): Guillaume OLIVIERO <goliviero@lpccaen.in2p3.fr>
 
 #ifndef FALAISE_DIGITIZATION_PLUGIN_SNEMO_DIGITIZATION_ID_CONVERTOR_H
-#define FALAISE_DIGITIZATION_PLUGIN_SNEMO_DIGITIZATION_ID_CONVERTOR_H 
+#define FALAISE_DIGITIZATION_PLUGIN_SNEMO_DIGITIZATION_ID_CONVERTOR_H
 
 // Standard library :
 
@@ -23,7 +23,7 @@
 
 namespace snemo {
 
-  namespace geometry { 
+  namespace geometry {
     class gg_locator;
     class calo_locator;
     class xcalo_locator;
@@ -31,39 +31,38 @@ namespace snemo {
   }
 
   namespace digitization {
-    
+
     class ID_convertor : boost::noncopyable {
 
-    public : 
+    public :
 
       ID_convertor();
       ID_convertor(const geomtools::manager & mgr_, int module_number_);
       virtual ~ID_convertor(); // Default D-tor
-  
-    private : 
+
+    private :
       bool _initialized_;
       datatools::logger::priority _logging_;
       int _module_number_;
+			std::string _tracker_mapping_filename_;
       const geomtools::manager * _geo_manager_;
-      boost::scoped_ptr<geometry::gg_locator>  _gg_locator_; 
+      boost::scoped_ptr<geometry::gg_locator>  _gg_locator_;
       boost::scoped_ptr<geometry::calo_locator> _calo_locator_;
       boost::scoped_ptr<geometry::xcalo_locator> _xcalo_locator_;
       boost::scoped_ptr<geometry::gveto_locator> _gveto_locator_;
-  
-			// protected :
-      
-			//   const geometry::gg_locator & _get_gg_locator() const;
-			//   const geometry::calo_locator & _get_calo_locator() const;
-			//   const geometry::xcalo_locator & _get_xcalo_locator() const;
-			//   const geometry::gveto_locator & _get_gveto_locator() const;
+
+			std::map<geomtools::geom_id, geomtools::geom_id> _geiger_feb_mapping_;
 
     public :
-  
+
       bool is_initialized() const;
-      void initialize();
+      void initialize(const datatools::properties & config_);
+			void set_geiger_feb_mapping_file(const std::string & filename_);
       void reset();
       void set_logging(datatools::logger::priority);
       datatools::logger::priority get_logging() const;
+			void build_geiger_feb_mapping();
+			std::map<geomtools::geom_id, geomtools::geom_id> get_geiger_feb_mapping() const;
       geomtools::geom_id convert_GID_to_EID(const geomtools::geom_id & geom_id_) const;
       void set_geo_manager(const geomtools::manager & mgr_);
       void set_module_number(int);
@@ -81,9 +80,9 @@ namespace snemo {
 } // end of namespace snemo
 
 
-#endif // FALAISE_DIGITIZATION_PLUGIN_SNEMO_DIGITIZATION_ID_CONVERTOR_H 
+#endif // FALAISE_DIGITIZATION_PLUGIN_SNEMO_DIGITIZATION_ID_CONVERTOR_H
 
-/* 
+/*
 ** Local Variables: --
 ** mode: c++ --
 ** c-file-style: "gnu" --

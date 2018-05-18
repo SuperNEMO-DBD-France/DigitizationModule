@@ -41,6 +41,16 @@ namespace snemo {
 			     const geomtools::geom_id & electronic_id_,
 			     uint32_t clocktick_25ns_)
     {
+      DT_THROW_IF(electronic_id_.get_type() != mapping::CALO_FEB_CATEGORY_TYPE,
+		  std::logic_error,
+		  "Calo TP EID type '" << electronic_id_.get_type() <<"' is not correct !");
+      DT_THROW_IF(electronic_id_.get(mapping::CRATE_INDEX) >= mapping::NUMBER_OF_CRATES_PER_TYPE,
+		  std::logic_error,
+		  "Calo TP EID Crate ID '" << electronic_id_.get(mapping::CRATE_INDEX) << "'  is not correct !");
+      DT_THROW_IF(electronic_id_.get(mapping::BOARD_INDEX) >= mapping::NUMBER_OF_GEIGER_FEBS_PER_CRATE,
+		  std::logic_error,
+		  "Calo TP EID Board ID '" << electronic_id_.get(mapping::BOARD_INDEX) << "'  is not correct !");
+
       set_hit_id(hit_id_);
       set_geom_id(electronic_id_);
       set_clocktick_25ns(clocktick_25ns_);

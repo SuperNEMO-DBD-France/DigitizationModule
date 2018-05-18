@@ -200,10 +200,10 @@ namespace snemo {
 						    calo_ctw & a_calo_ctw_)
     {
       geomtools::geom_id temporary_feb_id;
-      temporary_feb_id.set_type(my_calo_tp_.get_geom_id().get_type());
+      temporary_feb_id.set_type(mapping::CALO_CONTROL_BOARD_TYPE);
       temporary_feb_id.set_depth(mapping::BOARD_DEPTH);
       my_calo_tp_.get_geom_id().extract_to(temporary_feb_id);
-      temporary_feb_id.set(mapping::BOARD_INDEX, mapping::CONTROL_BOARD_ID);
+      temporary_feb_id.set(mapping::BOARD_INDEX, mapping::CONTROL_BOARD_INDEX);
 
       uint32_t clocktick_with_internal_shift = my_calo_tp_.get_clocktick_25ns() + clock_utils::CALO_CB_SHIFT_CLOCKTICK_NUMBER;
 
@@ -222,10 +222,10 @@ namespace snemo {
 						      calo_ctw & a_calo_ctw_)
     {
       geomtools::geom_id temporary_feb_id;
-      temporary_feb_id.set_type(my_calo_tp_.get_geom_id().get_type());
+      temporary_feb_id.set_type(mapping::CALO_CONTROL_BOARD_TYPE);
       temporary_feb_id.set_depth(mapping::BOARD_DEPTH);
       my_calo_tp_.get_geom_id().extract_to(temporary_feb_id);
-      temporary_feb_id.set(mapping::BOARD_INDEX, mapping::CONTROL_BOARD_ID);
+      temporary_feb_id.set(mapping::BOARD_INDEX, mapping::CONTROL_BOARD_INDEX);
 
       uint32_t clocktick_with_internal_shift = my_calo_tp_.get_clocktick_25ns() + clock_utils::CALO_CB_SHIFT_CLOCKTICK_NUMBER;
 

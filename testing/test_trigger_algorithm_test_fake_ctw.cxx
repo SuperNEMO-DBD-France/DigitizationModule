@@ -66,7 +66,7 @@ int main( int  argc_ , char **argv_  )
     snemo::digitization::electronic_mapping my_e_mapping;
     my_e_mapping.set_geo_manager(my_manager);
     my_e_mapping.set_module_number(snemo::digitization::mapping::DEMONSTRATOR_MODULE_NUMBER);
-    my_e_mapping.add_preconstructed_type(snemo::digitization::mapping::GEIGER_CATEGORY_TYPE);
+    my_e_mapping.add_preconstructed_type(snemo::digitization::mapping::GEIGER_ANODIC_CATEGORY_TYPE);
     my_e_mapping.add_preconstructed_type(snemo::digitization::mapping::CALO_MAIN_WALL_CATEGORY_TYPE);
     my_e_mapping.initialize();
     // Clock manager :
@@ -208,7 +208,10 @@ int main( int  argc_ , char **argv_  )
     // Add fake CTW calo and geiger :
     {
       snemo::digitization::calo_ctw & my_calo_ctw = my_calo_ctw_data.add();
-      geomtools::geom_id my_ctw_gid(snemo::digitization::mapping::CALORIMETER_CONTROL_BOARD_TYPE, snemo::digitization::mapping::CALO_RACK_ID, 0, 10); // GID : [type]:[RACK],[CRATE],[BOARD]
+      geomtools::geom_id my_ctw_gid(snemo::digitization::mapping::CALO_CONTROL_BOARD_TYPE,
+				    snemo::digitization::mapping::DEMONSTRATOR_MODULE_NUMBER,
+				    snemo::digitization::mapping::MAIN_CALO_SIDE_0_CRATE,
+				    snemo::digitization::mapping::CONTROL_BOARD_INDEX); // GID : [type]:[module],[CRATE],[BOARD]
       my_calo_ctw.set_header(155,
 			     my_ctw_gid,
 			     200); // hit, gid, clocktick25ns
@@ -225,7 +228,10 @@ int main( int  argc_ , char **argv_  )
       {
 	{
 	  snemo::digitization::geiger_ctw & my_geiger_ctw = my_geiger_ctw_data.add();
-	  geomtools::geom_id my_ctw_gid(snemo::digitization::mapping::TRACKER_CONTROL_BOARD_TYPE, snemo::digitization::mapping::GEIGER_RACK_ID, 1, 10);
+	  geomtools::geom_id my_ctw_gid(snemo::digitization::mapping::GEIGER_CONTROL_BOARD_TYPE,
+					snemo::digitization::mapping::DEMONSTRATOR_MODULE_NUMBER,
+					snemo::digitization::mapping::GEIGER_CRATE_1,
+					snemo::digitization::mapping::CONTROL_BOARD_INDEX); // GID : [type]:[module],[CRATE],[BOARD]
 	  my_geiger_ctw.set_header(ict+50,
 				   my_ctw_gid,
 				   ict);
@@ -251,7 +257,10 @@ int main( int  argc_ , char **argv_  )
     // Add fake CTW calo and geiger :
     {
       snemo::digitization::calo_ctw & my_calo_ctw = my_calo_ctw_data.add();
-      geomtools::geom_id my_ctw_gid(snemo::digitization::mapping::CALORIMETER_CONTROL_BOARD_TYPE, snemo::digitization::mapping::CALO_RACK_ID, 0, 10); // GID : [type]:[RACK],[CRATE],[BOARD]
+      geomtools::geom_id my_ctw_gid(snemo::digitization::mapping::CALO_CONTROL_BOARD_TYPE,
+				    snemo::digitization::mapping::DEMONSTRATOR_MODULE_NUMBER,
+				    snemo::digitization::mapping::MAIN_CALO_SIDE_0_CRATE,
+				    snemo::digitization::mapping::CONTROL_BOARD_INDEX);
       my_calo_ctw.set_header(155,
 			     my_ctw_gid,
 			     16000); // hit, gid, clocktick25ns
@@ -267,7 +276,10 @@ int main( int  argc_ , char **argv_  )
       for (unsigned int ict = 500; ict < 512; ict++)
 	{
 	  snemo::digitization::geiger_ctw & my_geiger_ctw = my_geiger_ctw_data.add();
-	  geomtools::geom_id my_ctw_gid(snemo::digitization::mapping::TRACKER_CONTROL_BOARD_TYPE, snemo::digitization::mapping::GEIGER_RACK_ID, 1, 10);
+	  geomtools::geom_id my_ctw_gid(snemo::digitization::mapping::GEIGER_CONTROL_BOARD_TYPE,
+					snemo::digitization::mapping::DEMONSTRATOR_MODULE_NUMBER,
+					snemo::digitization::mapping::GEIGER_CRATE_1,
+					snemo::digitization::mapping::CONTROL_BOARD_INDEX);
 	  my_geiger_ctw.set_header(ict+50,
 				   my_ctw_gid,
 				   ict); // hit, gid, clocktick800ns
@@ -295,7 +307,10 @@ int main( int  argc_ , char **argv_  )
       for (unsigned int ict = 900; ict < 906; ict++)
 	{
 	  snemo::digitization::geiger_ctw & my_geiger_ctw = my_geiger_ctw_data.add();
-	  geomtools::geom_id my_ctw_gid(snemo::digitization::mapping::TRACKER_CONTROL_BOARD_TYPE, snemo::digitization::mapping::GEIGER_RACK_ID, 1, 10);
+	  geomtools::geom_id my_ctw_gid(snemo::digitization::mapping::GEIGER_CONTROL_BOARD_TYPE,
+					snemo::digitization::mapping::DEMONSTRATOR_MODULE_NUMBER,
+					snemo::digitization::mapping::GEIGER_CRATE_1,
+					snemo::digitization::mapping::CONTROL_BOARD_INDEX);
 	  my_geiger_ctw.set_header(ict+50,
 				   my_ctw_gid,
 				   ict); // hit, gid, clocktick800ns
@@ -323,7 +338,10 @@ int main( int  argc_ , char **argv_  )
       for (unsigned int ict = 1600; ict < 1605; ict++)
 	{
 	  snemo::digitization::geiger_ctw & my_geiger_ctw = my_geiger_ctw_data.add();
-	  geomtools::geom_id my_ctw_gid(snemo::digitization::mapping::TRACKER_CONTROL_BOARD_TYPE, snemo::digitization::mapping::GEIGER_RACK_ID, 1, 10);
+	  geomtools::geom_id my_ctw_gid(snemo::digitization::mapping::GEIGER_CONTROL_BOARD_TYPE,
+					snemo::digitization::mapping::DEMONSTRATOR_MODULE_NUMBER,
+					snemo::digitization::mapping::GEIGER_CRATE_1,
+					snemo::digitization::mapping::CONTROL_BOARD_INDEX);
 	  my_geiger_ctw.set_header(ict+50,
 				   my_ctw_gid,
 				   ict); // hit, gid, clocktick800ns
@@ -351,7 +369,10 @@ int main( int  argc_ , char **argv_  )
       for (unsigned int ict = 4000; ict < 4005; ict++)
 	{
 	  snemo::digitization::geiger_ctw & my_geiger_ctw = my_geiger_ctw_data.add();
-	  geomtools::geom_id my_ctw_gid(snemo::digitization::mapping::TRACKER_CONTROL_BOARD_TYPE, snemo::digitization::mapping::GEIGER_RACK_ID, 1, 10);
+	  geomtools::geom_id my_ctw_gid(snemo::digitization::mapping::GEIGER_CONTROL_BOARD_TYPE,
+					snemo::digitization::mapping::DEMONSTRATOR_MODULE_NUMBER,
+					snemo::digitization::mapping::GEIGER_CRATE_1,
+					snemo::digitization::mapping::CONTROL_BOARD_INDEX);
 	  my_geiger_ctw.set_header(ict+50,
 				   my_ctw_gid,
 				   ict); // hit, gid, clocktick800ns

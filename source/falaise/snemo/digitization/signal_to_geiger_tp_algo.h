@@ -56,6 +56,7 @@ namespace snemo {
 				double VLNT; //!< Anodic low negative threshold in Volts
 				double VHNT; //!< Anodic high negative threshold in Volts
 				double VHPT; //!< Anodic high positive threshold in Volts
+				double VCPT; //!< Cathodic positive threshold in Volts
 
 			protected :
 				void _set_defaults();
@@ -75,11 +76,22 @@ namespace snemo {
 											 const std::string & indent_ = "",
 											 bool inherit_               = false) const;
 
+				// Probably attributes to remove :
+				// Keep it for the moment for debug / visualization
 				const mctools::signal::base_signal * signal_ref;
 				mygsl::unary_function_promoted_with_numeric_derivative signal_deriv;
+				///////
+
 				int32_t            hit_id;
-				geomtools::geom_id geom_id;
-				geomtools::geom_id cell_electronic_id;
+				geomtools::geom_id anodic_gid;
+				geomtools::geom_id cathodic_bottom_gid;
+				geomtools::geom_id cathodic_top_gid;
+
+				geomtools::geom_id anodic_eid;
+				geomtools::geom_id cathodic_bottom_eid;
+				geomtools::geom_id cathodic_top_eid;
+
+				double event_time_reference;
 				double trigger_time;
 				double anodic_R0;
 				double anodic_R1;
@@ -88,6 +100,9 @@ namespace snemo {
 				double anodic_R4;
 				double cathodic_R5;
 				double cathodic_R6;
+
+				std::string cathode_top_register;
+				std::string cathode_bottom_register;
 
 				uint32_t  clocktick_800;
 			};

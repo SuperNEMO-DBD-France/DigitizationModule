@@ -160,9 +160,9 @@ namespace snemo {
     }
 
     void tracker_trigger_algorithm::build_hit_cells_gids_from_ctw(const geiger_ctw & my_geiger_ctw_,
-									    std::vector<geomtools::geom_id> & hit_cells_gids_) const
+								  std::vector<geomtools::geom_id> & hit_cells_gids_) const
     {
-      for (unsigned int i = 0; i < mapping::NUMBER_OF_FEBS_BY_CRATE; i++)
+      for (unsigned int i = 0; i < mapping::NUMBER_OF_GEIGER_FEBS_PER_CRATE; i++)
 	{
 	  // Take care here after definition change of Geiger CTW
 	  std::bitset<geiger::tp::FULL_SIZE> my_bitset;
@@ -175,18 +175,19 @@ namespace snemo {
 	    {
 	      if (my_tp_bitset.test(j))
 		{
-		  uint32_t ctw_type  = my_geiger_ctw_.get_geom_id().get_type();
-		  uint32_t ctw_rack  = my_geiger_ctw_.get_geom_id().get(mapping::RACK_INDEX);
-		  uint32_t ctw_crate = my_geiger_ctw_.get_geom_id().get(mapping::CRATE_INDEX);
+		  uint32_t feb_type  = mapping::GEIGER_FEB_CATEGORY_TYPE;
+		  uint32_t crate_id = my_geiger_ctw_.get_geom_id().get(mapping::CRATE_INDEX);
 		  uint32_t board_id = get_board_id(my_bitset);
+		  // TO DO : eid -> gid
+		  // uint32_t feast_id = get_board_id(my_bitset);
 		  uint32_t channel_id = j;
 		  geomtools::geom_id temporary_electronic_id;
-		  temporary_electronic_id.set_depth(mapping::CHANNEL_DEPTH);
-		  temporary_electronic_id.set_type(ctw_type);
-		  temporary_electronic_id.set(mapping::RACK_INDEX, ctw_rack);
-		  temporary_electronic_id.set(mapping::CRATE_INDEX, ctw_crate);
+		  temporary_electronic_id.set_depth(mapping::GEIGER_CHANNEL_DEPTH);
+		  temporary_electronic_id.set_type(feb_type);
+		  temporary_electronic_id.set(mapping::MODULE_INDEX, mapping::DEMONSTRATOR_MODULE_NUMBER);
+		  temporary_electronic_id.set(mapping::CRATE_INDEX, crate_id);
 		  temporary_electronic_id.set(mapping::BOARD_INDEX, board_id);
-		  temporary_electronic_id.set(mapping::CHANNEL_INDEX, channel_id);
+		  temporary_electronic_id.set(mapping::GEIGER_CHANNEL_INDEX, channel_id);
 		  {
 		    geomtools::geom_id dummy;
 		    hit_cells_gids_.push_back(dummy);

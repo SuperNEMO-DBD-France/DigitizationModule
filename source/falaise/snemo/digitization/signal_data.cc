@@ -159,7 +159,7 @@ namespace snemo {
 					calo_signal a_calo_signal = a_calo_signal_handle.get();
 
 					const geomtools::geom_id a_calo_gid = a_calo_signal.get_geom_id();
-					if(a_calo_gid.get_type() == mapping::CALORIMETER_X_WALL_CATEGORY_TYPE)
+					if(a_calo_gid.get_type() == mapping::CALO_XWALL_CATEGORY_TYPE)
 						{
 							number_of_xcalo_signal++;
 						}
@@ -179,7 +179,7 @@ namespace snemo {
 					calo_signal a_calo_signal = a_calo_signal_handle.get();
 
 					const geomtools::geom_id a_calo_gid = a_calo_signal.get_geom_id();
-					if(a_calo_gid.get_type() == mapping::CALORIMETER_GVETO_CATEGORY_TYPE)
+					if(a_calo_gid.get_type() == mapping::CALO_GVETO_CATEGORY_TYPE)
 						{
 							number_of_gveto_signal++;
 						}

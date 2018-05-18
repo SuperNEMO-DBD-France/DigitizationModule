@@ -93,7 +93,7 @@ namespace snemo {
 
     void calo_ctw::set_htm_main_wall(unsigned int multiplicity_)
     {
-      DT_THROW_IF(multiplicity_ > mapping::NUMBER_OF_FEBS_BY_CRATE, std::logic_error, "Multiplicity value ["<< multiplicity_ << "] is not valid ! ");
+      DT_THROW_IF(multiplicity_ > mapping::NUMBER_OF_CALO_FEBS_PER_CRATE, std::logic_error, "Multiplicity value ["<< multiplicity_ << "] is not valid ! ");
       DT_THROW_IF(_layout_ == calo::ctw::LAYOUT_UNDEFINED || _layout_ == calo::ctw::LAYOUT_XWALL_GVETO, std::logic_error, "Layout value [" << _layout_ << "] is not valid ! ");
 
       switch (multiplicity_)
@@ -146,7 +146,7 @@ namespace snemo {
 
     void calo_ctw::set_htm_gveto(unsigned int multiplicity_)
     {
-      DT_THROW_IF(multiplicity_ > mapping::NUMBER_OF_FEBS_BY_CRATE, std::logic_error, "Multiplicity value ["<< multiplicity_ << "] is not valid ! ");
+      DT_THROW_IF(multiplicity_ > mapping::NUMBER_OF_CALO_FEBS_PER_CRATE, std::logic_error, "Multiplicity value ["<< multiplicity_ << "] is not valid ! ");
       DT_THROW_IF(_layout_ == calo::ctw::LAYOUT_UNDEFINED || _layout_ == calo::ctw::LAYOUT_MAIN_WALL, std::logic_error, "Layout value [" << _layout_ << "] is not valid ! ");
 
       switch (multiplicity_)
@@ -200,7 +200,7 @@ namespace snemo {
 
     void calo_ctw::set_htm_xwall_side_0(unsigned int multiplicity_)
     {
-      DT_THROW_IF(multiplicity_ > mapping::NUMBER_OF_FEBS_BY_CRATE, std::logic_error, "Multiplicity value ["<< multiplicity_ << "] is not valid ! ");
+      DT_THROW_IF(multiplicity_ > mapping::NUMBER_OF_CALO_FEBS_PER_CRATE, std::logic_error, "Multiplicity value ["<< multiplicity_ << "] is not valid ! ");
       DT_THROW_IF(_layout_ == calo::ctw::LAYOUT_UNDEFINED || _layout_ == calo::ctw::LAYOUT_MAIN_WALL, std::logic_error, "Layout value [" << _layout_ << "] is not valid ! ");
 
       switch (multiplicity_)
@@ -253,7 +253,7 @@ namespace snemo {
 
     void calo_ctw::set_htm_xwall_side_1(unsigned int multiplicity_)
     {
-      DT_THROW_IF(multiplicity_ > mapping::NUMBER_OF_FEBS_BY_CRATE, std::logic_error, "Multiplicity value ["<< multiplicity_ << "] is not valid ! ");
+      DT_THROW_IF(multiplicity_ > mapping::NUMBER_OF_CALO_FEBS_PER_CRATE, std::logic_error, "Multiplicity value ["<< multiplicity_ << "] is not valid ! ");
       DT_THROW_IF(_layout_ == calo::ctw::LAYOUT_UNDEFINED || _layout_ == calo::ctw::LAYOUT_MAIN_WALL, std::logic_error, "Layout value [" << _layout_ << "] is not valid ! ");
 
       switch (multiplicity_)

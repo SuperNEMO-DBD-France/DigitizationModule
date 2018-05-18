@@ -793,7 +793,7 @@ namespace snemo {
 		 ictw++) {
 	      datatools::handle<calo_ctw> a_handle_calo_ctw = *ictw;
 
-	      std::size_t calo_ctw_number = a_handle_calo_ctw.get().get_geom_id().get(mapping::RACK_DEPTH);
+	      std::size_t calo_ctw_number = a_handle_calo_ctw.get().get_geom_id().get(mapping::CRATE_DEPTH);
 
 	      if (calo_ctw_number == 0) {
 		calo_ofstreams_[0] << binary_counter << " : ";
@@ -951,12 +951,12 @@ namespace snemo {
 		 ictw++) {
 
 	      datatools::handle<geiger_ctw> a_handle_gg_ctw = *ictw;
-	      std::size_t tracker_ctw_number = a_handle_gg_ctw.get().get_geom_id().get(mapping::RACK_DEPTH);
+	      std::size_t tracker_ctw_number = a_handle_gg_ctw.get().get_geom_id().get(mapping::CRATE_DEPTH);
 
 	      if (tracker_ctw_number == 0)
 		{
 		  // Only 19 FEBs, 36 bits / clock25ns + 19 * 36 zero bits
-		  for (std::size_t iblock = 0; iblock < mapping::NUMBER_OF_FEBS_BY_CRATE; iblock++)
+		  for (std::size_t iblock = 0; iblock < mapping::NUMBER_OF_GEIGER_FEBS_PER_CRATE; iblock++)
 		    {
 		      binary_counter = decimal_counter;
 		      tracker_ofstreams_[0] << binary_counter << " : ";
@@ -975,7 +975,7 @@ namespace snemo {
 	      if (tracker_ctw_number == 1)
 		{
 		  // Only 19 FEBs, 36 bits / clock25ns + 36 zero bits
-		  for (std::size_t iblock = 0; iblock < mapping::NUMBER_OF_FEBS_BY_CRATE; iblock++)
+		  for (std::size_t iblock = 0; iblock < mapping::NUMBER_OF_GEIGER_FEBS_PER_CRATE; iblock++)
 		    {
 		      binary_counter = decimal_counter;
 		      tracker_ofstreams_[1] << binary_counter << " : ";
@@ -995,7 +995,7 @@ namespace snemo {
 	      if (tracker_ctw_number == 2)
 		{
 		  // Only 19 FEBs, 36 bits / clock25ns + 36 zero bits
-		  for (std::size_t iblock = 0; iblock < mapping::NUMBER_OF_FEBS_BY_CRATE; iblock++)
+		  for (std::size_t iblock = 0; iblock < mapping::NUMBER_OF_GEIGER_FEBS_PER_CRATE; iblock++)
 		    {
 		      binary_counter = initial_counter;
 		      tracker_ofstreams_[2] << binary_counter << " : ";

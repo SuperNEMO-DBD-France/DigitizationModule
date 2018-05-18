@@ -96,30 +96,16 @@ namespace snemo {
 	prng_seed = config_.fetch_integer("prng_seed");
       }
 
-
-
-      // std::string key_prefix = "driver." + driver_name + ".";
-      // std::string type_id_key = key_prefix + "type_id";
-      // std::string config_key_prefix = key_prefix + "config.";
-      // DT_THROW_IF(!config_.has_key(type_id_key),
-      //             std::logic_error,
-      //             "Missing type ID for signal generator driver '" << driver_name << "'!");
-      // std::string driver_type_id = config_.fetch_string(type_id_key);
-      // DT_THROW_IF(driver_type_id.empty(),
-      //             std::logic_error,
-      //             "Empty type ID for signal generator driver '" << driver_name << "'!");
-      // datatools::properties driver_config;
-      // config_.export_and_rename_starting_with(driver_config, config_key_prefix, "");
-      // add_driver(driver_name, driver_type_id, driver_config);
-
-
       // Initialize internal object
       _rdm_gen_.initialize(prng_seed);
       _clock_utils_.initialize();
 
+      std::string elec_mapping_key = "electronic_mapping.config.";
+      datatools::properties elec_mapping_config;
+      config_.export_and_rename_starting_with(elec_mapping_config, elec_mapping_key, "");
       _electronic_mapping_.set_geo_manager(get_geometry_manager());
-      _electronic_mapping_.set_module_number(mapping::DEMONSTRATOR_MODULE_NUMBER);
-      _electronic_mapping_.initialize();
+      _electronic_mapping_.initialize(elec_mapping_config);
+      elec_mapping_config.tree_dump(std::clog, "Electronic mapping configuration");
 
       _gg_ssb_.set_logging_priority(_logging_priority_);
       _calo_ssb_.set_logging_priority(_logging_priority_);
@@ -238,14 +224,15 @@ namespace snemo {
       // int32_t clocktick_25_reference  = _clock_utils_.get_clocktick_25_ref();
       // double  clocktick_25_shift      = _clock_utils_.get_shift_25();
       // _calo_signal_to_tp_algo_.set_clocktick_reference(clocktick_25_reference);
-
+      std::clog << "Debug 0" << std::endl;
       calo_tp_data calo_tp_data;
       _calo_signal_to_tp_algo_.process(SSD_, calo_tp_data);
 
+      std::clog << "Debug 1" << std::endl;
       calo_ctw_data calo_ctw_data;
       _calo_tp_to_ctw_algo_.process(calo_tp_data,
 				    calo_ctw_data);
-
+      std::clog << "Debug 2" << std::endl;
 
       // int32_t clocktick_800_reference = _clock_utils_.get_clocktick_800_ref();
       // double  clocktick_800_shift     = _clock_utils_.get_shift_800();
@@ -254,6 +241,8 @@ namespace snemo {
       geiger_tp_data gg_tp_data;
       _geiger_signal_to_tp_algo_.process(SSD_,
 					 gg_tp_data);
+
+      std::clog << "Debug 3" << std::endl;
 
       geiger_ctw_data gg_ctw_data;
       _geiger_tp_to_ctw_algo_.process(gg_tp_data, gg_ctw_data);
@@ -267,9 +256,6 @@ namespace snemo {
 
       _trigger_algo_.process(calo_ctw_data,
 			     gg_ctw_data);
-
-
-
 
       return;
     }

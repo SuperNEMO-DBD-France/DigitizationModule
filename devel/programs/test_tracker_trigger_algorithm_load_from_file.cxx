@@ -269,9 +269,8 @@ int main( int  argc_ , char **argv_  )
 	    geomtools::geom_id temporary_elec_id;
 	    temporary_elec_id.set_type(snemo::digitization::mapping::TRACKER_CONTROL_BOARD_TYPE);
 	    temporary_elec_id.set_depth(snemo::digitization::mapping::BOARD_DEPTH);
-	    temporary_elec_id.set(snemo::digitization::mapping::RACK_INDEX, snemo::digitization::mapping::GEIGER_RACK_ID);
-	    temporary_elec_id.set(snemo::digitization::mapping::CRATE_INDEX, 0);
-	    temporary_elec_id.set(snemo::digitization::mapping::BOARD_INDEX, snemo::digitization::mapping::CONTROL_BOARD_ID);
+	    temporary_elec_id.set(snemo::digitization::mapping::CRATE_INDEX, snemo::digitization::mapping::GEIGER_CRATE_0);
+	    temporary_elec_id.set(snemo::digitization::mapping::BOARD_INDEX, snemo::digitization::mapping::CONTROL_BOARD_INDEX);
 
 	    my_geiger_ctw_0.set_header(hit_id,
 				       temporary_elec_id,

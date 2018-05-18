@@ -13,6 +13,7 @@
 #include <falaise/falaise.h>
 
 // This project :
+#include <snemo/digitization/fldigi.h>
 #include <snemo/digitization/calo_tp.h>
 #include <snemo/digitization/geiger_tp.h>
 #include <snemo/digitization/ID_convertor.h>
@@ -22,6 +23,7 @@
 int main(int argc_, char ** argv_)
 {
   falaise::initialize(argc_, argv_);
+  snemo::digitization::initialize(argc_, argv_);
   int error_code = EXIT_SUCCESS;
   datatools::logger::priority logging = datatools::logger::PRIO_FATAL;
   try {
@@ -42,6 +44,11 @@ int main(int argc_, char ** argv_)
 	manager_config.erase ("mapping.excluded_categories");
       }
 
+    std::string geiger_feb_mapping_filename = "@fldigi:config/snemo/demonstrator/simulation/digitization/0.1/feast_channel_mapping.csv";
+    datatools::fetch_path_with_env(geiger_feb_mapping_filename);
+    std::clog << "GG FEB mapping filename = " << geiger_feb_mapping_filename << std::endl;
+
+
     // std::vector<std::string> only_categories;
     // only_categories.push_back ("module");
     // only_categories.push_back ("drift_cell_core");
@@ -56,37 +63,39 @@ int main(int argc_, char ** argv_)
     snemo::digitization::ID_convertor my_convertor;
     my_convertor.set_geo_manager(my_manager);
     my_convertor.set_module_number(0);
-    my_convertor.initialize();
+    my_convertor.set_geiger_feb_mapping_file(geiger_feb_mapping_filename);
+    my_convertor.initialize(manager_config);
 
-    geomtools::geom_id my_geom_ID_from_SD;
-    my_geom_ID_from_SD.set_type(1204);
-    my_geom_ID_from_SD.set_address(0,1,7,112);
+    std::map<geomtools::geom_id, geomtools::geom_id> gid_eid_feb_map = my_convertor.get_geiger_feb_mapping();
 
-   geomtools::geom_id my_electronic_ID;
+    for (auto it=gid_eid_feb_map.begin(); it!=gid_eid_feb_map.end(); it++)
+      {
+	std::cout << it->first << " => " << it->second << std::endl;
+      }
 
-    std::clog << "DEBUG : MAIN : geom_ID " << my_geom_ID_from_SD << std::endl;
-    my_electronic_ID =  my_convertor.convert_GID_to_EID(my_geom_ID_from_SD);
-    std::clog << "DEBUG : MAIN : elec_ID " << my_electronic_ID << std::endl;
+    geomtools::geom_id GID;
+    GID.set_type(snemo::digitization::mapping::GEIGER_ANODIC_CATEGORY_TYPE);
+    int module = 0;
+    int side = 0;
+    int layer = 2;
+    int row = 4;
+    GID.set_address(module, side, layer, row);
 
-    snemo::digitization::geiger_tp my_geiger_tp;
-    my_geiger_tp.set_header(36, my_electronic_ID, 12, 0, 0, 6);
-    my_geiger_tp.tree_dump(std::clog, "my_geiger_TP (filled with electronic) : ", "INFO : ");
+    geomtools::geom_id EID;
+    EID = my_convertor.convert_GID_to_EID(GID);
+    std::clog <<" Anodic GID : " << GID << " <=> EID : " << EID << std::endl;
 
-    my_geom_ID_from_SD.reset();
-    my_electronic_ID.reset();
+    int part = 0; // bottom
+    geomtools::geom_id GID2(snemo::digitization::mapping::GEIGER_CATHODIC_CATEGORY_TYPE,
+			    module,
+			    side,
+			    layer,
+			    row,
+			    part);
+    EID = my_convertor.convert_GID_to_EID(GID2);
+    std::clog <<" Cathodic GID : " << GID2 << " <=> EID : " << EID << std::endl;
 
-    my_geom_ID_from_SD.set_type(1302);
-    my_geom_ID_from_SD.set_address(0,0,4,11);
-    std::clog << "DEBUG : MAIN : geom_ID " << my_geom_ID_from_SD << std::endl;
-    my_electronic_ID =  my_convertor.convert_GID_to_EID(my_geom_ID_from_SD);
-    std::clog << "DEBUG : MAIN : elec_ID " << my_electronic_ID << std::endl;
 
-    snemo::digitization::calo_tp my_calo_tp;
-    my_calo_tp.set_header(25, my_electronic_ID, 20);
-    my_calo_tp.tree_dump(std::clog, "my_calo_TP : ", " INFO : ");
-
-    my_calo_tp.reset();
-    my_calo_tp.tree_dump(std::clog, "my_calo_TP (reset) : ", "INFO : ");
 
   }
 
@@ -100,6 +109,7 @@ int main(int argc_, char ** argv_)
     error_code = EXIT_FAILURE;
   }
 
+  snemo::digitization::terminate();
   falaise::terminate();
   return error_code;
 }

@@ -64,7 +64,7 @@ int main( int  argc_ , char ** argv_ )
     snemo::digitization::electronic_mapping my_e_mapping;
     my_e_mapping.set_geo_manager(my_manager);
     my_e_mapping.set_module_number(0);
-    my_e_mapping.add_preconstructed_type(snemo::digitization::mapping::GEIGER_CATEGORY_TYPE);
+    my_e_mapping.add_preconstructed_type(snemo::digitization::mapping::GEIGER_ANODIC_CATEGORY_TYPE);
     my_e_mapping.initialize();
 
     snemo::digitization::signal_to_geiger_tp_algo signal_2_geiger_tp;

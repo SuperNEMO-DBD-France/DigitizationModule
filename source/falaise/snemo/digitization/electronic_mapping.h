@@ -29,7 +29,7 @@ namespace snemo {
     class electronic_mapping
     {
 
-      typedef boost::bimap< geomtools::geom_id, geomtools::geom_id > ID_bimap;
+      typedef boost::bimap<geomtools::geom_id, geomtools::geom_id> ID_bimap;
       typedef ID_bimap::value_type ID_doublet;
 
     public :
@@ -61,6 +61,9 @@ namespace snemo {
       /// Initializing
       void initialize();
 
+      /// Initializing
+      void initialize(const datatools::properties & config_);
+
       /// Check if the object is initialized
       bool is_initialized() const;
 
@@ -68,15 +71,19 @@ namespace snemo {
       void reset();
 
       /// Convert geometric ID into electronic ID
-      void convert_GID_to_EID(const bool tracker_trigger_mode_, const geomtools::geom_id & geom_id_, geomtools::geom_id & electronic_id_) const;
+      void convert_GID_to_EID(const bool tracker_trigger_mode_,
+															const geomtools::geom_id & geom_id_,
+															geomtools::geom_id & electronic_id_) const;
 
       /// Convert electronic ID into geometric ID
-      void convert_EID_to_GID(const bool tracker_trigger_mode_, const geomtools::geom_id & electronic_id_, geomtools::geom_id & geom_id_) const;
+      void convert_EID_to_GID(const bool tracker_trigger_mode_,
+															const geomtools::geom_id & electronic_id_,
+															geomtools::geom_id & geom_id_) const;
 
     protected :
 
       /// Initializing
-      void _initialize();
+      void _initialize(const datatools::properties & config_);
 
       /// Construct the bimap for geiger category type
       void _init_geiger();
@@ -91,10 +98,14 @@ namespace snemo {
       void _init_gveto();
 
       /// Protected convert geometric ID into electronic ID
-      void _convert_GID_to_EID(const bool tracker_trigger_mode_, const geomtools::geom_id & geom_id_, geomtools::geom_id & electronic_id_);
+      void _convert_GID_to_EID(const bool tracker_trigger_mode_,
+															 const geomtools::geom_id & geom_id_,
+															 geomtools::geom_id & electronic_id_);
 
       /// Protected convert electronic ID into geometric ID
-      void _convert_EID_to_GID(const bool tracker_trigger_mode_, const geomtools::geom_id & electronic_id_, geomtools::geom_id & geom_id_);
+      void _convert_EID_to_GID(const bool tracker_trigger_mode_,
+															 const geomtools::geom_id & electronic_id_,
+															 geomtools::geom_id & geom_id_);
 
     private :
 

@@ -311,7 +311,7 @@ namespace snemo {
 	  std::bitset<calo::ctw::XWALL_ZONING_BITSET_SIZE> xwall_zoning_bitset;
 	  my_calo_ctw_.get_xwall_zoning_word(xwall_zoning_bitset);
 
-	  for (unsigned int izone = calo::ctw::ZONING_XWALL_BIT0; izone < (calo::ctw::ZONING_XWALL_BIT0 + mapping::NUMBER_OF_XWALL_CALO_TRIGGER_ZONES); izone++)
+	  for (unsigned int izone = calo::ctw::ZONING_XWALL_BIT0; izone < (calo::ctw::ZONING_XWALL_BIT0 + mapping::NUMBER_OF_XWALL_TRIGGER_ZONES); izone++)
 	    {
 	      switch (izone)
 		{

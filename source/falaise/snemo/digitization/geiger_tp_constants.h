@@ -57,10 +57,6 @@ namespace snemo {
 				};
 
 
-				static const double ANODIC_NEGATIVE_LOW_THRESHOLD  = -0.02; // in mV ? Value to check
-				static const double ANODIC_NEGATIVE_HIGH_THRESHOLD = -0.04; // in mV ? Value to check
-				static const double ANODIC_POSITIVE_HIGH_THRESHOLD = -0.04; // in mV ? Value to check
-
 			} // end of namespace tp
 
 		} // end of namespace geiger
