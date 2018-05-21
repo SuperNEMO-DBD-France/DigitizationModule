@@ -186,9 +186,9 @@ int main( int argc_ , char ** argv_  )
 	    snemo::digitization::calo_tp_to_ctw_algo calo_tp_2_ctw;
 	    calo_tp_2_ctw.initialize(dummy_config);
 
-	    geiger_tp_2_ctw.process(my_geiger_tp_data, my_geiger_ctw_data);
+	    // geiger_tp_2_ctw.process(my_geiger_tp_data, my_geiger_ctw_data);
 	    my_geiger_ctw_data.tree_dump(std::clog, "Geiger CTW(s) data : ", "INFO : ");
-	    calo_tp_2_ctw.process(my_calo_tp_data, my_calo_ctw_data);
+	    // calo_tp_2_ctw.process(my_calo_tp_data, my_calo_ctw_data);
 	    my_calo_ctw_data.tree_dump(std::clog, "Calorimeter CTW(s) data : ", "INFO : ");
 	  }
 	// CF README.RST pour display graphique avec loader de manager.conf

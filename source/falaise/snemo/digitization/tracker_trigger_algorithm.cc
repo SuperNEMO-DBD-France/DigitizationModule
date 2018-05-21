@@ -178,15 +178,38 @@ namespace snemo {
 		  uint32_t feb_type  = mapping::GEIGER_FEB_CATEGORY_TYPE;
 		  uint32_t crate_id = my_geiger_ctw_.get_geom_id().get(mapping::CRATE_INDEX);
 		  uint32_t board_id = get_board_id(my_bitset);
-		  // TO DO : eid -> gid
-		  // uint32_t feast_id = get_board_id(my_bitset);
-		  uint32_t channel_id = j;
+		  uint32_t tp_position_id = j;
+
+		  uint32_t feast_id = -1;
+		  uint32_t channel_id = -1;
+
+		  if (tp_position_id < 18)
+		    {
+		      feast_id = 1;
+
+		      if (tp_position_id % 2 == 0)
+			{
+			  channel_id = tp_position_id * 3;
+			}
+		      else channel_id = tp_position_id * 3 + 1;
+		    }
+		  else
+		    {
+		      feast_id = 0;
+		      if (tp_position_id % 2 == 0)
+			{
+			  channel_id = (tp_position_id - 18) * 3;
+			}
+		      else channel_id = (tp_position_id - 18) * 3 + 1;
+		    }
+
 		  geomtools::geom_id temporary_electronic_id;
 		  temporary_electronic_id.set_depth(mapping::GEIGER_CHANNEL_DEPTH);
 		  temporary_electronic_id.set_type(feb_type);
 		  temporary_electronic_id.set(mapping::MODULE_INDEX, mapping::DEMONSTRATOR_MODULE_NUMBER);
 		  temporary_electronic_id.set(mapping::CRATE_INDEX, crate_id);
 		  temporary_electronic_id.set(mapping::BOARD_INDEX, board_id);
+		  temporary_electronic_id.set(mapping::GEIGER_FEAST_INDEX, feast_id);
 		  temporary_electronic_id.set(mapping::GEIGER_CHANNEL_INDEX, channel_id);
 		  {
 		    geomtools::geom_id dummy;
@@ -484,46 +507,52 @@ namespace snemo {
     void tracker_trigger_algorithm::print_zones(std::ostream & out_) const
     {
       out_ << "Zones: \n";
-      for (unsigned int ilayer = trigger_info::NLAYERS - 1; ilayer > 0; ilayer--) {
-	for (unsigned int izone = 0; izone < trigger_info::NZONES; izone++) {
-	  for (unsigned int irow = 0; irow < tracker_zone::width(izone); irow++) {
-	    out_ << (_zones_[0][izone].cells[ilayer][irow] ? 'o' : '.');
-	  }
-	  out_ << ' ';
+      for (unsigned int ilayer = trigger_info::NLAYERS - 1; ilayer > 0; ilayer--)
+	{
+	  for (unsigned int izone = 0; izone < trigger_info::NZONES; izone++)
+	    {
+	      for (unsigned int irow = 0; irow < tracker_zone::width(izone); irow++)
+		{
+		  out_ << (_zones_[0][izone].cells[ilayer][irow] ? 'o' : '.');
+		}
+	      out_ << ' ';
+	    }
+	  out_ << '\n';
 	}
-	out_ << '\n';
-      }
-      for (unsigned int irow = 0; irow < trigger_info::NROWS + trigger_info::NZONES - 1; irow++) {
-	out_ << '=';
-      }
+      for (unsigned int irow = 0; irow < trigger_info::NROWS + trigger_info::NZONES - 1; irow++)
+	{
+	  out_ << '=';
+	}
       out_ << '\n';
-      for (unsigned int ilayer = 0; ilayer < trigger_info::NLAYERS; ilayer++) {
-	for (unsigned int izone = 0; izone < trigger_info::NZONES; izone++) {
-	  for (unsigned int irow = 0; irow < tracker_zone::width(izone); irow++) {
-	    out_ << (_zones_[1][izone].cells[ilayer][irow] ? 'o' : '.');
-	  }
-	  out_ << ' ';
+      for (unsigned int ilayer = 0; ilayer < trigger_info::NLAYERS; ilayer++)
+	{
+	  for (unsigned int izone = 0; izone < trigger_info::NZONES; izone++)
+	    {
+	      for (unsigned int irow = 0; irow < tracker_zone::width(izone); irow++)
+		{
+		  out_ << (_zones_[1][izone].cells[ilayer][irow] ? 'o' : '.');
+		}
+	      out_ << ' ';
+	    }
+	  out_ << '\n';
 	}
-	out_ << '\n';
-      }
       out_ << '\n';
 
       return;
     }
 
     void tracker_trigger_algorithm::_process_for_a_clocktick(const std::vector<datatools::handle<geiger_ctw> > geiger_ctw_list_per_clocktick_,
-								       trigger_structures::tracker_record & a_tracker_record_)
+							     trigger_structures::tracker_record & a_tracker_record_)
     {
       _a_geiger_matrix_for_a_clocktick_.reset();
       reset_zones_informations();
       for (unsigned int isize = 0; isize < geiger_ctw_list_per_clocktick_.size(); isize++)
        	{
        	  std::vector<geomtools::geom_id> hit_cells_gids;
-       	  build_hit_cells_gids_from_ctw(geiger_ctw_list_per_clocktick_[isize].get(), hit_cells_gids);
-       	  fill_matrix(hit_cells_gids);
+	  build_hit_cells_gids_from_ctw(geiger_ctw_list_per_clocktick_[isize].get(), hit_cells_gids);
+	  fill_matrix(hit_cells_gids);
 	} // end of isize
       _a_geiger_matrix_for_a_clocktick_.clocktick_1600ns = geiger_ctw_list_per_clocktick_[0].get().get_clocktick_800ns();
-
       build_sliding_zones(_sliding_zone_vertical_memory_, _sliding_zone_horizontal_memory_);
       build_zones();
       build_tracker_record(a_tracker_record_);

@@ -489,7 +489,7 @@ namespace snemo {
 		  && the_L2_decision.L2_trigger_mode != trigger_structures::L2_trigger_mode::CALO_TRACKER_TIME_COINC,
 		  std::logic_error, "Previous event record can't be build because L2 decision is not equal to CARACO or CALO_TRACKER_TIME_COINC !");
 
-      // Construct the PER on the coincidence records pushed back (to have the maximum of calo / tracker information (concatenate)) :
+      // Construct the PER on the coincidence records pushed back (to have the maximum of calo / tracker information (concatenate)) :2
       trigger_structures::previous_event_record a_previous_event_record;
       for (unsigned int i = 0; i < _coincidence_records_.size(); i++)
 	{

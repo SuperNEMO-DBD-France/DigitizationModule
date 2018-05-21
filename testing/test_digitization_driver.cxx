@@ -199,6 +199,17 @@ void test_driver_1(const params_type & params_)
 	  const mctools::signal::signal_data & SSD = ER.get<mctools::signal::signal_data>(SSD_bank_label);
 	  SSD.tree_dump(std::clog, "SSD");
 
+	  // std::string calo_signal_category = "sigcalo";
+	  // if (SSD.has_signals(calo_signal_category))
+	  //   {
+	  //     int number_of_calo_signals = SSD.get_number_of_signals(calo_signal_category);
+	  //     for (int i = 0; i < number_of_calo_signals; i++)
+	  // 	{
+	  // 	  const mctools::signal::base_signal a_signal = SSD.get_signal(calo_signal_category, i);
+	  // 	  a_signal.tree_dump(std::clog, "A Calo signal");
+	  // 	}
+	  //   }
+
 	  snemo::datamodel::sim_digi_data SDD;
 
 	  digi_driver.process(SSD, SDD);

@@ -163,6 +163,7 @@ namespace snemo {
       datatools::invalidate(high_threshold_trigger_time);
       low_threshold_CT_25 = clock_utils::INVALID_CLOCKTICK;
       high_threshold_CT_25 = clock_utils::INVALID_CLOCKTICK;
+      calo_digitized_signal.clear();
     }
 
     bool signal_to_calo_tp_algo::calo_digi_working_data::operator<(const calo_digi_working_data & other_) const
@@ -326,6 +327,14 @@ namespace snemo {
     const std::vector<signal_to_calo_tp_algo::calo_digi_working_data> signal_to_calo_tp_algo::get_calo_digi_working_data_vector() const
     {
       return _calo_digi_data_collection_;
+    }
+
+    void signal_to_calo_tp_algo::clear_working_data()
+    {
+      DT_THROW_IF(!is_initialized(), std::logic_error, "Signal to calo TP algorithm is not initialized ! ");
+      _set_defaults();
+      _calo_digi_data_collection_.clear();
+      return;
     }
 
     void signal_to_calo_tp_algo::process(const mctools::signal::signal_data & SSD_,

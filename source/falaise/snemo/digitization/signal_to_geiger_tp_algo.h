@@ -145,6 +145,9 @@ namespace snemo {
 			void update_gg_tp(const geiger_digi_working_data & my_wd_data_,
 												geiger_tp & my_geiger_tp_);
 
+			/// Clear temporary working data
+			void clear_working_data();
+
       /// Process to fill a geiger tp data object from simulated data
       void process(const mctools::signal::signal_data & SSD_,
 									 geiger_tp_data & my_geiger_tp_data_);

@@ -355,6 +355,7 @@ int main( int  argc_ , char **argv_  )
     // Creation and initialization of trigger algorithm :
     snemo::digitization::trigger_algorithm my_trigger_algo;
     my_trigger_algo.set_clock_manager(my_clock_manager);
+    my_trigger_algo.set_electronic_mapping(my_e_mapping);
     my_trigger_algo.initialize(trigger_config);
 
     trigger_config.tree_dump(std::clog, "My trigger config : ");
@@ -439,7 +440,7 @@ int main( int  argc_ , char **argv_  )
 		    // signal_2_calo_tp.process(signal_data, my_calo_tp_data);
 
 		    // Calo TP to geiger CTW process :
-		    calo_tp_2_ctw.process(my_calo_tp_data, my_calo_ctw_data);
+		    // calo_tp_2_ctw.process(my_calo_tp_data, my_calo_ctw_data);
 
 		    if (logging == datatools::logger::PRIO_TRACE) {
 		      my_calo_tp_data.tree_dump(std::clog, "Calorimeter TP(s) data : ", "INFO : ");
@@ -455,7 +456,7 @@ int main( int  argc_ , char **argv_  )
 		    // signal_2_geiger_tp.process(signal_data, my_geiger_tp_data);
 
 		    // Geiger TP to geiger CTW process
-		    geiger_tp_2_ctw.process(my_geiger_tp_data, my_geiger_ctw_data);
+		    // geiger_tp_2_ctw.process(my_geiger_tp_data, my_geiger_ctw_data);
 
 		    if (logging == datatools::logger::PRIO_TRACE) {
 		      my_geiger_tp_data.tree_dump(std::clog, "Geiger TP(s) data : ", "INFO : ");
@@ -467,8 +468,8 @@ int main( int  argc_ , char **argv_  )
 	      } // end of if has "calo" || "xcalo" || "gveto" || "gg" step hits
 
 	    // Trigger process
-	    my_trigger_algo.process(my_calo_ctw_data,
-				    my_geiger_ctw_data);
+	    // my_trigger_algo.process(my_calo_ctw_data,
+	    // 			    my_geiger_ctw_data);
 
 	    // Finale structures :
 

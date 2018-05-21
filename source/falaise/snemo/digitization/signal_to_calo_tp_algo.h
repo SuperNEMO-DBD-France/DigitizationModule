@@ -84,7 +84,6 @@ namespace snemo {
 				geomtools::geom_id geom_id;
 				geomtools::geom_id channel_electronic_id;
 				bool							 is_low_threshold_only;
-
 				bool							 is_low_threshold;
 				double						 low_threshold_trigger_time;
 				bool							 is_high_threshold;
@@ -124,6 +123,9 @@ namespace snemo {
 
 			/// Return the collection of calo digi working data
 			const std::vector<signal_to_calo_tp_algo::calo_digi_working_data> get_calo_digi_working_data_vector() const;
+
+			/// Clear temporary working data
+			void clear_working_data();
 
       /// Process to fill a calo tp data object from signal data
 			void process(const mctools::signal::signal_data & signal_data_,

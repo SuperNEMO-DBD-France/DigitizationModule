@@ -80,6 +80,9 @@ namespace snemo {
 															const geomtools::geom_id & electronic_id_,
 															geomtools::geom_id & geom_id_) const;
 
+			/// Dump the GID <-> EID Geiger bimap
+			void dump_geiger_bimap(std::ostream & out_ = std::clog) const;
+
     protected :
 
       /// Initializing

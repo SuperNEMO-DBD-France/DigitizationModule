@@ -138,6 +138,15 @@ namespace snemo {
       return;
     }
 
+    void electronic_mapping::dump_geiger_bimap(std::ostream & out_) const
+    {
+      DT_THROW_IF(!is_initialized(), std::logic_error, "Electronic mapping is not initialized ! ");
+
+      for (ID_bimap::const_iterator it = _geiger_id_bimap_.begin(); it != _geiger_id_bimap_.end(); it++)
+	{
+	  out_ << it->left << " <=> " << it->right << std::endl;
+	}
+    }
 
     void electronic_mapping::_initialize(const datatools::properties & config_)
     {
@@ -154,7 +163,7 @@ namespace snemo {
 	  if (*it == mapping::GEIGER_ANODIC_CATEGORY_TYPE)  _init_geiger();
 	  if (*it == mapping::CALO_MAIN_WALL_CATEGORY_TYPE) _init_mcalo();
 	  if (*it == mapping::CALO_XWALL_CATEGORY_TYPE)     _init_x_wall();
-	  // if (*it == mapping::CALO_GVETO_CATEGORY_TYPE)  _init_gveto();
+	  if (*it == mapping::CALO_GVETO_CATEGORY_TYPE)  _init_gveto();
 	}
 
       return;
@@ -279,41 +288,58 @@ namespace snemo {
       geom_id_.reset();
       ID_bimap::right_const_iterator right_iter ;
 
-      // Geiger case
+      unsigned int input_type = elec_id_.get_type();
+
+      // Geiger case:
+      if (input_type == mapping::GEIGER_FEB_CATEGORY_TYPE)
+	{
+      	  right_iter = _geiger_id_bimap_.right.find(elec_id_);
+      	  if (right_iter != _geiger_id_bimap_.right.end())
+      	    {
+      	      geom_id_ = right_iter->second;
+      	    }
+	}
+
+      // Calo case:
+      if (input_type == mapping::CALO_FEB_CATEGORY_TYPE)
+	{
+	  // Search in Main Calo bimap:
+	  if (elec_id_.get(mapping::CRATE_INDEX) == mapping::MAIN_CALO_SIDE_0_CRATE || elec_id_.get(mapping::CRATE_INDEX) == mapping::MAIN_CALO_SIDE_1_CRATE)
+	    {
+	      right_iter = _mcalo_id_bimap_.right.find(elec_id_);
+	      if (right_iter != _mcalo_id_bimap_.right.end())
+		{
+		  geom_id_ = right_iter->second;
+		}
+	    }
 
 
+	  if (elec_id_.get(mapping::CRATE_INDEX) == mapping::XWALL_GVETO_CALO_CRATE)
+	    {
+	      // Search in Calo Gveto bimap:
+	      if (elec_id_.get(mapping::BOARD_INDEX) == 4
+		  || elec_id_.get(mapping::BOARD_INDEX) == 5
+		  || elec_id_.get(mapping::BOARD_INDEX) == 15
+		  || elec_id_.get(mapping::BOARD_INDEX) == 16)
+		{
+		  right_iter = _gveto_id_bimap_.right.find(elec_id_);
+		  if (right_iter != _gveto_id_bimap_.right.end())
+		    {
+		      geom_id_ = right_iter->second;
+		    }
+		}
+	      else
+		{
+		  // Search in Calo XWall bimap:
+		  right_iter = _xcalo_id_bimap_.right.find(elec_id_);
+		  if (right_iter != _xcalo_id_bimap_.right.end())
+		    {
+		      geom_id_ = right_iter->second;
+		    }
+		}
+	    }
+	}
 
-
-      // Calo Crate 0: Crate 1: Crate 2
-
-
-      // switch (elec_id_.get(mapping::RACK_INDEX))
-      // 	{
-      // 	case mapping::GEIGER_RACK_ID :
-      // 	  right_iter = _geiger_id_bimap_.right.find(elec_id_);
-      // 	  if (right_iter != _geiger_id_bimap_.right.end() )
-      // 	    {
-      // 	      geom_id_ = right_iter->second;
-      // 	    }
-      // 	  else
-      // 	    {
-      // 	    }
-      // 	  break;
-
-      // 	case mapping::CALO_RACK_ID :
-      // 	  right_iter = _mcalo_id_bimap_.right.find(elec_id_);
-      // 	  if (right_iter != _mcalo_id_bimap_.right.end() )
-      // 	    {
-      // 	      geom_id_ = right_iter->second;
-      // 	    }
-      // 	  else
-      // 	    {
-      // 	    }
-      // 	  break;
-
-      // 	default :
-      // 	  break;
-      // 	}
       return;
     }
 

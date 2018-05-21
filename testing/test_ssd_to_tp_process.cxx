@@ -183,14 +183,8 @@ int main(int argc_, char** argv_)
 		mctools::signal::base_signal a_signal = SSD.get_signal(calo_signal_category, 0);
 		a_signal.tree_dump(std::clog, "A Calo signal");
 
-		// signal_2_calo_tp.process(SSD, my_calo_tp_data);
-		// my_calo_tp_data.tree_dump(std::clog, "Calorimeter TP(s) data : ", "INFO : ");
-
-
-		// Create fake calo signals :
-
-
-
+		signal_2_calo_tp.process(SSD, my_calo_tp_data);
+		my_calo_tp_data.tree_dump(std::clog, "Calorimeter TP(s) data : ", "INFO : ");
 
 	      }
 	    std::clog << std::endl;

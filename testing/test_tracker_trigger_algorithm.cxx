@@ -172,8 +172,8 @@ int main(int  argc_ , char ** argv_)
 
 		// Initializing and processing SD to Geiger signal :
 		snemo::digitization::sd_to_geiger_signal_algo sd_2_geiger_signal(my_manager);
-		sd_2_geiger_signal.initialize();
-		sd_2_geiger_signal.process(SD, signal_data);
+		// sd_2_geiger_signal.initialize();
+		// sd_2_geiger_signal.process(SD, signal_data);
 
 		std::vector<snemo::digitization::trigger_structures::tracker_record> tracker_collection_records;
 		std::vector<snemo::digitization::trigger_structures::geiger_matrix> geiger_matrix_collection_records;
@@ -208,8 +208,8 @@ int main(int  argc_ , char ** argv_)
 		    // Initializing and processing Geiger TP to Geiger CTW :
 		    datatools::properties dummy_config;
 		    snemo::digitization::geiger_tp_to_ctw_algo geiger_tp_2_ctw;
-		    geiger_tp_2_ctw.initialize(dummy_config);
-		    geiger_tp_2_ctw.process(my_geiger_tp_data, my_geiger_ctw_data);
+		    // geiger_tp_2_ctw.initialize(dummy_config);
+		    // geiger_tp_2_ctw.process(my_geiger_tp_data, my_geiger_ctw_data);
 		    my_geiger_ctw_data.tree_dump(std::clog, "Geiger CTW(s) data : ", "INFO : ");
 
 		    // Initializing and processing tracker trigger algorithm to make a decision :

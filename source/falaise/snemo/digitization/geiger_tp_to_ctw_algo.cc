@@ -56,7 +56,7 @@ namespace snemo {
     void geiger_tp_to_ctw_algo::_fill_a_geiger_ctw(const geiger_tp & my_geiger_tp_, geiger_ctw & a_geiger_ctw_)
     {
       geomtools::geom_id temporary_feb_id;
-      temporary_feb_id.set_type(my_geiger_tp_.get_geom_id().get_type());
+      temporary_feb_id.set_type(mapping::GEIGER_CONTROL_BOARD_TYPE);
       temporary_feb_id.set_depth(mapping::BOARD_DEPTH);
       my_geiger_tp_.get_geom_id().extract_to(temporary_feb_id);
       temporary_feb_id.set(mapping::BOARD_INDEX, mapping::CONTROL_BOARD_INDEX);

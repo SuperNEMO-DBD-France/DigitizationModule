@@ -204,8 +204,13 @@ namespace snemo {
       _process_readout_algorithms(SSD_, SDD_);
 
 
+      // Clear working data:
       _gg_ssb_.clear_functors();
       _calo_ssb_.clear_functors();
+      _calo_signal_to_tp_algo_.clear_working_data();
+      _geiger_signal_to_tp_algo_.clear_working_data();
+
+      _trigger_algo_.reset_data();
 
       return;
     }
@@ -223,15 +228,12 @@ namespace snemo {
       // int32_t clocktick_25_reference  = _clock_utils_.get_clocktick_25_ref();
       // double  clocktick_25_shift      = _clock_utils_.get_shift_25();
       // _calo_signal_to_tp_algo_.set_clocktick_reference(clocktick_25_reference);
-      std::clog << "Debug 0" << std::endl;
       calo_tp_data calo_tp_data;
       _calo_signal_to_tp_algo_.process(SSD_, calo_tp_data);
 
-      std::clog << "Debug 1" << std::endl;
       calo_ctw_data calo_ctw_data;
       _calo_tp_to_ctw_algo_.process(calo_tp_data,
 				    calo_ctw_data);
-      std::clog << "Debug 2" << std::endl;
 
       // int32_t clocktick_800_reference = _clock_utils_.get_clocktick_800_ref();
       // double  clocktick_800_shift     = _clock_utils_.get_shift_800();
@@ -241,17 +243,33 @@ namespace snemo {
       _geiger_signal_to_tp_algo_.process(SSD_,
 					 gg_tp_data);
 
-      std::clog << "Debug 3" << std::endl;
-
       geiger_ctw_data gg_ctw_data;
       _geiger_tp_to_ctw_algo_.process(gg_tp_data, gg_ctw_data);
 
 
-      calo_tp_data.tree_dump(std::clog, "Calorimeter TP(s) data : ", "INFO : ");
-      calo_ctw_data.tree_dump(std::clog, "Calorimeter CTW(s) data : ", "INFO : ");
+      // gg_tp_data.tree_dump(std::clog, "Geiger TP(s) data : ", "INFO : ");
+      // for (auto it = gg_tp_data.get_geiger_tps().begin(); it != gg_tp_data.get_geiger_tps().end(); it++)
+      // 	{
+      // 	  it->get().tree_dump(std::clog, "A GG TP");
+      // 	}
 
-      gg_tp_data.tree_dump(std::clog, "Geiger TP(s) data : ", "INFO : ");
-      gg_ctw_data.tree_dump(std::clog, "Geiger CTW(s) data : ", "INFO : ");
+      // gg_ctw_data.tree_dump(std::clog, "Geiger CTW(s) data : ", "INFO : ");
+      // for (auto it = gg_ctw_data.get_geiger_ctws().begin(); it != gg_ctw_data.get_geiger_ctws().end(); it++)
+      // 	{
+      // 	  it->get().tree_dump(std::clog, "A GG CTW");
+      // 	}
+
+      // calo_tp_data.tree_dump(std::clog, "Calorimeter TP(s) data : ", "INFO : ");
+      // for (auto it = calo_tp_data.get_calo_tps().begin(); it != calo_tp_data.get_calo_tps().end(); it++)
+      // 	{
+      // 	  it->get().tree_dump(std::clog, "A CALO TP");
+      // 	}
+
+      // calo_ctw_data.tree_dump(std::clog, "Calorimeter CTW(s) data : ", "INFO : ");
+      // for (auto it = calo_ctw_data.get_calo_ctws().begin(); it != calo_ctw_data.get_calo_ctws().end(); it++)
+      // 	{
+      // 	  it->get().tree_dump(std::clog, "A CALO CTW");
+      // 	}
 
       _trigger_algo_.process(calo_ctw_data,
 			     gg_ctw_data);
