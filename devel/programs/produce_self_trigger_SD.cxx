@@ -187,7 +187,7 @@ int main( int  argc_ , char **argv_  )
 
 
     // Select geiger GID :
-    geomtools::geom_id geiger_gid_pattern(1204,
+    geomtools::geom_id geiger_gid_pattern(1210,
 					  module_number,
 					  geomtools::geom_id::ANY_ADDRESS,  // Side
 					  geomtools::geom_id::ANY_ADDRESS,  // Layer
@@ -242,7 +242,7 @@ int main( int  argc_ , char **argv_  )
 
       for (std::size_t i = 0; i < calo_tracker_spurious_pool.size(); i++)
 	{
-	  if (calo_tracker_spurious_pool[i].get_geom_id().get_type() == 1204)
+	  if (calo_tracker_spurious_pool[i].get_geom_id().get_type() == 1210)
 	    {
 	      self_trigger_SD.add_step_hit("gg") = calo_tracker_spurious_pool[i];
 	    }
@@ -359,7 +359,7 @@ int main( int  argc_ , char **argv_  )
 	  if (first_geiger_position != -1 && last_geiger_position != -1) {
 	    for (int igeiger = first_geiger_position; igeiger <= last_geiger_position; igeiger++)
 	      {
-		if (calo_tracker_spurious_pool[igeiger].get_geom_id().get_type() == 1204)
+		if (calo_tracker_spurious_pool[igeiger].get_geom_id().get_type() == 1210)
 		  {
 		    self_trigger_SD.add_step_hits("gg", 20);
 		    self_trigger_SD.add_step_hit("gg") = calo_tracker_spurious_pool[igeiger];

@@ -43,22 +43,13 @@ int main(int argc_, char ** argv_)
       {
 	manager_config.erase ("mapping.excluded_categories");
       }
+    my_manager.initialize (manager_config);
 
     std::string geiger_feb_mapping_filename = "@fldigi:config/snemo/demonstrator/simulation/digitization/0.1/feast_channel_mapping.csv";
     datatools::fetch_path_with_env(geiger_feb_mapping_filename);
     std::clog << "GG FEB mapping filename = " << geiger_feb_mapping_filename << std::endl;
 
 
-    // std::vector<std::string> only_categories;
-    // only_categories.push_back ("module");
-    // only_categories.push_back ("drift_cell_core");
-    // only_categories.push_back ("xcalo_block");
-    // only_categories.push_back ("gveto_block");
-    // only_categories.push_back ("calorimeter_block");
-    // only_categories.push_back ("calorimeter_optical_module");
-    // set the 'only' property:
-    // manager_config.update ("mapping.only_categories", only_categories);
-    my_manager.initialize (manager_config);
 
     snemo::digitization::ID_convertor my_convertor;
     my_convertor.set_geo_manager(my_manager);

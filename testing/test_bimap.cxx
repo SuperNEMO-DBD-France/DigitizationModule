@@ -3,41 +3,29 @@
 // Standard libraries :
 #include <iostream>
 
-// GSL:
-#include <bayeux/mygsl/rng.h>
-// BOOST :
+// Boost :
 #include <boost/bimap.hpp>
 // - Bayeux/datatools:
 #include <datatools/utils.h>
 #include <datatools/io_factory.h>
 #include <datatools/clhep_units.h>
-// - Bayeux/mctools:
-#include <mctools/simulated_data.h>
-// - Bayeux/dpp:
-#include <dpp/input_module.h>
 
 // Falaise:
 #include <falaise/falaise.h>
 
 // This project :
-#include <snemo/digitization/clock_utils.h>
+#include <snemo/digitization/fldigi.h>
 #include <snemo/digitization/mapping.h>
 #include <snemo/digitization/electronic_mapping.h>
-#include <snemo/digitization/sd_to_geiger_signal_algo.h>
-#include <snemo/digitization/sd_to_calo_signal_algo.h>
-#include <snemo/digitization/signal_to_calo_tp_algo.h>
-#include <snemo/digitization/signal_to_geiger_tp_algo.h>
 
 int main( int  argc_ , char ** argv_  )
 {
- falaise::initialize(argc_, argv_);
+  falaise::initialize(argc_, argv_);
+  snemo::digitization::initialize(argc_, argv_);
   int error_code = EXIT_SUCCESS;
   datatools::logger::priority logging = datatools::logger::PRIO_FATAL;
   try {
     std::clog << "Test program for class 'snemo::digitization::test_bimap' !" << std::endl;
-    int32_t seed = 314159;
-    mygsl::rng random_generator;
-    random_generator.initialize(seed);
 
     std::string manager_config_file;
 
@@ -56,23 +44,25 @@ int main( int  argc_ , char ** argv_  )
     my_manager.initialize (manager_config);
 
 
+    std::string geiger_feb_mapping_filename = "@fldigi:config/snemo/demonstrator/simulation/digitization/0.1/feast_channel_mapping.csv";
+    datatools::fetch_path_with_env(geiger_feb_mapping_filename);
+    std::clog << "GG FEB mapping filename = " << geiger_feb_mapping_filename << std::endl;
+
+    int module_number = 0;
+    datatools::properties elec_config;
+    elec_config.store_string("feast_channel_mapping", geiger_feb_mapping_filename);
+    elec_config.store("module_number", module_number);
 
     snemo::digitization::electronic_mapping my_e_mapping;
-
-
-
     my_e_mapping.set_geo_manager(my_manager);
+    my_e_mapping.initialize(elec_config);
 
 
-
-    my_e_mapping.set_module_number(0);
-    my_e_mapping.initialize();
-
-    const geomtools::geom_id GID1(1204, 0, 0, 3, 97);
-    const geomtools::geom_id GID2(1204, 0, 0, 6, 98);
-    const geomtools::geom_id GID3(1204, 0, 0, 5, 99);
-    const geomtools::geom_id GID4(1204, 0, 0, 5, 100);
-    const geomtools::geom_id GID5(1204, 0, 0, 5, 101);
+    const geomtools::geom_id GID1(1210, 0, 0, 3, 25);
+    const geomtools::geom_id GID2(1210, 0, 0, 6, 30);
+    const geomtools::geom_id GID3(1210, 0, 0, 5, 35);
+    const geomtools::geom_id GID4(1210, 0, 0, 5, 44);
+    const geomtools::geom_id GID5(1210, 0, 0, 5, 33);
 
     geomtools::geom_id EID1;
     geomtools::geom_id EID2;
@@ -82,37 +72,37 @@ int main( int  argc_ , char ** argv_  )
 
 
     my_e_mapping.convert_GID_to_EID(snemo::digitization::mapping::THREE_WIRES_TRACKER_MODE, GID1, EID1);
-    std::cout <<"GID1 : "<<  GID1;
-    std::cout <<" ---> EID1 : "<<  EID1<<std::endl;
+    std::clog <<"GID1 : "<<  GID1;
+    std::clog <<" ---> EID1 : "<<  EID1<<std::endl;
 
     my_e_mapping.convert_GID_to_EID(snemo::digitization::mapping::THREE_WIRES_TRACKER_MODE, GID2, EID2);
-    std::cout <<"GID2 : "<<  GID2;
-    std::cout <<" ---> EID2 : "<<  EID2<<std::endl;
+    std::clog <<"GID2 : "<<  GID2;
+    std::clog <<" ---> EID2 : "<<  EID2<<std::endl;
 
     my_e_mapping.convert_GID_to_EID(snemo::digitization::mapping::THREE_WIRES_TRACKER_MODE, GID3, EID3);
-    std::cout <<"GID3 : "<<  GID3;
-    std::cout <<" ---> EID3 : "<<  EID3<<std::endl;
+    std::clog <<"GID3 : "<<  GID3;
+    std::clog <<" ---> EID3 : "<<  EID3<<std::endl;
 
     my_e_mapping.convert_GID_to_EID(snemo::digitization::mapping::THREE_WIRES_TRACKER_MODE, GID4, EID4);
-    std::cout <<"GID4 : "<<  GID4;
-    std::cout <<" ---> EID4 : "<<  EID4<<std::endl;
+    std::clog <<"GID4 : "<<  GID4;
+    std::clog <<" ---> EID4 : "<<  EID4<<std::endl;
 
     my_e_mapping.convert_GID_to_EID(snemo::digitization::mapping::THREE_WIRES_TRACKER_MODE, GID5, EID5);
-    std::cout <<"GID5 : "<<  GID5;
-    std::cout <<" ---> EID5 : "<<  EID5<<std::endl;
+    std::clog <<"GID5 : "<<  GID5;
+    std::clog <<" ---> EID5 : "<<  EID5<<std::endl;
 
   }
-    catch (std::exception & error) {
-      DT_LOG_FATAL(logging, error.what());
-      error_code = EXIT_FAILURE;
-    }
+  catch (std::exception & error) {
+    DT_LOG_FATAL(logging, error.what());
+    error_code = EXIT_FAILURE;
+  }
 
-    catch (...) {
-      DT_LOG_FATAL(logging, "Unexpected error!");
-      error_code = EXIT_FAILURE;
-    }
+  catch (...) {
+    DT_LOG_FATAL(logging, "Unexpected error!");
+    error_code = EXIT_FAILURE;
+  }
 
+  snemo::digitization::terminate();
   falaise::terminate();
   return error_code;
-
-  }
+}

@@ -81,12 +81,11 @@ namespace snemo {
       return _module_number_status_;
     }
 
-
     void electronic_mapping::initialize()
     {
       DT_THROW_IF(!geo_manager_is_set() && !module_number_is_set(), std::logic_error, "Geo manager or module number is not set ! ");
       datatools::properties dummy_config;
-      _initialize(dummy_config);
+      initialize(dummy_config);
       return;
     }
 
@@ -111,8 +110,11 @@ namespace snemo {
       _logging_ = datatools::logger::PRIO_FATAL;
       _module_number_ = mapping::INVALID_MODULE_NUMBER;
       _pre_constructed_types_.clear();
-      _ID_convertor_.reset();
       _geiger_id_bimap_.clear();
+      _mcalo_id_bimap_.clear();
+      _xcalo_id_bimap_.clear();
+      _gveto_id_bimap_.clear();
+      _ID_convertor_.reset();
       return;
     }
 
@@ -268,9 +270,9 @@ namespace snemo {
 						 geomtools::geom_id & geom_id_)
     {
       DT_THROW_IF(!is_initialized(), std::logic_error, "Electronic mapping is not initialized ! ");
-      DT_THROW_IF(elec_id_.get_type() != mapping::GEIGER_FEB_CATEGORY_TYPE
-		  || elec_id_.get_type() != mapping::CALO_FEB_CATEGORY_TYPE,
-		  std::logic_error, "EID [" << elec_id_ << "] incorrect type ! ");
+      DT_THROW_IF(!(elec_id_.get_type() == mapping::GEIGER_FEB_CATEGORY_TYPE
+		    || elec_id_.get_type() == mapping::CALO_FEB_CATEGORY_TYPE),
+		  std::logic_error, "Electronic ID [" << elec_id_ << "] incorrect type [" << elec_id_.get_type() << "] !");
       DT_THROW_IF(tracker_trigger_mode_ != mapping::THREE_WIRES_TRACKER_MODE,
 		  std::logic_error,
 		  "Give a correct tracker trigger mode (Two wires mode is not supported yet) ! ");

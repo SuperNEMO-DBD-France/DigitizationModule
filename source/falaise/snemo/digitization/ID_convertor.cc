@@ -34,7 +34,6 @@ namespace snemo {
       _logging_ = datatools::logger::PRIO_FATAL;
       _initialized_ = false;
       _module_number_ = mapping::INVALID_MODULE_NUMBER;
-      _tracker_mapping_filename_ = "";
       _geo_manager_ = 0;
       set_module_number(module_number_);
       set_geo_manager(mgr_);
@@ -198,14 +197,13 @@ namespace snemo {
 
     geomtools::geom_id ID_convertor::convert_GID_to_EID(const geomtools::geom_id & geom_id_) const
     {
-      DT_THROW_IF(!geom_id_.is_valid (), std::logic_error,
-                  "Geom ID to convert is not valid !");
+      DT_THROW_IF(!geom_id_.is_valid (), std::logic_error, "Geom ID to convert is not valid !");
 
       //DT_THROW_IF(!geom_id_.is_complete(), std::logic_error,
       //   "Geom ID to convert is not complete !");
 
       geomtools::geom_id electronic_id;
-      int module_id = -1;
+      int module_id   = -1;
       int crate_id    = -1;
       int board_id    = -1;
       int feast_id    = -1;

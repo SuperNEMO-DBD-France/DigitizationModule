@@ -20,13 +20,12 @@
 #include <bayeux/mygsl/rng.h>
 
 // This project :
+#include <snemo/digitization/fldigi.h>
 #include <snemo/digitization/clock_utils.h>
 #include <snemo/digitization/mapping.h>
-
 #include <snemo/digitization/sd_to_calo_signal_algo.h>
 #include <snemo/digitization/signal_to_calo_tp_algo.h>
 #include <snemo/digitization/calo_tp_to_ctw_algo.h>
-
 #include <snemo/digitization/sd_to_geiger_signal_algo.h>
 #include <snemo/digitization/signal_to_geiger_tp_algo.h>
 #include <snemo/digitization/geiger_tp_to_ctw_algo.h>
@@ -36,6 +35,7 @@
 int main( int  argc_ , char **argv_  )
 {
   falaise::initialize(argc_, argv_);
+  snemo::digitization::initialize(argc_, argv_);
   int error_code = EXIT_SUCCESS;
   datatools::logger::priority logging = datatools::logger::PRIO_FATAL;
 
@@ -63,12 +63,21 @@ int main( int  argc_ , char **argv_  )
     my_manager.initialize (manager_config);
 
     // Electronic mapping :
+    std::string geiger_feb_mapping_filename = "@fldigi:config/snemo/demonstrator/simulation/digitization/0.1/feast_channel_mapping.csv";
+    datatools::fetch_path_with_env(geiger_feb_mapping_filename);
+    std::clog << "Geiger FEB mapping filename = " << geiger_feb_mapping_filename << std::endl;
+
+    int module_number = 0;
+    datatools::properties elec_config;
+    elec_config.store_string("feast_channel_mapping", geiger_feb_mapping_filename);
+    elec_config.store("module_number", module_number);
+
     snemo::digitization::electronic_mapping my_e_mapping;
     my_e_mapping.set_geo_manager(my_manager);
-    my_e_mapping.set_module_number(snemo::digitization::mapping::DEMONSTRATOR_MODULE_NUMBER);
     my_e_mapping.add_preconstructed_type(snemo::digitization::mapping::GEIGER_ANODIC_CATEGORY_TYPE);
     my_e_mapping.add_preconstructed_type(snemo::digitization::mapping::CALO_MAIN_WALL_CATEGORY_TYPE);
-    my_e_mapping.initialize();
+    my_e_mapping.initialize(elec_config);
+
     // Clock manager :
     snemo::digitization::clock_utils my_clock_manager;
     my_clock_manager.initialize();
@@ -425,6 +434,7 @@ int main( int  argc_ , char **argv_  )
     error_code = EXIT_FAILURE;
   }
 
+  snemo::digitization::terminate();
   falaise::terminate();
   return error_code;
 }

@@ -19,6 +19,7 @@
 #include <falaise/falaise.h>
 
 // This project :
+#include <snemo/digitization/fldigi.h>
 #include <snemo/digitization/clock_utils.h>
 #include <snemo/digitization/sd_to_geiger_signal_algo.h>
 #include <snemo/digitization/sd_to_calo_signal_algo.h>
@@ -30,6 +31,7 @@
 int main( int  argc_ , char ** argv_ )
 {
   falaise::initialize(argc_, argv_);
+  snemo::digitization::initialize(argc_, argv_);
   int error_code = EXIT_SUCCESS;
   datatools::logger::priority logging = datatools::logger::PRIO_FATAL;
 
@@ -59,20 +61,27 @@ int main( int  argc_ , char ** argv_ )
     my_clock_manager.initialize();
     my_clock_manager.compute_clockticks_ref(random_generator);
 
-    datatools::things ER;
+    std::string geiger_feb_mapping_filename = "@fldigi:config/snemo/demonstrator/simulation/digitization/0.1/feast_channel_mapping.csv";
+    datatools::fetch_path_with_env(geiger_feb_mapping_filename);
+    std::clog << "Geiger FEB mapping filename = " << geiger_feb_mapping_filename << std::endl;
+
+    int module_number = 0;
+    datatools::properties elec_config;
+    elec_config.store_string("feast_channel_mapping", geiger_feb_mapping_filename);
+    elec_config.store("module_number", module_number);
 
     snemo::digitization::electronic_mapping my_e_mapping;
     my_e_mapping.set_geo_manager(my_manager);
-    my_e_mapping.set_module_number(0);
-    my_e_mapping.add_preconstructed_type(snemo::digitization::mapping::GEIGER_ANODIC_CATEGORY_TYPE);
-    my_e_mapping.initialize();
+    my_e_mapping.initialize(elec_config);
+
+    datatools::things ER;
 
     snemo::digitization::signal_to_geiger_tp_algo signal_2_geiger_tp;
     // signal_2_geiger_tp.initialize(my_e_mapping, my_clock_manager);
 
-    const geomtools::geom_id GID1(1204, 0, 0, 3, 106);
-    const geomtools::geom_id GID2(1204, 0, 0, 6, 95);
-    const geomtools::geom_id GID3(1204, 0, 0, 5, 57);
+    const geomtools::geom_id GID1(1210, 0, 0, 3, 106);
+    const geomtools::geom_id GID2(1210, 0, 0, 6, 95);
+    const geomtools::geom_id GID3(1210, 0, 0, 5, 57);
     const double anode_avalanche_time1 = 1200 * CLHEP::nanosecond;
     const double anode_avalanche_time2 = 850 * CLHEP::nanosecond;
     const double anode_avalanche_time3 = 4500 * CLHEP::nanosecond;
@@ -113,6 +122,7 @@ int main( int  argc_ , char ** argv_ )
     error_code = EXIT_FAILURE;
   }
 
+  snemo::digitization::terminate();
   falaise::terminate();
   return error_code;
 }

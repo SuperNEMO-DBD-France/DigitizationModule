@@ -139,7 +139,6 @@ namespace snemo {
 			/// Add a geiger tp from a working data
 			void add_geiger_tp(const geiger_digi_working_data & my_wd_data_,
 												 uint32_t signal_clocktick_,
-												 int32_t hit_id_,
 												 geiger_tp_data & my_geiger_tp_data_);
 
 			/// Update a geiger tp

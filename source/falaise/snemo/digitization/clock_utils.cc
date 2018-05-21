@@ -124,10 +124,10 @@ namespace snemo {
       if (datatools::is_valid(time_)) {
       	int32_t ct_800ns = _clocktick_800_ref_;
 
-	// if (time_ > 800 * CLHEP::ns)
-	//   {
-	//     ct_800ns += static_cast<uint32_t>(time_ / 800);
-	//   }
+	if (time_ > 800 * CLHEP::ns)
+	  {
+	    ct_800ns += static_cast<uint32_t>(time_ / 800);
+	  }
 
 	return ct_800ns;
       }
@@ -139,10 +139,10 @@ namespace snemo {
       if (datatools::is_valid(time_)) {
       	int32_t ct_1600ns = _clocktick_ref_;
 
-	// if (time_ > 1600 * CLHEP::ns)
-	//   {
-	//     ct_1600ns += static_cast<uint32_t>(time_ / 1600);
-	//   }
+	if (time_ > 1600 * CLHEP::ns)
+	  {
+	    ct_1600ns += static_cast<uint32_t>(time_ / 1600);
+	  }
 
 	return ct_1600ns;
       }

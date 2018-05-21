@@ -22,6 +22,7 @@
 #include <boost/program_options.hpp>
 
 // This project :
+#include <snemo/digitization/fldigi.h>
 #include <snemo/digitization/clock_utils.h>
 #include <snemo/digitization/sd_to_calo_signal_algo.h>
 #include <snemo/digitization/signal_to_calo_tp_algo.h>
@@ -32,6 +33,7 @@
 int main( int  argc_ , char **argv_  )
 {
   falaise::initialize(argc_, argv_);
+  snemo::digitization::initialize(argc_, argv_);
   int error_code = EXIT_SUCCESS;
   datatools::logger::priority logging = datatools::logger::PRIO_FATAL;
 
@@ -92,8 +94,8 @@ int main( int  argc_ , char **argv_  )
     if(!input_filename.empty()){
       pipeline_simulated_data_filename = input_filename;
     }else{
-      //pipeline_simulated_data_filename = "${FALAISE_DIGI_TESTING_DIR}/data/Se82_0nubb-source_strips_bulk_SD_10_events.brio";
-      pipeline_simulated_data_filename = "${DATA_NEMO_PERSO_DIR}/trigger/simulated_data_brio/Se82_0nubb_500000-source_strips_bulk_SD.brio";
+      pipeline_simulated_data_filename = "${FALAISE_DIGI_TESTING_DIR}/data/Se82_0nubb-source_strips_bulk_SD_10_events.brio";
+      // pipeline_simulated_data_filename = "${DATA_NEMO_PERSO_DIR}/trigger/simulated_data_brio/Se82_0nubb_500000-source_strips_bulk_SD.brio";
     }
     datatools::fetch_path_with_env(pipeline_simulated_data_filename);
 
@@ -109,14 +111,18 @@ int main( int  argc_ , char **argv_  )
 
     datatools::things ER;
 
-    // Loading memory from external files
-    // std::string memory_mult_layer   = "${FALAISE_DIGI_TESTING_DIR}/config/trigger/tracker/A5_D1_default_min_mult_memory.data";
-    // datatools::fetch_path_with_env(memory_lvl1_to_lvl2);
+    std::string geiger_feb_mapping_filename = "@fldigi:config/snemo/demonstrator/simulation/digitization/0.1/feast_channel_mapping.csv";
+    datatools::fetch_path_with_env(geiger_feb_mapping_filename);
+    std::clog << "Geiger FEB mapping filename = " << geiger_feb_mapping_filename << std::endl;
+
+    int module_number = 0;
+    datatools::properties elec_config;
+    elec_config.store_string("feast_channel_mapping", geiger_feb_mapping_filename);
+    elec_config.store("module_number", module_number);
 
     snemo::digitization::electronic_mapping my_e_mapping;
     my_e_mapping.set_geo_manager(my_manager);
-    my_e_mapping.set_module_number(snemo::digitization::mapping::DEMONSTRATOR_MODULE_NUMBER);
-    my_e_mapping.initialize();
+    my_e_mapping.initialize(elec_config);
 
     snemo::digitization::clock_utils my_clock_manager;
     my_clock_manager.initialize();
@@ -217,6 +223,7 @@ int main( int  argc_ , char **argv_  )
     error_code = EXIT_FAILURE;
   }
 
+  snemo::digitization::terminate();
   falaise::terminate();
   return error_code;
 }

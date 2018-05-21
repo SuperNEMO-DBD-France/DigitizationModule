@@ -296,23 +296,55 @@ namespace snemo {
 
     void signal_to_geiger_tp_algo::add_geiger_tp(const geiger_digi_working_data & my_wd_data_,
 						 uint32_t signal_clocktick_,
- 						 int32_t hit_id_,
 						 geiger_tp_data & my_geiger_tp_data_)
     {
       snemo::digitization::geiger_tp & gg_tp = my_geiger_tp_data_.add();
+      unsigned int gg_tp_hit_id = _running_tp_id_;
+      _increment_running_tp_id();
+
       geomtools::geom_id temporary_feb_id;
       temporary_feb_id.set_type(my_wd_data_.anodic_eid.get_type());
       temporary_feb_id.set_depth(mapping::BOARD_DEPTH);
       my_wd_data_.anodic_eid.extract_to(temporary_feb_id);
-      gg_tp.set_header(hit_id_,
+      gg_tp.set_header(gg_tp_hit_id,
 		       temporary_feb_id,
 		       signal_clocktick_,
 		       mapping::THREE_WIRES_TRACKER_MODE,
 		       mapping::SIDE_MODE,
 		       mapping::NUMBER_OF_CONNECTED_ROWS);
-      gg_tp.set_gg_tp_active_bit(my_wd_data_.anodic_eid.get(mapping::GEIGER_CHANNEL_INDEX));
+
+      // Find bit index function of the WD Anodic GID directly:
+
+      int side  = my_wd_data_.anodic_gid.get(mapping::SIDE_INDEX);
+      int layer = my_wd_data_.anodic_gid.get(mapping::LAYER_INDEX);
+      int row   = my_wd_data_.anodic_gid.get(mapping::ROW_INDEX);
+      int tp_channel = -1;
+      if (side == 0)
+	{
+	  if (row % 2 == 0)
+	    {
+	      tp_channel = layer;
+	    }
+	  if (row % 2 == 1)
+	    {
+	      tp_channel = mapping::NUMBER_OF_GEIGER_LAYERS + layer;
+	    }
+	}
+      if (side == 1)
+	{
+	  if (row % 2 == 0)
+	    {
+	      tp_channel = 2 * mapping::NUMBER_OF_GEIGER_LAYERS + layer;
+	    }
+	  if (row % 2 == 1)
+	    {
+	      tp_channel = 2 * mapping::NUMBER_OF_GEIGER_LAYERS + mapping::NUMBER_OF_GEIGER_LAYERS + layer;
+	    }
+	}
+
+      gg_tp.set_gg_tp_active_bit(tp_channel);
       // gg_tp.set_auxiliaries(my_wd_data_.auxiliaries);
-      _activated_bits_[my_wd_data_.anodic_eid.get(mapping::GEIGER_CHANNEL_INDEX)] = 1;
+      _activated_bits_[tp_channel] = 1;
       // gg_tp.tree_dump(std::clog, "***** Geiger TP creation : *****", "INFO : ");
 
       return;
@@ -321,8 +353,37 @@ namespace snemo {
     void signal_to_geiger_tp_algo::update_gg_tp(const geiger_digi_working_data & my_wd_data_,
 						geiger_tp & my_geiger_tp_)
     {
-      my_geiger_tp_.set_gg_tp_active_bit(my_wd_data_.anodic_eid.get(mapping::GEIGER_CHANNEL_INDEX));
-      _activated_bits_[my_wd_data_.anodic_eid.get(mapping::GEIGER_CHANNEL_INDEX)] = 1;
+
+      int side  = my_wd_data_.anodic_gid.get(mapping::SIDE_INDEX);
+      int layer = my_wd_data_.anodic_gid.get(mapping::LAYER_INDEX);
+      int row   = my_wd_data_.anodic_gid.get(mapping::ROW_INDEX);
+      int tp_channel = -1;
+      if (side == 0)
+	{
+	  if (row % 2 == 0)
+	    {
+	      tp_channel = layer;
+	    }
+	  if (row % 2 == 1)
+	    {
+	      tp_channel = mapping::NUMBER_OF_GEIGER_LAYERS + layer;
+	    }
+	}
+      if (side == 1)
+	{
+	  if (row % 2 == 0)
+	    {
+	      tp_channel = 2 * mapping::NUMBER_OF_GEIGER_LAYERS + layer;
+	    }
+	  if (row % 2 == 1)
+	    {
+	      tp_channel = 2 * mapping::NUMBER_OF_GEIGER_LAYERS + mapping::NUMBER_OF_GEIGER_LAYERS + layer;
+	    }
+	}
+
+      my_geiger_tp_.set_gg_tp_active_bit(tp_channel);
+      // gg_tp.set_auxiliaries(my_wd_data_.auxiliaries);
+      _activated_bits_[tp_channel] = 1;
       // my_geiger_tp_.tree_dump(std::clog, "***** Geiger TP Update : *****", "INFO : ");
       return;
     }
@@ -475,8 +536,6 @@ namespace snemo {
 		      continue;
 		    }
 
-		  // if (first_trigger) break;
-
 		  former_y = y;
 		}
 
@@ -485,16 +544,10 @@ namespace snemo {
 	      _electronic_mapping_->convert_GID_to_EID(mapping::THREE_WIRES_TRACKER_MODE, geom_id, electronic_id);
 
 	      uint32_t a_geiger_signal_clocktick = _clock_utils_->compute_clocktick_800ns_from_time(trigger_time);
-	      //std::floor(event_time_ref / 800) +  _clocktick_ref_ + clock_utils::TRACKER_FEB_SHIFT_CLOCKTICK_NUMBER;
+	      // See with Jihane and Thierry to add shift computation
+	      // a_geiger_signal_clocktick += clock_utils::TRACKER_FEB_SHIFT_CLOCKTICK_NUMBER;
 
-	      // if (relative_time > 800)
-	      //   {
-	      // 	a_geiger_signal_clocktick += static_cast<int32_t>(relative_time) / 800;
-	      //   }
-
-	      a_wd.hit_id = _running_tp_id_;
-	      _increment_running_tp_id();
-
+	      a_wd.hit_id = a_wd.signal_ref->get_hit_id();
 	      a_wd.trigger_time = trigger_time;
 	      a_wd.anodic_gid   = geom_id;
 	      a_wd.anodic_eid   = electronic_id;
@@ -601,7 +654,7 @@ namespace snemo {
 			  if (is_cathodic_top) a_wd.cathode_top_register = "R5";
 			  else a_wd.cathode_bottom_register = "R5";
 
-			  a_wd.cathodic_R5 = x;
+			  a_wd.cathodic_R5 = x - a_wd.event_time_reference;
 			  former_y = y;
 			  break;
 			}
@@ -618,7 +671,7 @@ namespace snemo {
 			  if (x < a_wd.cathodic_R5)
 			    {
 			      a_wd.cathodic_R6 = a_wd.cathodic_R5;
-			      a_wd.cathodic_R5 = x;
+			      a_wd.cathodic_R5 = x - a_wd.event_time_reference;
 
 			      if (is_cathodic_top)
 				{
@@ -644,7 +697,6 @@ namespace snemo {
 		    }
 		}
 
-	      // a_mutable_signal.tree_dump(std::clog, "Mutable cathodic signal with shape instantiated");
 	    } // end of cathodics
 
 	} // end of number_of_hits
@@ -656,8 +708,6 @@ namespace snemo {
 	  //if (_gg_digi_data_collection_[j].cathode_top_register == "R6")
 	  _gg_digi_data_collection_[j].tree_dump(std::clog, "GG WD #" + std::to_string(_gg_digi_data_collection_[j].hit_id));
 	}
-
-
 
       return ;
     }
@@ -672,9 +722,9 @@ namespace snemo {
 						      geiger_tp_data & my_geiger_tp_data_)
     {
       DT_THROW_IF(!is_initialized(), std::logic_error, "Signal to geiger TP algorithm is not initialized ! ");
-      int32_t geiger_tp_hit_id = 0;
       for (unsigned int i = 0; i < wd_collection_.size(); i++)
 	{
+	  int32_t geiger_tp_hit_id   = wd_collection_[i].hit_id;
 	  uint32_t signal_clocktick  = wd_collection_[i].clocktick_800;
 	  int existing_index = -1;
 	  bool existing_eid  = false;
@@ -716,7 +766,6 @@ namespace snemo {
 		{
 		  add_geiger_tp(wd_collection_[i],
 				signal_clocktick,
-				geiger_tp_hit_id,
 				my_geiger_tp_data_);
 		}
 	      signal_clocktick++;
@@ -754,30 +803,27 @@ namespace snemo {
     {
       DT_THROW_IF(!is_initialized(), std::logic_error, "Signal to geiger TP algorithm is not initialized ! ");
       _prepare_working_data(SSD_, _gg_digi_data_collection_);
-      std::clog << "DEBUG 001" << std::endl;
       _sort_working_data(_gg_digi_data_collection_);
-      std::clog << "DEBUG 002" << std::endl;
       _geiger_tp_process(_gg_digi_data_collection_, my_geiger_tp_data_);
-      std::clog << "DEBUG 003" << std::endl;
 
-      // my_geiger_tp_data_.tree_dump(std::clog, "GG TP DATA");
+      my_geiger_tp_data_.tree_dump(std::clog, "GG TP DATA");
 
-      // for(uint32_t i = my_geiger_tp_data_.get_clocktick_min(); i <= my_geiger_tp_data_.get_clocktick_max(); i++)
-      // 	{
-      // 	  for(unsigned int j = 0 ; j <= mapping::NUMBER_OF_CRATES ; j++)
-      // 	    {
-      // 	      std::vector<datatools::handle<geiger_tp> > geiger_tp_list_per_clocktick_per_crate;
-      // 	      my_geiger_tp_data_.get_list_of_gg_tp_per_clocktick_per_crate(i, j, geiger_tp_list_per_clocktick_per_crate);
-      // 	      if(!geiger_tp_list_per_clocktick_per_crate.empty())
-      // 		{
-      // 		  for(unsigned int k = 0; k < geiger_tp_list_per_clocktick_per_crate.size(); k++)
-      // 		    {
-      // 		      const geiger_tp & my_geiger_tp =  geiger_tp_list_per_clocktick_per_crate[k].get();
-      // 		      my_geiger_tp.tree_dump(std::clog, "a_geiger_tp : ", "INFO : ");
-      // 		    }
-      // 		}
-      // 	    }
-      // 	}
+      for(uint32_t i = my_geiger_tp_data_.get_clocktick_min(); i <= my_geiger_tp_data_.get_clocktick_max(); i++)
+      	{
+      	  for(unsigned int j = 0 ; j <= mapping::NUMBER_OF_CRATES_PER_TYPE; j++)
+      	    {
+      	      std::vector<datatools::handle<geiger_tp> > geiger_tp_list_per_clocktick_per_crate;
+      	      my_geiger_tp_data_.get_list_of_gg_tp_per_clocktick_per_crate(i, j, geiger_tp_list_per_clocktick_per_crate);
+      	      if(!geiger_tp_list_per_clocktick_per_crate.empty())
+      		{
+      		  for(unsigned int k = 0; k < geiger_tp_list_per_clocktick_per_crate.size(); k++)
+      		    {
+      		      const geiger_tp & my_geiger_tp =  geiger_tp_list_per_clocktick_per_crate[k].get();
+      		      my_geiger_tp.tree_dump(std::clog, "a_geiger_tp : ", "INFO : ");
+      		    }
+      		}
+      	    }
+      	}
 
       return;
     }

@@ -209,14 +209,14 @@ int main( int  argc_ , char **argv_  )
 	      snemo::digitization::calo_signal::compare_handle_by_timestamp());
 
     // Select geiger GID :
-    geomtools::geom_id geiger_gid_pattern(1204,
+    geomtools::geom_id geiger_gid_pattern(1210,
 					  module_number,
 					  geomtools::geom_id::ANY_ADDRESS,  // Side
 					  geomtools::geom_id::ANY_ADDRESS,  // Layer
 					  geomtools::geom_id::ANY_ADDRESS); // Row
 
     std::vector<geomtools::geom_id> collection_of_geiger_gid;
-    // geomtools::geom_id a_test_gid(1204,0,1,4,48);
+    // geomtools::geom_id a_test_gid(1210,0,1,4,48);
     // collection_of_geiger_gid.push_back(a_test_gid);
     my_manager.get_mapping().compute_matching_geom_id(geiger_gid_pattern,
 						      collection_of_geiger_gid);

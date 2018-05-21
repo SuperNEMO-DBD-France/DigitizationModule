@@ -164,7 +164,6 @@ namespace snemo {
       trigger_multi_prop.tree_dump(std::clog, "Trigger multi properties");
 
       _trigger_algo_.set_clock_manager(_clock_utils_);
-      // Electronic mapping is needed for tracker trigger algorithm
       _trigger_algo_.set_electronic_mapping(_electronic_mapping_);
       _trigger_algo_.initialize(trigger_multi_prop);
 
