@@ -26,8 +26,8 @@
 #include <snemo/digitization/clock_utils.h>
 #include <snemo/digitization/sd_to_geiger_signal_algo.h>
 #include <snemo/digitization/sd_to_calo_signal_algo.h>
-#include <snemo/digitization/signal_to_calo_tp_algo.h>
-#include <snemo/digitization/signal_to_geiger_tp_algo.h>
+#include <snemo/digitization/calo_feb_process.h>
+#include <snemo/digitization/tracker_feb_process.h>
 #include <snemo/digitization/geiger_tp_to_ctw_algo.h>
 #include <snemo/digitization/calo_tp_to_ctw_algo.h>
 
@@ -143,11 +143,11 @@ int main( int argc_ , char ** argv_  )
 
 	    my_clock_manager.compute_clockticks_ref(random_generator);
 
-	    snemo::digitization::signal_to_calo_tp_algo signal_2_calo_tp;
-	    // signal_2_calo_tp.initialize(my_e_mapping);
+	    snemo::digitization::calo_feb_process calo_feb_process;
+	    // calo_feb_process.initialize(my_e_mapping);
 
-	    snemo::digitization::signal_to_geiger_tp_algo signal_2_geiger_tp;
-	    // signal_2_geiger_tp.initialize(my_e_mapping, my_clock_manager);
+	    snemo::digitization::tracker_feb_process tracker_feb_process;
+	    // tracker_feb_process.initialize(my_e_mapping);
 
 	    snemo::digitization::signal_data signal_data;
 	    if( SD.has_step_hits("gg"))
@@ -165,13 +165,13 @@ int main( int argc_ , char ** argv_  )
 
 	    if( signal_data.has_geiger_signals())
 	      {
-	    	// signal_2_geiger_tp.process(signal_data, my_geiger_tp_data);
+	    	// tracker_feb_process.process(signal_data, my_geiger_tp_data);
 	    	my_geiger_tp_data.tree_dump(std::clog, "Geiger TP(s) data : ", "INFO : ");
 	      }
 
 	    if( signal_data.has_calo_signals())
 	      {
-		// signal_2_calo_tp.process(signal_data, my_calo_tp_data);
+		// calo_feb_process.process(signal_data, my_calo_tp_data);
 		my_calo_tp_data.tree_dump(std::clog, "Calorimeter TP(s) data : ", "INFO : ");
 	      }
 

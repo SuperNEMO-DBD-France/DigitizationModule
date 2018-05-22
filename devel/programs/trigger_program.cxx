@@ -29,11 +29,11 @@
 #include <snemo/digitization/mapping.h>
 
 #include <snemo/digitization/sd_to_calo_signal_algo.h>
-#include <snemo/digitization/signal_to_calo_tp_algo.h>
+#include <snemo/digitization/calo_feb_process.h>
 #include <snemo/digitization/calo_tp_to_ctw_algo.h>
 
 #include <snemo/digitization/sd_to_geiger_signal_algo.h>
-#include <snemo/digitization/signal_to_geiger_tp_algo.h>
+#include <snemo/digitization/tracker_feb_process.h>
 #include <snemo/digitization/geiger_tp_to_ctw_algo.h>
 
 #include <snemo/digitization/trigger_algorithm.h>
@@ -191,14 +191,13 @@ int main( int  argc_ , char **argv_  )
     snemo::digitization::sd_to_geiger_signal_algo sd_2_geiger_signal(my_manager);
     sd_2_geiger_signal.initialize();
 
-    // Initializing signal to calo_tp algo :
-    snemo::digitization::signal_to_calo_tp_algo signal_2_calo_tp;
-    // signal_2_calo_tp.initialize(my_e_mapping);
+    // Initializing signal to calo tp algo :
+    snemo::digitization::calo_feb_process calo_feb_process;
+    // calo_feb_process.initialize(my_e_mapping);
 
-    // Initializing signal to geiger_tp algo :
-    snemo::digitization::signal_to_geiger_tp_algo signal_2_geiger_tp;
-    // signal_2_geiger_tp.initialize(my_e_mapping,
-    // 				  my_clock_manager);
+    // Initializing signal to tracker tp algo :
+    snemo::digitization::tracker_feb_process tracker_feb_process;
+    // tracker_feb_process.initialize(my_e_mapping);
 
     datatools::properties dummy_config;
 

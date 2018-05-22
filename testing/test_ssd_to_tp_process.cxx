@@ -24,8 +24,8 @@
 // This project :
 #include <snemo/digitization/fldigi.h>
 #include <snemo/digitization/clock_utils.h>
-#include <snemo/digitization/signal_to_calo_tp_algo.h>
-#include <snemo/digitization/signal_to_geiger_tp_algo.h>
+#include <snemo/digitization/calo_feb_process.h>
+#include <snemo/digitization/tracker_feb_process.h>
 
 int main(int argc_, char** argv_)
 {
@@ -154,17 +154,17 @@ int main(int argc_, char** argv_)
 
 	    my_clock_manager.compute_clockticks_ref(random_generator);
 
-	    snemo::digitization::signal_to_calo_tp_algo signal_2_calo_tp;
-	    signal_2_calo_tp.initialize(algos_config,
+	    snemo::digitization::calo_feb_process calo_feb_process;
+	    calo_feb_process.initialize(algos_config,
 					my_clock_manager,
 					my_e_mapping,
 					calo_ssb);
 
-	    snemo::digitization::signal_to_geiger_tp_algo signal_2_geiger_tp;
-	    signal_2_geiger_tp.initialize(algos_config,
-					  my_clock_manager,
-					  my_e_mapping,
-					  gg_ssb);
+	    snemo::digitization::tracker_feb_process  tracker_feb_process;
+	    tracker_feb_process.initialize(algos_config,
+					   my_clock_manager,
+					   my_e_mapping,
+					   gg_ssb);
 
 	    snemo::digitization::geiger_tp_data my_geiger_tp_data;
 	    snemo::digitization::calo_tp_data my_calo_tp_data;
@@ -174,7 +174,7 @@ int main(int argc_, char** argv_)
 		mctools::signal::base_signal a_signal = SSD.get_signal(tracker_signal_category, 0);
 		// a_signal.tree_dump(std::clog, "A GG signal");
 
-	    	signal_2_geiger_tp.process(SSD, my_geiger_tp_data);
+	    	tracker_feb_process.trigger_process(SSD, my_geiger_tp_data);
 		my_geiger_tp_data.tree_dump(std::clog, "Geiger TP(s) data : ", "INFO : ");
 	      }
 
@@ -183,7 +183,7 @@ int main(int argc_, char** argv_)
 		mctools::signal::base_signal a_signal = SSD.get_signal(calo_signal_category, 0);
 		a_signal.tree_dump(std::clog, "A Calo signal");
 
-		signal_2_calo_tp.process(SSD, my_calo_tp_data);
+		calo_feb_process.trigger_process(SSD, my_calo_tp_data);
 		my_calo_tp_data.tree_dump(std::clog, "Calorimeter TP(s) data : ", "INFO : ");
 
 	      }

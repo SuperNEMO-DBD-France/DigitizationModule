@@ -1,10 +1,10 @@
-// snemo/digitization/signal_to_geiger_tp_algo.h
+// snemo/digitization/tracker_feb_process.h
 // Author(s): Yves LEMIERE <lemiere@lpccaen.in2p3.fr>
 // Author(s): Francois MAUGER <mauger@lpccaen.in2p3.fr>
 // Author(s): Guillaume OLIVIERO <goliviero@lpccaen.in2p3.fr>
 
-#ifndef FALAISE_DIGITIZATION_PLUGIN_SNEMO_DIGITIZATION_SIGNAL_TO_GEIGER_TP_ALGO_H
-#define FALAISE_DIGITIZATION_PLUGIN_SNEMO_DIGITIZATION_SIGNAL_TO_GEIGER_TP_ALGO_H
+#ifndef FALAISE_DIGITIZATION_PLUGIN_SNEMO_DIGITIZATION_TRACKER_FEB_PROCESS_H
+#define FALAISE_DIGITIZATION_PLUGIN_SNEMO_DIGITIZATION_TRACKER_FEB_PROCESS_H
 
 // Standard library :
 #include <stdexcept>
@@ -22,6 +22,9 @@
 // - Bayeux/mygsl:
 #include <mygsl/i_unary_function_with_derivative.h>
 
+// - Falaise:
+#include <falaise/snemo/datamodels/sim_digi_data.h>
+
 // This project :
 #include <snemo/digitization/electronic_mapping.h>
 #include <snemo/digitization/tempo_utils.h>
@@ -35,7 +38,7 @@ namespace snemo {
   namespace digitization {
 
     /// \brief Algorithm processing. Take Simulated Signal Data 'SSD' bank and fill geiger trigger primitive 'TP' data object.
-    class signal_to_geiger_tp_algo : boost::noncopyable
+    class tracker_feb_process : boost::noncopyable
     {
     public :
 
@@ -110,10 +113,10 @@ namespace snemo {
 			typedef std::vector<geiger_digi_working_data> gg_digi_working_data_collection_type;
 
       /// Default constructor
-      signal_to_geiger_tp_algo();
+      tracker_feb_process();
 
       /// Destructor
-      virtual ~signal_to_geiger_tp_algo();
+      virtual ~tracker_feb_process();
 
       /// Initializing
       void initialize(const datatools::properties & config_,
@@ -149,8 +152,11 @@ namespace snemo {
 			void clear_working_data();
 
       /// Process to fill a geiger tp data object from simulated data
-      void process(const mctools::signal::signal_data & SSD_,
-									 geiger_tp_data & my_geiger_tp_data_);
+      void trigger_process(const mctools::signal::signal_data & SSD_,
+													 geiger_tp_data & my_geiger_tp_data_);
+
+      /// Process to fill simulated digitized data tracker digitized hit collection
+			void readout_process(snemo::datamodel::sim_digi_data & SDD_);
 
     protected:
 
@@ -168,12 +174,18 @@ namespace snemo {
 			void _geiger_tp_process(const gg_digi_working_data_collection_type & wd_collection_,
 															geiger_tp_data & my_geiger_tp_data_);
 
-      // Increment the running digi ID assigned to the next signal
+      // Increment the running TP ID assigned to the next GG TP
       void _increment_running_tp_id();
 
+      // Increment the running readout ID assigned to the next tracker digi signal
+      void _increment_running_readout_id();
+
       ///  Process to fill a geiger tp data object from signal data
-      void _process(const mctools::signal::signal_data & SSD_,
-										geiger_tp_data & my_geiger_tp_data_);
+      void _trigger_process(const mctools::signal::signal_data & SSD_,
+														geiger_tp_data & my_geiger_tp_data_);
+
+      /// Process to fill simulated digitized data tracker digitized hit collection
+			void _readout_process(snemo::datamodel::sim_digi_data & SDD_);
 
     private :
 
@@ -184,12 +196,13 @@ namespace snemo {
 			electronic_mapping * _electronic_mapping_;     //!< Convert geometric ID into electronic ID
 			mctools::signal::signal_shape_builder * _ssb_; //!< An external shape builder
 
-
 			std::string _signal_category_; //!< Identifier of the input tracker signal category
 			geiger_feb_config _gg_feb_config_; //!< The Geiger FEB configuration
 
 			// Working resources :
-			int _running_tp_id_ = -1; //!< Give a new unique hit ID to calo TP
+			int _running_tp_id_; //!< Give a new unique hit ID to calo TP
+      int _running_readout_id_;
+
 			bool _activated_bits_[geiger::tp::TP_SIZE]; //!< Table of booleans to see which bits were activated
 			gg_digi_working_data_collection_type _gg_digi_data_collection_; //!< Temporary collection of tracker digitized data
 
@@ -200,7 +213,7 @@ namespace snemo {
 } // end of namespace snemo
 
 
-#endif // FALAISE_DIGITIZATION_PLUGIN_SNEMO_DIGITIZATION_SIGNAL_TO_GEIGER_TP_ALGO_H
+#endif // FALAISE_DIGITIZATION_PLUGIN_SNEMO_DIGITIZATION_TRACKER_FEB_PROCESS_H
 
 /*
 ** Local Variables: --

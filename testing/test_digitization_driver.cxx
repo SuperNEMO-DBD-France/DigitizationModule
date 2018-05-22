@@ -212,8 +212,11 @@ void test_driver_1(const params_type & params_)
 
 	  snemo::datamodel::sim_digi_data SDD;
 
+	  std::clog << "DEBUG 00000 " << std::endl;
 	  digi_driver.process(SSD, SDD);
+	  std::clog << "DEBUG 00001 " << std::endl;
 	} // end if (ER.has(SSD_bank_label)...)
+
 
       ER.clear();
 

@@ -25,7 +25,7 @@
 #include <snemo/digitization/fldigi.h>
 #include <snemo/digitization/clock_utils.h>
 #include <snemo/digitization/sd_to_calo_signal_algo.h>
-#include <snemo/digitization/signal_to_calo_tp_algo.h>
+#include <snemo/digitization/calo_feb_process.h>
 #include <snemo/digitization/calo_tp_to_ctw_algo.h>
 #include <snemo/digitization/calo_trigger_algorithm.h>
 #include <snemo/digitization/mapping.h>
@@ -150,7 +150,7 @@ int main( int  argc_ , char **argv_  )
 
 		if( signal_data.has_calo_signals())
 		  {
-		    snemo::digitization::signal_to_calo_tp_algo signal_2_calo_tp;
+		    snemo::digitization::calo_feb_process signal_2_calo_tp;
 		    // signal_2_calo_tp.initialize(my_e_mapping);
 
 		    snemo::digitization::calo_tp_data my_calo_tp_data;

@@ -47,8 +47,8 @@
 #include <falaise/snemo/datamodels/sim_digi_data.h>
 
 // This project:
-#include <falaise/snemo/digitization/signal_to_calo_tp_algo.h>
-#include <falaise/snemo/digitization/signal_to_geiger_tp_algo.h>
+#include <falaise/snemo/digitization/calo_feb_process.h>
+#include <falaise/snemo/digitization/tracker_feb_process.h>
 #include <falaise/snemo/digitization/calo_tp_to_ctw_algo.h>
 #include <falaise/snemo/digitization/geiger_tp_to_ctw_algo.h>
 #include <falaise/snemo/digitization/trigger_algorithm.h>
@@ -126,9 +126,11 @@ namespace snemo {
       void _process_digitization_algorithms(const mctools::signal::signal_data & SSD_,
 																						snemo::datamodel::sim_digi_data & SDD_);
 
-      /// Process readout algorithms (TO DO)
-      void _process_readout_algorithms(const mctools::signal::signal_data & SSD_,
-																			 snemo::datamodel::sim_digi_data & SDD_);
+      /// Process readout algorithms. Fill 'SDD' bank
+      void _process_readout_algorithms(snemo::datamodel::sim_digi_data & SDD_);
+
+			/// Clear algorithm's working data
+			void _clear_working_data();
 
     private:
 
@@ -148,11 +150,11 @@ namespace snemo {
 			mctools::signal::signal_shape_builder _calo_ssb_; //!< The Calorimeter signal shape builder
 
       // Algorithms:
-      snemo::digitization::signal_to_calo_tp_algo   _calo_signal_to_tp_algo_;   //!< Calo signal to calo trigger primitive (TP) algo
-      snemo::digitization::signal_to_geiger_tp_algo _geiger_signal_to_tp_algo_; //!< Geiger signal to geiger  TP algo
-      snemo::digitization::calo_tp_to_ctw_algo      _calo_tp_to_ctw_algo_;      //!< Calo TP to crate trigger word algo
-      snemo::digitization::geiger_tp_to_ctw_algo    _geiger_tp_to_ctw_algo_;    //!< Geiger TP to crate trigger word algo
-      snemo::digitization::trigger_algorithm        _trigger_algo_;             //!< The trigger algorithm
+      snemo::digitization::calo_feb_process      _calo_feb_process_;      //!< Calo FEB process (trigger and readout)
+			snemo::digitization::tracker_feb_process   _tracker_feb_process_;   //!< Tracker FEB process (trigger and readout)
+      snemo::digitization::calo_tp_to_ctw_algo   _calo_tp_to_ctw_algo_;		//!< Calo TP to crate trigger word algo
+			snemo::digitization::geiger_tp_to_ctw_algo _geiger_tp_to_ctw_algo_; //!< Geiger TP to crate trigger word algo
+			snemo::digitization::trigger_algorithm		 _trigger_algo_;					//!< The trigger algorithm
 
     };
 

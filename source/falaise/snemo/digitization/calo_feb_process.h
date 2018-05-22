@@ -1,9 +1,9 @@
-// snemo/digitization/signal_to_calo_tp_algo.h
+// snemo/digitization/calo_feb_process.h
 // Author(s): Yves LEMIERE <lemiere@lpccaen.in2p3.fr>
 // Author(s): Guillaume OLIVIERO <goliviero@lpccaen.in2p3.fr>
 
-#ifndef FALAISE_DIGITIZATION_PLUGIN_SNEMO_DIGITIZATION_SIGNAL_TO_CALO_TP_ALGO_H
-#define FALAISE_DIGITIZATION_PLUGIN_SNEMO_DIGITIZATION_SIGNAL_TO_CALO_TP_ALGO_H
+#ifndef FALAISE_DIGITIZATION_PLUGIN_SNEMO_DIGITIZATION_CALO_FEB_PROCESS_H
+#define FALAISE_DIGITIZATION_PLUGIN_SNEMO_DIGITIZATION_CALO_FEB_PROCESS_H
 
 // Standard library :
 #include <stdexcept>
@@ -19,6 +19,9 @@
 // - Bayeux/mygsl:
 #include <mygsl/i_unary_function.h>
 
+// - Falaise:
+#include <falaise/snemo/datamodels/sim_digi_data.h>
+
 // Boost :
 #include <boost/circular_buffer.hpp>
 
@@ -33,7 +36,7 @@ namespace snemo {
   namespace digitization {
 
     /// \brief Algorithm processing. Take signal data and fill calo trigger primitive data object.
-    class signal_to_calo_tp_algo : boost::noncopyable
+    class calo_feb_process : boost::noncopyable
     {
     public :
 			typedef boost::circular_buffer<double> circular_buffer;
@@ -51,15 +54,21 @@ namespace snemo {
 															 const std::string & indent_ = "",
 															 bool inherit_               = false) const;
 
-				bool external_trigger; //!< External trigger activated
-				bool calo_tp_spare;    //!< Calo TP spare bit activated
+				static const unsigned int DEFAULT_ADC_DYNAMIC = 4096;
+				static const double DEFAULT_VOLTAGE_DYNAMIC = 2.5 * CLHEP::volt;
+				static const unsigned int DEFAULT_ZERO_ADC_POS = 2048;
+				const double VOLT_ADC_VALUE = DEFAULT_VOLTAGE_DYNAMIC / DEFAULT_ADC_DYNAMIC;
+
+				unsigned int adc_dynamic = DEFAULT_ADC_DYNAMIC; //!< ADC dynamic
+				bool    external_trigger; //!< External trigger activated
+				bool    calo_tp_spare;    //!< Calo TP spare bit activated
 				int16_t acquisition_window_length; //<! Number of samples of the acquisition window
-				bool   initialized;    //!< Initialization flag
-				double low_threshold;  //!< Calorimeter Low threshold in Volts
-				double high_threshold; //!< Calorimeter High threshold in Volts
-				double sampling_rate;	 //!< Wavecatcher sampling rate
-				double sampling_step;	 //!< Wavecatcher sampling step (based on sampling rate)
-				double post_trig_window_ns; //!< Time to record after trigger
+				bool    initialized;     //!< Initialization flag
+				double  low_threshold;   //!< Calorimeter Low threshold in Volts
+				double  high_threshold;  //!< Calorimeter High threshold in Volts
+				double  sampling_rate;	 //!< Wavecatcher sampling rate
+				double  sampling_step;	 //!< Wavecatcher sampling step (based on sampling rate)
+				double  post_trig_window_ns; //!< Time to record after trigger
 				unsigned int post_trig_window_samples; //!< Number of samples to record after trigger
 
 			protected :
@@ -95,10 +104,10 @@ namespace snemo {
 			};
 
 			/// Default constructor
-      signal_to_calo_tp_algo();
+      calo_feb_process();
 
       /// Destructor
-      virtual ~signal_to_calo_tp_algo();
+      virtual ~calo_feb_process();
 
       /// Initializing
       void initialize(const datatools::properties & config_,
@@ -122,19 +131,19 @@ namespace snemo {
       const std::string & get_signal_category() const;
 
 			/// Return the collection of calo digi working data
-			const std::vector<signal_to_calo_tp_algo::calo_digi_working_data> get_calo_digi_working_data_vector() const;
+			const std::vector<calo_feb_process::calo_digi_working_data> get_calo_digi_working_data_vector() const;
 
 			/// Clear temporary working data
 			void clear_working_data();
 
-      /// Process to fill a calo tp data object from signal data
-			void process(const mctools::signal::signal_data & signal_data_,
-									 calo_tp_data & my_calo_tp_data_);
+			/// Process to fill a calo tp data object from signal data
+			void trigger_process(const mctools::signal::signal_data & SSD_,
+													 calo_tp_data & my_calo_tp_data_);
+
+      /// Process to fill simulated digitized data calo digitized hit collection
+			void readout_process(snemo::datamodel::sim_digi_data & SDD_);
 
     protected:
-
-			// unsigned int _existing_same_electronic_id(const geomtools::geom_id & electronic_id_,
-			// 																					calo_tp_data & my_calo_tp_data_);
 
 			/// Set defaults parameters
 			void _set_defaults();
@@ -145,11 +154,17 @@ namespace snemo {
       // Increment the running digi ID assigned to the next signal
       void _increment_running_tp_id();
 
-			///  Process to fill a calo tp data object from signal data
-			void _process(const mctools::signal::signal_data & signal_data_,
-										calo_tp_data & my_calo_tp_data_);
+      // Increment the running digi ID assigned to the next signal
+      void _increment_running_readout_id();
 
-    private :
+			///  Process to fill a calo tp data object from signal data
+			void _trigger_process(const mctools::signal::signal_data & SSD_,
+														calo_tp_data & my_calo_tp_data_);
+
+      /// Process to fill simulated digitized data calo digitized hit collection
+			void _readout_process(snemo::datamodel::sim_digi_data & SDD_);
+
+		private :
 
 			// Configuration:
       bool _initialized_;      //!< Initialization flag
@@ -165,11 +180,11 @@ namespace snemo {
 			calo_feb_config _calo_feb_config_; //!< Calorimeter Front-End board configuration
 
 			// Working resources:
-			int _running_digi_id_ = -1; //!< Give a new unique hit ID to calo WD
-			int _running_tp_id_ = -1; //!< Give a new unique hit ID to calo TP
+			int _running_digi_id_;    //!< Give a new unique hit ID to calo WD
+			int _running_tp_id_;      //!< Give a new unique hit ID to calo TP
+			int _running_readout_id_; //!< Give a new unique hit ID to calo digitized hit (readout)
 
 			std::vector<calo_digi_working_data> _calo_digi_data_collection_; //!< Temporary collection of calo digitized data
-
 
     };
 
@@ -178,7 +193,7 @@ namespace snemo {
 } // end of namespace snemo
 
 
-#endif // FALAISE_DIGITIZATION_PLUGIN_SNEMO_DIGITIZATION_SIGNAL_TO_CALO_TP_ALGO_H
+#endif // FALAISE_DIGITIZATION_PLUGIN_SNEMO_DIGITIZATION_CALO_FEB_PROCESS_H
 
 /*
 ** Local Variables: --

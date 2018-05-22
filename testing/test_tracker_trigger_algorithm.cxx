@@ -28,7 +28,7 @@
 #include <snemo/digitization/fldigi.h>
 #include <snemo/digitization/clock_utils.h>
 #include <snemo/digitization/sd_to_geiger_signal_algo.h>
-#include <snemo/digitization/signal_to_geiger_tp_algo.h>
+#include <snemo/digitization/tracker_feb_process.h>
 #include <snemo/digitization/geiger_tp_to_ctw_algo.h>
 #include <snemo/digitization/tracker_trigger_algorithm.h>
 
@@ -196,7 +196,7 @@ int main(int  argc_ , char ** argv_)
 		    snemo::digitization::geiger_tp_data my_geiger_tp_data;
 
 		    // Initializing and processing Geiger signal to Geiger TP :
-		    snemo::digitization::signal_to_geiger_tp_algo signal_2_geiger_tp;
+		    snemo::digitization::tracker_feb_process tracker_feb_process;
 		    // signal_2_geiger_tp.initialize(my_e_mapping, my_clock_manager);
 		    // signal_2_geiger_tp.process(signal_data, my_geiger_tp_data);
 

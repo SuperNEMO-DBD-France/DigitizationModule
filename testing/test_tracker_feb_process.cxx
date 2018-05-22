@@ -21,10 +21,8 @@
 // This project :
 #include <snemo/digitization/fldigi.h>
 #include <snemo/digitization/clock_utils.h>
-#include <snemo/digitization/sd_to_geiger_signal_algo.h>
-#include <snemo/digitization/sd_to_calo_signal_algo.h>
-#include <snemo/digitization/signal_to_calo_tp_algo.h>
-#include <snemo/digitization/signal_to_geiger_tp_algo.h>
+#include <snemo/digitization/signal_data.h>
+#include <snemo/digitization/tracker_feb_process.h>
 #include <snemo/digitization/electronic_mapping.h>
 #include <snemo/digitization/mapping.h>
 
@@ -36,7 +34,7 @@ int main( int  argc_ , char ** argv_ )
   datatools::logger::priority logging = datatools::logger::PRIO_FATAL;
 
   try {
-    std::clog << "Test program for class 'snemo::digitization::sd_to_calo_tp_algo' !" << std::endl;
+    std::clog << "Test program for class 'snemo::digitization::tracker_feb_process' !" << std::endl;
     int32_t seed = 314159;
     mygsl::rng random_generator;
     random_generator.initialize(seed);
@@ -76,8 +74,8 @@ int main( int  argc_ , char ** argv_ )
 
     datatools::things ER;
 
-    snemo::digitization::signal_to_geiger_tp_algo signal_2_geiger_tp;
-    // signal_2_geiger_tp.initialize(my_e_mapping, my_clock_manager);
+    snemo::digitization::tracker_feb_process tracker_feb_process;
+    // tracker_feb_process.initialize(my_e_mapping, my_clock_manager);
 
     const geomtools::geom_id GID1(1210, 0, 0, 3, 106);
     const geomtools::geom_id GID2(1210, 0, 0, 6, 95);
@@ -105,7 +103,7 @@ int main( int  argc_ , char ** argv_ )
 
     if( signal_data.has_geiger_signals())
       {
-	// signal_2_geiger_tp.process(signal_data, my_geiger_tp_data);
+	// tracker_feb_process.trigger_process(signal_data, my_geiger_tp_data);
 	my_geiger_tp_data.tree_dump(std::clog, "Geiger TP(s) data : ", "INFO : ");
       }
 

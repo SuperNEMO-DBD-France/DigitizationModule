@@ -2,10 +2,6 @@
 
 // Ourselves:
 #include <snemo/digitization/digitization_driver.h>
-// #include <snemo/digitization/geiger_tp_data.h>
-// #include <snemo/digitization/calo_tp_data.h>
-// #include <snemo/digitization/geiger_ctw_data.h>
-// #include <snemo/digitization/calo_ctw_data.h>
 
 namespace snemo {
 
@@ -122,21 +118,21 @@ namespace snemo {
       _calo_ssb_.initialize(calo_ssb_config);
       _calo_ssb_.tree_dump(std::clog, "Calo Signal Shape Builder");
 
-      std::string gg_to_tp_algo_key = "gg_to_tp_algo.config.";
+      std::string gg_to_tp_algo_key = "tracker_feb.config.";
       datatools::properties gg_to_tp_algo_config;
       config_.export_and_rename_starting_with(gg_to_tp_algo_config, gg_to_tp_algo_key, "");
-      _geiger_signal_to_tp_algo_.initialize(gg_to_tp_algo_config,
-					    _clock_utils_,
-					    grab_electronic_mapping(),
-					    _gg_ssb_);
+      _tracker_feb_process_.initialize(gg_to_tp_algo_config,
+				       _clock_utils_,
+				       grab_electronic_mapping(),
+				       _gg_ssb_);
 
-      std::string calo_to_tp_algo_key = "calo_to_tp_algo.config.";
+      std::string calo_to_tp_algo_key = "calo_feb.config.";
       datatools::properties calo_to_tp_algo_config;
       config_.export_and_rename_starting_with(calo_to_tp_algo_config, calo_to_tp_algo_key, "");
-      _calo_signal_to_tp_algo_.initialize(calo_to_tp_algo_config,
-					  _clock_utils_,
-					  grab_electronic_mapping(),
-					  _calo_ssb_);
+      _calo_feb_process_.initialize(calo_to_tp_algo_config,
+				    _clock_utils_,
+				    grab_electronic_mapping(),
+				    _calo_ssb_);
 
       std::string calo_tp_to_ctw_algo_key = "calo_tp_to_ctw_algo.config.";
       datatools::properties calo_tp_to_ctw_algo_config;
@@ -186,8 +182,8 @@ namespace snemo {
       _clock_utils_.reset();
       _gg_ssb_.reset();
       _calo_ssb_.reset();
-      _calo_signal_to_tp_algo_.reset();
-      _geiger_signal_to_tp_algo_.reset();
+      _calo_feb_process_.reset();
+      _tracker_feb_process_.reset();
       _calo_tp_to_ctw_algo_.reset();
       _geiger_tp_to_ctw_algo_.reset();
       _trigger_algo_.reset();
@@ -199,18 +195,15 @@ namespace snemo {
     {
       DT_THROW_IF(!is_initialized(), std::logic_error, "Not initialized !");
 
+      std::clog << "DEBUG 000 " << std::endl;
 
       _process_digitization_algorithms(SSD_, SDD_);
-      _process_readout_algorithms(SSD_, SDD_);
+      std::clog << "DEBUG 001 " << std::endl;
+      _process_readout_algorithms(SDD_);
 
 
-      // Clear working data:
-      _gg_ssb_.clear_functors();
-      _calo_ssb_.clear_functors();
-      _calo_signal_to_tp_algo_.clear_working_data();
-      _geiger_signal_to_tp_algo_.clear_working_data();
 
-      _trigger_algo_.reset_data();
+      _clear_working_data();
 
       return;
     }
@@ -224,27 +217,22 @@ namespace snemo {
       _clock_utils_.compute_clockticks_ref(_rdm_gen_);
       // _clock_utils_.tree_dump(std::clog, "Clock utils");
 
-      // For the moment only CT ref are used. Shifts plays the role of a new '0'. It will be add later:
-      // int32_t clocktick_25_reference  = _clock_utils_.get_clocktick_25_ref();
-      // double  clocktick_25_shift      = _clock_utils_.get_shift_25();
-      // _calo_signal_to_tp_algo_.set_clocktick_reference(clocktick_25_reference);
       calo_tp_data calo_tp_data;
-      _calo_signal_to_tp_algo_.process(SSD_, calo_tp_data);
+      _calo_feb_process_.trigger_process(SSD_,
+					 calo_tp_data);
 
       calo_ctw_data calo_ctw_data;
       _calo_tp_to_ctw_algo_.process(calo_tp_data,
 				    calo_ctw_data);
 
-      // int32_t clocktick_800_reference = _clock_utils_.get_clocktick_800_ref();
-      // double  clocktick_800_shift     = _clock_utils_.get_shift_800();
-      // _geiger_signal_to_tp_algo_.set_clocktick_reference(clocktick_800_reference);
 
       geiger_tp_data gg_tp_data;
-      _geiger_signal_to_tp_algo_.process(SSD_,
-					 gg_tp_data);
+      _tracker_feb_process_.trigger_process(SSD_,
+					    gg_tp_data);
 
       geiger_ctw_data gg_ctw_data;
-      _geiger_tp_to_ctw_algo_.process(gg_tp_data, gg_ctw_data);
+      _geiger_tp_to_ctw_algo_.process(gg_tp_data,
+				      gg_ctw_data);
 
 
       // gg_tp_data.tree_dump(std::clog, "Geiger TP(s) data : ", "INFO : ");
@@ -277,20 +265,52 @@ namespace snemo {
       return;
     }
 
-    void digitization_driver::_process_readout_algorithms(const mctools::signal::signal_data & /*SSD_*/,
-							 snemo::datamodel::sim_digi_data & /*SDD_*/)
+    void digitization_driver::_process_readout_algorithms(snemo::datamodel::sim_digi_data & SDD_)
     {
       DT_THROW_IF(!is_initialized(), std::logic_error, "Not initialized !");
 
       // todo
+      _calo_feb_process_.readout_process(SDD_);
+
+
+
+
+
+      // for (unsigned int i = 0; i < _L2_decision_records_.size(); i++)
+      // 	{
+      // 	        if (_trigger_algo_. get_L2_decision_records_[i])
+      // Process as many readout as needed
+      // 	}
+
+
+
+
 
       return;
     }
 
+    void digitization_driver::_clear_working_data()
+    {
+      DT_THROW_IF(!is_initialized(), std::logic_error, "Not initialized !");
+
+      // Clear working data:
+      std::clog << "DEBUG 002 " << std::endl;
+      _gg_ssb_.clear_functors();
+      std::clog << "DEBUG 003 " << std::endl;
+      _calo_ssb_.clear_functors();
+      std::clog << "DEBUG 004 " << std::endl;
+      _calo_feb_process_.clear_working_data();
+      std::clog << "DEBUG 005 " << std::endl;
+      _tracker_feb_process_.clear_working_data();
+      std::clog << "DEBUG 006 " << std::endl;
+      _trigger_algo_.reset_data();
+      std::clog << "DEBUG 007 " << std::endl;
+    }
+
     void digitization_driver::tree_dump(std::ostream & out_,
-                                                 const std::string & title_,
-                                                 const std::string & indent_,
-                                                 bool inherit_) const
+					const std::string & title_,
+					const std::string & indent_,
+					bool inherit_) const
     {
       if (!title_.empty()) {
         out_ << indent_ << title_ << std::endl;

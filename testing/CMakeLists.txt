@@ -24,8 +24,8 @@ set(FalaiseDigitizationPlugin_TESTS
   test_sd_to_signal_process.cxx
   # test_sd_to_tp_process.cxx
   test_ssd_to_tp_process.cxx
-  test_signal_to_geiger_tp_algo.cxx
-  test_signal_to_calo_tp_algo.cxx
+  test_tracker_feb_process.cxx
+  test_calo_feb_process.cxx
   test_simulated_data_reading.cxx
   test_tracker_trigger_algorithm.cxx
   test_trigger_algorithm.cxx

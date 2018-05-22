@@ -1,24 +1,27 @@
-// snemo/digitization/signal_to_calo_tp_algo.cc
+// snemo/digitization/calo_feb_process.cc
 // Author(s): Yves LEMIERE <lemiere@lpccaen.in2p3.fr>
 // Author(s): Guillaume OLIVIERO <goliviero@lpccaen.in2p3.fr>
+
+// - Falaise:
+#include <falaise/snemo/datamodels/sim_calo_digi_hit.h>
 
 // This project :
 #include <snemo/digitization/clock_utils.h>
 
 // Ourselves:
-#include <snemo/digitization/signal_to_calo_tp_algo.h>
+#include <snemo/digitization/calo_feb_process.h>
 #include <snemo/digitization/tempo_utils.h>
 
 namespace snemo {
 
   namespace digitization {
 
-    signal_to_calo_tp_algo::calo_feb_config::calo_feb_config()
+    calo_feb_process::calo_feb_config::calo_feb_config()
     {
       reset();
     }
 
-    signal_to_calo_tp_algo::calo_feb_config::~calo_feb_config()
+    calo_feb_process::calo_feb_config::~calo_feb_config()
     {
       if (is_initialized())
 	{
@@ -26,7 +29,7 @@ namespace snemo {
 	}
     }
 
-    void signal_to_calo_tp_algo::calo_feb_config::initialize(const datatools::properties & config_)
+    void calo_feb_process::calo_feb_config::initialize(const datatools::properties & config_)
     {
       _set_defaults();
 
@@ -72,12 +75,12 @@ namespace snemo {
       return;
     }
 
-    bool signal_to_calo_tp_algo::calo_feb_config::is_initialized() const
+    bool calo_feb_process::calo_feb_config::is_initialized() const
     {
       return initialized;
     }
 
-    void signal_to_calo_tp_algo::calo_feb_config::reset()
+    void calo_feb_process::calo_feb_config::reset()
     {
       initialized = false;
       external_trigger = false;
@@ -92,7 +95,7 @@ namespace snemo {
       return;
     }
 
-    void signal_to_calo_tp_algo::calo_feb_config::_set_defaults()
+    void calo_feb_process::calo_feb_config::_set_defaults()
     {
       external_trigger = false;
       calo_tp_spare = false;
@@ -106,7 +109,7 @@ namespace snemo {
       return;
     }
 
-    void signal_to_calo_tp_algo::calo_feb_config::tree_dump(std::ostream & out_,
+    void calo_feb_process::calo_feb_config::tree_dump(std::ostream & out_,
 							    const std::string & title_,
 							    const std::string & indent_,
 							    bool inherit_) const
@@ -140,18 +143,18 @@ namespace snemo {
       return;
     }
 
-    signal_to_calo_tp_algo::calo_digi_working_data::calo_digi_working_data()
+    calo_feb_process::calo_digi_working_data::calo_digi_working_data()
     {
       reset();
     }
 
-    signal_to_calo_tp_algo::calo_digi_working_data::~calo_digi_working_data()
+    calo_feb_process::calo_digi_working_data::~calo_digi_working_data()
     {
       reset();
       return;
     }
 
-    void signal_to_calo_tp_algo::calo_digi_working_data::reset()
+    void calo_feb_process::calo_digi_working_data::reset()
     {
       hit_id = -1;
       geom_id.reset();
@@ -166,12 +169,12 @@ namespace snemo {
       calo_digitized_signal.clear();
     }
 
-    bool signal_to_calo_tp_algo::calo_digi_working_data::operator<(const calo_digi_working_data & other_) const
+    bool calo_feb_process::calo_digi_working_data::operator<(const calo_digi_working_data & other_) const
     {
       return this-> low_threshold_CT_25 < low_threshold_CT_25;
     }
 
-    void signal_to_calo_tp_algo::calo_digi_working_data::tree_dump(std::ostream & out_,
+    void calo_feb_process::calo_digi_working_data::tree_dump(std::ostream & out_,
 								   const std::string & title_,
 								   bool dump_signal_,
 								   const std::string & indent_,
@@ -230,7 +233,7 @@ namespace snemo {
       return;
     }
 
-    signal_to_calo_tp_algo::signal_to_calo_tp_algo()
+    calo_feb_process::calo_feb_process()
     {
       _initialized_ = false;
       _electronic_mapping_ = nullptr;
@@ -238,7 +241,7 @@ namespace snemo {
       return;
     }
 
-    signal_to_calo_tp_algo::~signal_to_calo_tp_algo()
+    calo_feb_process::~calo_feb_process()
     {
       if (is_initialized())
 	{
@@ -247,12 +250,12 @@ namespace snemo {
       return;
     }
 
-    void signal_to_calo_tp_algo::initialize(const datatools::properties & config_,
+    void calo_feb_process::initialize(const datatools::properties & config_,
 					    clock_utils & my_clock_utils_,
 					    electronic_mapping & my_electronic_mapping_,
 					    mctools::signal::signal_shape_builder & my_ssb_)
     {
-      DT_THROW_IF(is_initialized(), std::logic_error, "Signal to calo tp algorithm is already initialized ! ");
+      DT_THROW_IF(is_initialized(), std::logic_error, "Calo FEB process is already initialized ! ");
       _set_defaults();
       _clock_utils_ = & my_clock_utils_;
       _electronic_mapping_ = & my_electronic_mapping_;
@@ -268,79 +271,90 @@ namespace snemo {
 
       _running_digi_id_ = 0;
       _running_tp_id_ = 0;
+      _running_readout_id_ = 0;
 
       _initialized_ = true;
       return;
     }
 
-    bool signal_to_calo_tp_algo::is_initialized() const
+    bool calo_feb_process::is_initialized() const
     {
       return _initialized_;
     }
 
-    void signal_to_calo_tp_algo::reset()
+    void calo_feb_process::reset()
     {
-      DT_THROW_IF(!is_initialized(), std::logic_error, "SD to calo tp algorithm is not initialized, it can't be reset ! ");
+      DT_THROW_IF(!is_initialized(), std::logic_error, "Calo FEB process is not initialized, it can't be reset ! ");
       _initialized_ = false;
       _electronic_mapping_ = nullptr;
       _clock_utils_ = nullptr;
       _calo_feb_config_.reset();
+      _running_digi_id_ = -1;
+      _running_tp_id_ = -1;
+      _running_readout_id_ = -1;
       return;
     }
 
-    bool signal_to_calo_tp_algo::has_signal_category() const
+    bool calo_feb_process::has_signal_category() const
     {
       return !_signal_category_.empty();
     }
 
-    const std::string & signal_to_calo_tp_algo::get_signal_category() const
+    const std::string & calo_feb_process::get_signal_category() const
     {
       return _signal_category_;
     }
 
-    void signal_to_calo_tp_algo::set_signal_category(const std::string & category_)
+    void calo_feb_process::set_signal_category(const std::string & category_)
     {
       _signal_category_ = category_;
       return;
     }
 
-    void signal_to_calo_tp_algo::_set_defaults()
+    void calo_feb_process::_set_defaults()
     {
       _signal_category_ = "sigcalo";
       _running_digi_id_ = -1;
       _running_tp_id_   = -1;
+      _running_readout_id_   = -1;
       return;
     }
 
-    void signal_to_calo_tp_algo::_increment_running_digi_id()
+    void calo_feb_process::_increment_running_digi_id()
     {
       _running_digi_id_++;
       return;
     }
 
-    void signal_to_calo_tp_algo::_increment_running_tp_id()
+    void calo_feb_process::_increment_running_tp_id()
     {
       _running_tp_id_++;
       return;
     }
 
-    const std::vector<signal_to_calo_tp_algo::calo_digi_working_data> signal_to_calo_tp_algo::get_calo_digi_working_data_vector() const
+    void calo_feb_process::_increment_running_readout_id()
+    {
+      _running_readout_id_++;
+      return;
+    }
+
+    const std::vector<calo_feb_process::calo_digi_working_data> calo_feb_process::get_calo_digi_working_data_vector() const
     {
       return _calo_digi_data_collection_;
     }
 
-    void signal_to_calo_tp_algo::clear_working_data()
+    void calo_feb_process::clear_working_data()
     {
-      DT_THROW_IF(!is_initialized(), std::logic_error, "Signal to calo TP algorithm is not initialized ! ");
+      DT_THROW_IF(!is_initialized(), std::logic_error, "Calo FEB process is not initialized ! ");
       _set_defaults();
       _calo_digi_data_collection_.clear();
       return;
     }
 
-    void signal_to_calo_tp_algo::process(const mctools::signal::signal_data & SSD_,
-					 calo_tp_data & my_calo_tp_data_)
+    void calo_feb_process::trigger_process(const mctools::signal::signal_data & SSD_,
+					   calo_tp_data & my_calo_tp_data_)
     {
-      DT_THROW_IF(!is_initialized(), std::logic_error, "Signal to calo TP algorithm is not initialized ! ");
+      DT_THROW_IF(!is_initialized(), std::logic_error, "Calo FEB process is not initialized ! ");
 
       /////////////////////////////////
       // Check simulated signal data //
@@ -353,16 +367,35 @@ namespace snemo {
 	 ********************/
 
 	// Main processing method :
-	_process(SSD_, my_calo_tp_data_);
+	_trigger_process(SSD_, my_calo_tp_data_);
       }
 
       return;
     }
 
-    void signal_to_calo_tp_algo::_process(const mctools::signal::signal_data & SSD_,
-					  calo_tp_data & my_calo_tp_data_)
+    void calo_feb_process::readout_process(snemo::datamodel::sim_digi_data & SDD_)
     {
-      DT_THROW_IF(!is_initialized(), std::logic_error, "Signal to calo TP algorithm is not initialized ! ");
+      DT_THROW_IF(!is_initialized(), std::logic_error, "Calo FEB process is not initialized ! ");
+
+      // Check if Calo digi working data is not empty :
+      if (_calo_digi_data_collection_.size() != 0)
+	{
+	  /********************
+	   * Process the data *
+	   ********************/
+
+	  // Main processing method :
+	  _readout_process(SDD_);
+	}
+
+      return;
+    }
+
+
+    void calo_feb_process::_trigger_process(const mctools::signal::signal_data & SSD_,
+					    calo_tp_data & my_calo_tp_data_)
+    {
+      DT_THROW_IF(!is_initialized(), std::logic_error, "Calo FEB process is not initialized ! ");
       std::size_t number_of_hits = SSD_.get_number_of_signals(get_signal_category());
 
       // std::clog << "Signal category = " << _signal_category_
@@ -653,6 +686,27 @@ namespace snemo {
 
       return;
     }
+
+    void calo_feb_process::_readout_process(snemo::datamodel::sim_digi_data & SDD_)
+    {
+      DT_THROW_IF(!is_initialized(), std::logic_error, "Signal to calo TP algorithm is not initialized ! ");
+
+
+      for (unsigned int i = 0; i < _calo_digi_data_collection_.size(); i++)
+	{
+	  calo_digi_working_data a_calo_wd_to_readout = _calo_digi_data_collection_[i];
+	  a_calo_wd_to_readout.tree_dump(std::clog);
+
+
+
+
+	  snemo::datamodel::sim_calo_digi_hit calo_digi_hit;
+	  SDD_.grab_calo_digi_hits().push_back(calo_digi_hit);
+
+	}
+      return;
+    }
+
 
   } // end of namespace digitization
 

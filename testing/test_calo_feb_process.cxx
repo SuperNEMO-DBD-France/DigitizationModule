@@ -1,4 +1,4 @@
-// test_signal_to_calo_tp_process.cxx
+// test_calo_feb_process.cxx
 
 // Standard libraries :
 #include <iostream>
@@ -25,7 +25,7 @@
 #include <snemo/digitization/fldigi.h>
 #include <snemo/digitization/tempo_utils.h>
 #include <snemo/digitization/clock_utils.h>
-#include <snemo/digitization/signal_to_calo_tp_algo.h>
+#include <snemo/digitization/calo_feb_process.h>
 
 int main(int argc_, char** argv_)
 {
@@ -56,7 +56,7 @@ int main(int argc_, char** argv_)
   }
 
   try {
-    std::clog << "Test program for class 'snemo::digitization::signal_to_calo_tp_process' !" << std::endl;
+    std::clog << "Test program for class 'snemo::digitization::calo_feb_process' !" << std::endl;
     int32_t seed = 314157;
     mygsl::rng random_generator;
     random_generator.initialize(seed);
@@ -179,8 +179,8 @@ int main(int argc_, char** argv_)
     my_clock_manager.tree_dump(std::clog, "Clocktick manager");
 
 
-    snemo::digitization::signal_to_calo_tp_algo signal_2_calo_tp;
-    signal_2_calo_tp.initialize(algos_config,
+    snemo::digitization::calo_feb_process calo_feb_process;
+    calo_feb_process.initialize(algos_config,
 				my_clock_manager,
 				my_e_mapping,
 				calo_ssb);
@@ -190,13 +190,13 @@ int main(int argc_, char** argv_)
     snemo::digitization::calo_tp_data my_calo_tp_data;
     if (SSD.has_signals(calo_signal_category))
       {
-	signal_2_calo_tp.process(SSD, my_calo_tp_data);
+	calo_feb_process.trigger_process(SSD, my_calo_tp_data);
 
-	const std::vector<snemo::digitization::signal_to_calo_tp_algo::calo_digi_working_data> calo_digi_working_data_collection = signal_2_calo_tp.get_calo_digi_working_data_vector();
+	const std::vector<snemo::digitization::calo_feb_process::calo_digi_working_data> calo_digi_working_data_collection = calo_feb_process.get_calo_digi_working_data_vector();
 
 	for (int i = 0; i < calo_digi_working_data_collection.size(); i++)
 	  {
-	    const snemo::digitization::signal_to_calo_tp_algo::calo_digi_working_data & a_calo_wd = calo_digi_working_data_collection[i];
+	    const snemo::digitization::calo_feb_process::calo_digi_working_data & a_calo_wd = calo_digi_working_data_collection[i];
 	    a_calo_wd.tree_dump(std::clog, "A calo Working Data", true);
 	  }
 

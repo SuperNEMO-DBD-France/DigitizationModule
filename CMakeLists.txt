@@ -115,8 +115,8 @@ list(APPEND FalaiseDigitizationPlugin_HEADERS
   ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/sd_to_calo_signal_algo.h
   ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/sd_to_geiger_signal_algo.h
   ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/signal_data.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/signal_to_calo_tp_algo.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/signal_to_geiger_tp_algo.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/calo_feb_process.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/tracker_feb_process.h
   ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/tracker_sliding_zone.h
   ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/tracker_trigger_algorithm.h
   ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/tracker_trigger_mem_maker.h
@@ -173,8 +173,8 @@ list(APPEND FalaiseDigitizationPlugin_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/sd_to_calo_signal_algo.cc
   ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/sd_to_geiger_signal_algo.cc
   ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/signal_data.cc
-  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/signal_to_calo_tp_algo.cc
-  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/signal_to_geiger_tp_algo.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/calo_feb_process.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/tracker_feb_process.cc
   ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/tracker_sliding_zone.cc
   ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/tracker_trigger_algorithm.cc
   ${CMAKE_CURRENT_SOURCE_DIR}/source/falaise/snemo/digitization/tracker_trigger_mem_maker.cc

@@ -1,4 +1,4 @@
-// snemo/digitization/signal_to_geiger_tp_algo.cc
+// snemo/digitization/tracker_feb_process.cc
 // Author(s): Yves LEMIERE <lemiere@lpccaen.in2p3.fr>
 // Author(s): Guillaume OLIVIERO <goliviero@lpccaen.in2p3.fr>
 
@@ -12,18 +12,18 @@
 #include <snemo/digitization/clock_utils.h>
 
 // Ourselves:
-#include <snemo/digitization/signal_to_geiger_tp_algo.h>
+#include <snemo/digitization/tracker_feb_process.h>
 
 namespace snemo {
 
   namespace digitization {
 
-    signal_to_geiger_tp_algo::geiger_feb_config::geiger_feb_config()
+    tracker_feb_process::geiger_feb_config::geiger_feb_config()
     {
       reset();
     }
 
-    signal_to_geiger_tp_algo::geiger_feb_config::~geiger_feb_config()
+    tracker_feb_process::geiger_feb_config::~geiger_feb_config()
     {
       if (is_initialized())
 	{
@@ -31,7 +31,7 @@ namespace snemo {
 	}
     }
 
-    void signal_to_geiger_tp_algo::geiger_feb_config::initialize(const datatools::properties & config_)
+    void tracker_feb_process::geiger_feb_config::initialize(const datatools::properties & config_)
     {
       _set_defaults();
 
@@ -60,12 +60,12 @@ namespace snemo {
       return;
     }
 
-    bool signal_to_geiger_tp_algo::geiger_feb_config::is_initialized() const
+    bool tracker_feb_process::geiger_feb_config::is_initialized() const
     {
       return initialized;
     }
 
-    void signal_to_geiger_tp_algo::geiger_feb_config::reset()
+    void tracker_feb_process::geiger_feb_config::reset()
     {
       datatools::invalidate(VLNT);
       datatools::invalidate(VHNT);
@@ -75,7 +75,7 @@ namespace snemo {
       return;
     }
 
-    void signal_to_geiger_tp_algo::geiger_feb_config::_set_defaults()
+    void tracker_feb_process::geiger_feb_config::_set_defaults()
     {
       this->VLNT = -0.015 * CLHEP::volt;
       this->VHNT = -0.12 * CLHEP::volt;
@@ -84,7 +84,7 @@ namespace snemo {
       return;
     }
 
-    void signal_to_geiger_tp_algo::geiger_feb_config::tree_dump(std::ostream & out_,
+    void tracker_feb_process::geiger_feb_config::tree_dump(std::ostream & out_,
 								const std::string & title_,
 								const std::string & indent_,
 								bool inherit_) const
@@ -106,19 +106,19 @@ namespace snemo {
       return;
     }
 
-    signal_to_geiger_tp_algo::geiger_digi_working_data::geiger_digi_working_data()
+    tracker_feb_process::geiger_digi_working_data::geiger_digi_working_data()
     {
       reset();
     }
 
 
-    signal_to_geiger_tp_algo::geiger_digi_working_data::~geiger_digi_working_data()
+    tracker_feb_process::geiger_digi_working_data::~geiger_digi_working_data()
     {
       reset();
       return;
     }
 
-    void signal_to_geiger_tp_algo::geiger_digi_working_data::reset()
+    void tracker_feb_process::geiger_digi_working_data::reset()
     {
       signal_ref = 0;
       signal_deriv.reset();
@@ -145,12 +145,12 @@ namespace snemo {
       clocktick_800 = clock_utils::INVALID_CLOCKTICK;
     }
 
-    bool signal_to_geiger_tp_algo::geiger_digi_working_data::operator<(const geiger_digi_working_data & other_) const
+    bool tracker_feb_process::geiger_digi_working_data::operator<(const geiger_digi_working_data & other_) const
     {
       return this-> clocktick_800 < other_.clocktick_800;
     }
 
-    void signal_to_geiger_tp_algo::geiger_digi_working_data::tree_dump(std::ostream & out_,
+    void tracker_feb_process::geiger_digi_working_data::tree_dump(std::ostream & out_,
 								       const std::string & title_,
 								       bool dump_signal_,
 								       const std::string & indent_,
@@ -221,7 +221,7 @@ namespace snemo {
       return;
     }
 
-    signal_to_geiger_tp_algo::signal_to_geiger_tp_algo()
+    tracker_feb_process::tracker_feb_process()
     {
       _initialized_   = false;
       _electronic_mapping_  = nullptr;
@@ -231,7 +231,7 @@ namespace snemo {
       return;
     }
 
-    signal_to_geiger_tp_algo::~signal_to_geiger_tp_algo()
+    tracker_feb_process::~tracker_feb_process()
     {
       if (is_initialized())
 	{
@@ -240,12 +240,12 @@ namespace snemo {
       return;
     }
 
-    void signal_to_geiger_tp_algo::initialize(const datatools::properties & config_,
+    void tracker_feb_process::initialize(const datatools::properties & config_,
 					      clock_utils & my_clock_utils_,
 					      electronic_mapping & my_electronic_mapping_,
 					      mctools::signal::signal_shape_builder & my_ssb_)
     {
-      DT_THROW_IF (is_initialized(), std::logic_error, "Signal to geiger tp algorithm is already initialized ! ");
+      DT_THROW_IF (is_initialized(), std::logic_error, "Tracker FEB process is already initialized ! ");
       _set_defaults();
       _clock_utils_ = & my_clock_utils_;
       _electronic_mapping_ = & my_electronic_mapping_;
@@ -260,41 +260,44 @@ namespace snemo {
       _gg_feb_config_.tree_dump(std::clog, "Geiger FEB configuration");
 
       _running_tp_id_ = 0;
+      _running_readout_id_ = 0;
 
       _initialized_ = true;
       return;
     }
 
-    bool signal_to_geiger_tp_algo::is_initialized() const
+    bool tracker_feb_process::is_initialized() const
     {
       return _initialized_;
     }
 
-    void signal_to_geiger_tp_algo::reset()
+    void tracker_feb_process::reset()
     {
-      DT_THROW_IF (!is_initialized(), std::logic_error, "Signal to geiger tp algorithm is not initialized, it can't be reset ! ");
+      DT_THROW_IF (!is_initialized(), std::logic_error, "Tracker FEB process is not initialized, it can't be reset ! ");
       _initialized_ = false;
       _electronic_mapping_ = 0;
+      _running_tp_id_ = -1;
+      _running_readout_id_ = -1;
       return;
     }
 
-    bool signal_to_geiger_tp_algo::has_signal_category() const
+    bool tracker_feb_process::has_signal_category() const
     {
       return !_signal_category_.empty();
     }
 
-    const std::string & signal_to_geiger_tp_algo::get_signal_category() const
+    const std::string & tracker_feb_process::get_signal_category() const
     {
       return _signal_category_;
     }
 
-    void signal_to_geiger_tp_algo::set_signal_category(const std::string & category_)
+    void tracker_feb_process::set_signal_category(const std::string & category_)
     {
       _signal_category_ = category_;
       return;
     }
 
-    void signal_to_geiger_tp_algo::add_geiger_tp(const geiger_digi_working_data & my_wd_data_,
+    void tracker_feb_process::add_geiger_tp(const geiger_digi_working_data & my_wd_data_,
 						 uint32_t signal_clocktick_,
 						 geiger_tp_data & my_geiger_tp_data_)
     {
@@ -350,7 +353,7 @@ namespace snemo {
       return;
     }
 
-    void signal_to_geiger_tp_algo::update_gg_tp(const geiger_digi_working_data & my_wd_data_,
+    void tracker_feb_process::update_gg_tp(const geiger_digi_working_data & my_wd_data_,
 						geiger_tp & my_geiger_tp_)
     {
       int side  = my_wd_data_.anodic_gid.get(mapping::SIDE_INDEX);
@@ -387,7 +390,7 @@ namespace snemo {
       return;
     }
 
-    void signal_to_geiger_tp_algo::clear_working_data()
+    void tracker_feb_process::clear_working_data()
     {
       DT_THROW_IF (!is_initialized(), std::logic_error, "Signal to geiger TP algorithm is not initialized ! ");
       _set_defaults();
@@ -395,7 +398,7 @@ namespace snemo {
       return;
     }
 
-    void signal_to_geiger_tp_algo::_set_defaults()
+    void tracker_feb_process::_set_defaults()
     {
       for (unsigned int i = 0; i < geiger::tp::TP_SIZE; i++)
 	{
@@ -407,13 +410,13 @@ namespace snemo {
       return;
     }
 
-    void signal_to_geiger_tp_algo::_increment_running_tp_id()
+    void tracker_feb_process::_increment_running_tp_id()
     {
       _running_tp_id_++;
       return;
     }
 
-    void signal_to_geiger_tp_algo::_prepare_working_data(const mctools::signal::signal_data & SSD_,
+    void tracker_feb_process::_prepare_working_data(const mctools::signal::signal_data & SSD_,
 							 gg_digi_working_data_collection_type & wd_collection_)
     {
       DT_THROW_IF (!is_initialized(), std::logic_error, "Signal to geiger TP algorithm is not initialized ! ");
@@ -719,13 +722,13 @@ namespace snemo {
       return ;
     }
 
-    void signal_to_geiger_tp_algo::_sort_working_data(gg_digi_working_data_collection_type & wd_collection_)
+    void tracker_feb_process::_sort_working_data(gg_digi_working_data_collection_type & wd_collection_)
     {
       std::sort(wd_collection_.begin(), wd_collection_.end());
       return;
     }
 
-    void signal_to_geiger_tp_algo::_geiger_tp_process(const gg_digi_working_data_collection_type & wd_collection_,
+    void tracker_feb_process::_geiger_tp_process(const gg_digi_working_data_collection_type & wd_collection_,
 						      geiger_tp_data & my_geiger_tp_data_)
     {
       DT_THROW_IF (!is_initialized(), std::logic_error, "Signal to geiger TP algorithm is not initialized ! ");
@@ -783,8 +786,8 @@ namespace snemo {
       return;
     }
 
-    void signal_to_geiger_tp_algo::process(const mctools::signal::signal_data & SSD_,
-					   geiger_tp_data & my_geiger_tp_data_)
+    void tracker_feb_process::trigger_process(const mctools::signal::signal_data & SSD_,
+					      geiger_tp_data & my_geiger_tp_data_)
     {
       DT_THROW_IF (!is_initialized(), std::logic_error, "Signal to geiger TP algorithm is not initialized ! ");
 
@@ -799,14 +802,33 @@ namespace snemo {
 	 ********************/
 
 	// Main processing method :
-	_process(SSD_, my_geiger_tp_data_);
+	_trigger_process(SSD_, my_geiger_tp_data_);
       }
 
       return;
     }
 
-    void signal_to_geiger_tp_algo::_process(const mctools::signal::signal_data & SSD_,
-					    geiger_tp_data & my_geiger_tp_data_)
+    void tracker_feb_process::readout_process(snemo::datamodel::sim_digi_data & SDD_)
+    {
+      DT_THROW_IF (!is_initialized(), std::logic_error, "Signal to geiger TP algorithm is not initialized ! ");
+
+      // Check if Calo digi working data is not empty :
+      if (_gg_digi_data_collection_.size() != 0)
+	{
+	  /********************
+	   * Process the data *
+	   ********************/
+
+	  // Main processing method :
+	  _readout_process(SDD_);
+	}
+
+      return;
+    }
+
+
+    void tracker_feb_process::_trigger_process(const mctools::signal::signal_data & SSD_,
+					       geiger_tp_data & my_geiger_tp_data_)
     {
       DT_THROW_IF (!is_initialized(), std::logic_error, "Signal to geiger TP algorithm is not initialized ! ");
       _prepare_working_data(SSD_, _gg_digi_data_collection_);
@@ -831,6 +853,13 @@ namespace snemo {
       // 		}
       // 	    }
       // 	}
+
+      return;
+    }
+
+    void tracker_feb_process::_readout_process(snemo::datamodel::sim_digi_data & SDD_)
+    {
+      DT_THROW_IF (!is_initialized(), std::logic_error, "Signal to geiger TP algorithm is not initialized ! ");
 
       return;
     }
