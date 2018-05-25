@@ -481,67 +481,6 @@ namespace snemo {
       return true;
     }
 
-    trigger_structures::L2_decision::L2_decision()
-    {
-      L2_decision::reset();
-      return;
-    }
-
-    void trigger_structures::L2_decision::reset()
-    {
-      L2_decision_bool = false;
-      L2_ct_decision = clock_utils::INVALID_CLOCKTICK;
-      L2_trigger_mode = INVALID;
-    }
-
-    void trigger_structures::L2_decision::display(std::ostream & out_) const
-    {
-      out_ << "Display L2 decision @ 1600 ns" << std::endl;
-      out_ << "Decision clocktick 1600 ns =  " << L2_ct_decision << std::endl;
-      out_ << "L2 Trigger mode            = [" << L2_trigger_mode << "]" << std::endl;
-      out_ << "L2 decision                = [" << L2_decision_bool << "]" << std::endl << std::endl;
-      return;
-    }
-
-    trigger_structures::L1_calo_decision::L1_calo_decision()
-    {
-      L1_calo_decision::reset();
-      return;
-    }
-
-    void trigger_structures::L1_calo_decision::reset()
-    {
-      L1_calo_decision_bool = false;
-      L1_calo_ct_decision = clock_utils::INVALID_CLOCKTICK;
-    }
-
-    void trigger_structures::L1_calo_decision::display(std::ostream & out_) const
-    {
-      out_ << "Display L1 calo decision @ 25 ns" << std::endl;
-      out_ << "Decision clocktick 25 ns =  " << L1_calo_ct_decision << std::endl;
-      out_ << "L1 calo decision         = [" << L1_calo_decision_bool << "]" << std::endl << std::endl;
-      return;
-    }
-
-    trigger_structures::L1_tracker_decision::L1_tracker_decision()
-    {
-      L1_tracker_decision::reset();
-      return;
-    }
-
-    void trigger_structures::L1_tracker_decision::reset()
-    {
-      L1_tracker_decision_bool = false;
-      L1_tracker_ct_decision = clock_utils::INVALID_CLOCKTICK;
-    }
-
-    void trigger_structures::L1_tracker_decision::display(std::ostream & out_) const
-    {
-      out_ << "Display L1 tracker decision @ 1600 ns" << std::endl;
-      out_ << "Decision clocktick 1600 ns  =  " << L1_tracker_ct_decision << std::endl;
-      out_ << "L1 tracker decision         = [" << L1_tracker_decision_bool << "]" << std::endl << std::endl;
-      return;
-    }
 
     trigger_structures::previous_event_record::previous_event_record()
     {
@@ -632,6 +571,122 @@ namespace snemo {
       out_ << std::endl;
       return;
     }
+
+    trigger_structures::L1_calo_decision::L1_calo_decision()
+    {
+      L1_calo_decision::reset();
+      return;
+    }
+
+    void trigger_structures::L1_calo_decision::reset()
+    {
+      L1_calo_decision_bool = false;
+      L1_calo_ct_decision = clock_utils::INVALID_CLOCKTICK;
+    }
+
+    void trigger_structures::L1_calo_decision::display(std::ostream & out_) const
+    {
+      out_ << "Display L1 calo decision @ 25 ns" << std::endl;
+      out_ << "Decision clocktick 25 ns =  " << L1_calo_ct_decision << std::endl;
+      out_ << "L1 calo decision         = [" << L1_calo_decision_bool << "]" << std::endl << std::endl;
+      return;
+    }
+
+    trigger_structures::L1_tracker_decision::L1_tracker_decision()
+    {
+      L1_tracker_decision::reset();
+      return;
+    }
+
+    void trigger_structures::L1_tracker_decision::reset()
+    {
+      L1_tracker_decision_bool = false;
+      L1_tracker_ct_decision = clock_utils::INVALID_CLOCKTICK;
+    }
+
+    void trigger_structures::L1_tracker_decision::display(std::ostream & out_) const
+    {
+      out_ << "Display L1 tracker decision @ 1600 ns" << std::endl;
+      out_ << "Decision clocktick 1600 ns  =  " << L1_tracker_ct_decision << std::endl;
+      out_ << "L1 tracker decision         = [" << L1_tracker_decision_bool << "]" << std::endl << std::endl;
+      return;
+    }
+
+    trigger_structures::L2_coincidence_gate::L2_coincidence_gate()
+    {
+      L2_coincidence_gate::reset();
+      return;
+    }
+
+    void trigger_structures::L2_coincidence_gate::reset()
+    {
+      L2_coincidence_gate_begin = clock_utils::INVALID_CLOCKTICK;
+      L2_coincidence_gate_end = clock_utils::INVALID_CLOCKTICK;
+      L1_calo_CT25 = clock_utils::INVALID_CLOCKTICK;
+      return;
+    }
+
+    void trigger_structures::L2_coincidence_gate::extend_gate(uint32_t nbr_of_ct1600_)
+    {
+      L2_coincidence_gate_end += nbr_of_ct1600_;
+      return;
+    }
+
+    void trigger_structures::L2_coincidence_gate::display(std::ostream & out_) const
+    {
+      out_ << "Display L2 coincidence gate" << std::endl;
+      out_ << "L2 gate begin CT1600     = [" << L2_coincidence_gate_begin << "]" << std::endl;
+      out_ << "L2 gate end CT1600       = [" << L2_coincidence_gate_end << "]"  << std::endl;
+      out_ << "Opener gate L1 calo CT25 = [" << L1_calo_CT25 << "]" << std::endl << std::endl;
+      return;
+    }
+
+    trigger_structures::L2_decision::L2_decision()
+    {
+      L2_decision::reset();
+      return;
+    }
+
+    void trigger_structures::L2_decision::reset()
+    {
+      L2_decision_bool = false;
+      L2_ct_decision = clock_utils::INVALID_CLOCKTICK;
+      L2_trigger_mode = INVALID;
+    }
+
+    void trigger_structures::L2_decision::display(std::ostream & out_) const
+    {
+      out_ << "Display L2 decision @ 1600 ns" << std::endl;
+      out_ << "Decision clocktick 1600 ns =  " << L2_ct_decision << std::endl;
+      out_ << "L2 Trigger mode            = [" << L2_trigger_mode << "]" << std::endl;
+      out_ << "L2 decision                = [" << L2_decision_bool << "]" << std::endl << std::endl;
+      return;
+    }
+
+    trigger_structures::L2_decision_gate::L2_decision_gate()
+    {
+      L2_decision_gate::reset();
+      return;
+    }
+
+    void trigger_structures::L2_decision_gate::reset()
+    {
+      L2_decision_gate_begin = clock_utils::INVALID_CLOCKTICK;
+      L2_decision_gate_end = clock_utils::INVALID_CLOCKTICK;
+      L1_calo_CT25 = clock_utils::INVALID_CLOCKTICK;
+      L2_trigger_mode = INVALID;
+    }
+
+    void trigger_structures::L2_decision_gate::display(std::ostream & out_) const
+    {
+      out_ << "Display L2 decision gate" << std::endl;
+      out_ << "L2 gate begin CT1600       = [" << L2_decision_gate_begin << "]" << std::endl;
+      out_ << "L2 gate end CT1600         = [" << L2_decision_gate_end << "]" << std::endl;
+      out_ << "Associated L1 calo CT25    = [" << L1_calo_CT25 << "]"  << std::endl;
+      out_ << "L2 Trigger mode            = [" << L2_trigger_mode << "]" << std::endl << std::endl;
+      return;
+    }
+
 
   } // end of namespace digitization
 

@@ -196,12 +196,10 @@ namespace snemo {
       DT_THROW_IF(!is_initialized(), std::logic_error, "Not initialized !");
 
       std::clog << "DEBUG 000 " << std::endl;
-
       _process_digitization_algorithms(SSD_, SDD_);
       std::clog << "DEBUG 001 " << std::endl;
       _process_readout_algorithms(SDD_);
-
-
+      std::clog << "DEBUG 002" << std::endl;
 
       _clear_working_data();
 
@@ -217,22 +215,28 @@ namespace snemo {
       _clock_utils_.compute_clockticks_ref(_rdm_gen_);
       // _clock_utils_.tree_dump(std::clog, "Clock utils");
 
+      std::clog << "DEBUG 100 " << std::endl;
       calo_tp_data calo_tp_data;
       _calo_feb_process_.trigger_process(SSD_,
 					 calo_tp_data);
 
+      std::clog << "DEBUG 101 " << std::endl;
       calo_ctw_data calo_ctw_data;
       _calo_tp_to_ctw_algo_.process(calo_tp_data,
 				    calo_ctw_data);
 
 
+      std::clog << "DEBUG 102 " << std::endl;
       geiger_tp_data gg_tp_data;
       _tracker_feb_process_.trigger_process(SSD_,
 					    gg_tp_data);
 
+      std::clog << "DEBUG 103 " << std::endl;
       geiger_ctw_data gg_ctw_data;
       _geiger_tp_to_ctw_algo_.process(gg_tp_data,
 				      gg_ctw_data);
+
+      std::clog << "DEBUG 104 " << std::endl;
 
 
       // gg_tp_data.tree_dump(std::clog, "Geiger TP(s) data : ", "INFO : ");
@@ -269,17 +273,22 @@ namespace snemo {
     {
       DT_THROW_IF(!is_initialized(), std::logic_error, "Not initialized !");
 
-      // todo
-      _calo_feb_process_.readout_process(SDD_);
-
 
 
 
 
       // for (unsigned int i = 0; i < _L2_decision_records_.size(); i++)
       // 	{
-      // 	        if (_trigger_algo_. get_L2_decision_records_[i])
-      // Process as many readout as needed
+      // 	  trigger_structures L2 = get_L2_decision_records_[i];
+
+
+      // 	  if (L2.L2_decision_bool) {
+      // 	    // Process as many readout as needed
+
+      // 	    // todo
+      // 	    _calo_feb_process_.readout_process(SDD_);
+      // 	  }
+
       // 	}
 
 
@@ -294,17 +303,11 @@ namespace snemo {
       DT_THROW_IF(!is_initialized(), std::logic_error, "Not initialized !");
 
       // Clear working data:
-      std::clog << "DEBUG 002 " << std::endl;
       _gg_ssb_.clear_functors();
-      std::clog << "DEBUG 003 " << std::endl;
       _calo_ssb_.clear_functors();
-      std::clog << "DEBUG 004 " << std::endl;
       _calo_feb_process_.clear_working_data();
-      std::clog << "DEBUG 005 " << std::endl;
       _tracker_feb_process_.clear_working_data();
-      std::clog << "DEBUG 006 " << std::endl;
       _trigger_algo_.reset_data();
-      std::clog << "DEBUG 007 " << std::endl;
     }
 
     void digitization_driver::tree_dump(std::ostream & out_,

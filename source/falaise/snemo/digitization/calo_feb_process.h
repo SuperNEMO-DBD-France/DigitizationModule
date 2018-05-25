@@ -30,6 +30,7 @@
 #include <snemo/digitization/signal_data.h>
 #include <snemo/digitization/electronic_mapping.h>
 #include <snemo/digitization/clock_utils.h>
+#include <snemo/digitization/trigger_structures.h>
 
 namespace snemo {
 
@@ -55,7 +56,7 @@ namespace snemo {
 															 bool inherit_               = false) const;
 
 				static const unsigned int DEFAULT_ADC_DYNAMIC = 4096;
-				static const double DEFAULT_VOLTAGE_DYNAMIC = 2.5 * CLHEP::volt;
+				const double DEFAULT_VOLTAGE_DYNAMIC = 2.5 * CLHEP::volt;
 				static const unsigned int DEFAULT_ZERO_ADC_POS = 2048;
 				const double VOLT_ADC_VALUE = DEFAULT_VOLTAGE_DYNAMIC / DEFAULT_ADC_DYNAMIC;
 
@@ -141,7 +142,10 @@ namespace snemo {
 													 calo_tp_data & my_calo_tp_data_);
 
       /// Process to fill simulated digitized data calo digitized hit collection
-			void readout_process(snemo::datamodel::sim_digi_data & SDD_);
+			void readout_process(
+
+													 const trigger_structures::L2_decision_gate & L2_,
+													 snemo::datamodel::sim_digi_data & SDD_);
 
     protected:
 
@@ -162,7 +166,8 @@ namespace snemo {
 														calo_tp_data & my_calo_tp_data_);
 
       /// Process to fill simulated digitized data calo digitized hit collection
-			void _readout_process(snemo::datamodel::sim_digi_data & SDD_);
+			void _readout_process(const trigger_structures::L2_decision_gate & L2_,
+														snemo::datamodel::sim_digi_data & SDD_);
 
 		private :
 

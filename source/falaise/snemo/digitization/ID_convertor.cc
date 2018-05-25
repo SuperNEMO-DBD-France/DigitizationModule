@@ -268,23 +268,24 @@ namespace snemo {
 
 	  board_id = (row_index + row_shift - shift) / 2;
 
-	  geomtools::geom_id generic_gid_with_part;
+	  geomtools::geom_id generic_gid_with_part = geom_id_;
 	  generic_gid_with_part.set_type(geom_id_.get_type());
-	  if (geom_id_.get_type() == mapping::GEIGER_ANODIC_CATEGORY_TYPE)
-	    {
-	      generic_gid_with_part.set_depth(geom_id_.get_depth() + 1);
-	      generic_gid_with_part.set_address(geom_id_.get(mapping::MODULE_INDEX),
-						geom_id_.get(mapping::SIDE_INDEX),
-						geom_id_.get(mapping::LAYER_INDEX),
-						geom_id_.get(mapping::ROW_INDEX));
-	      generic_gid_with_part.set(mapping::GEIGER_CELL_PART_INDEX,
-					mapping::GEIGER_CELL_ANODIC_PART);
-	    }
-	  if (geom_id_.get_type() == mapping::GEIGER_CATHODIC_CATEGORY_TYPE)
-	    {
 
-	      generic_gid_with_part = geom_id_;
-	      // geom_id_.extract_to(generic_gid_with_part);
+	  // In geometry, cell GID is for anodic but it does not have the 'part' index
+	  // Little 'hack' on this GID in order to add the ANODIC_PART at the last index.
+	  if (geom_id_.get_type() == mapping::GEIGER_ANODIC_CATEGORY_TYPE
+	      && geom_id_.get_depth() == mapping::GEIGER_ROW_DEPTH)
+	    {
+	      geomtools::geom_id hacked_gid;
+	      hacked_gid.set_type(geom_id_.get_type());
+	      hacked_gid.set_depth(mapping::GEIGER_CELL_PART_DEPTH);
+	      hacked_gid.set_address(geom_id_.get(mapping::MODULE_INDEX),
+				     geom_id_.get(mapping::SIDE_INDEX),
+				     geom_id_.get(mapping::LAYER_INDEX),
+				     geom_id_.get(mapping::ROW_INDEX));
+	      hacked_gid.set(mapping::GEIGER_CELL_PART_INDEX,
+			     mapping::GEIGER_CELL_ANODIC_PART);
+	      generic_gid_with_part = hacked_gid;
 	    }
 
 	  if (geom_id_.get(mapping::ROW_INDEX) % 2 == 0) generic_gid_with_part.set(mapping::ROW_INDEX, 0);
@@ -411,11 +412,11 @@ namespace snemo {
       return  electronic_id;
     }
     /*
-    void ID_convertor::tree_dump(std::ostream & out_,
-				 const std::string & title_ ,
-				 const std::string & indent_  ,
-				 bool inherit_){
-				 }*/
+      void ID_convertor::tree_dump(std::ostream & out_,
+      const std::string & title_ ,
+      const std::string & indent_  ,
+      bool inherit_){
+      }*/
 
   }// end of namespace digitization
 

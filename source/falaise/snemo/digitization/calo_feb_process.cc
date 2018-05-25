@@ -373,7 +373,8 @@ namespace snemo {
       return;
     }
 
-    void calo_feb_process::readout_process(snemo::datamodel::sim_digi_data & SDD_)
+    void calo_feb_process::readout_process(const trigger_structures::L2_decision_gate & L2_,
+					   snemo::datamodel::sim_digi_data & SDD_)
     {
       DT_THROW_IF(!is_initialized(), std::logic_error, "Calo FEB process is not initialized ! ");
 
@@ -385,7 +386,7 @@ namespace snemo {
 	   ********************/
 
 	  // Main processing method :
-	  _readout_process(SDD_);
+	  _readout_process(L2_, SDD_);
 	}
 
       return;
@@ -444,6 +445,7 @@ namespace snemo {
 	  circular_buffer online_buffer{static_cast<long unsigned int>(_calo_feb_config_.acquisition_window_length)};
 
 	  geomtools::geom_id signal_GID = a_mutable_signal.get_geom_id();
+
 	  geomtools::geom_id channel_electronic_id;
 	  _electronic_mapping_->convert_GID_to_EID(mapping::THREE_WIRES_TRACKER_MODE,
 						   signal_GID,
@@ -451,6 +453,8 @@ namespace snemo {
 	  geomtools::geom_id feb_electronic_id;
 	  feb_electronic_id.set_depth(mapping::BOARD_DEPTH);
 	  feb_electronic_id.set_type(channel_electronic_id.get_type());
+
+
 	  channel_electronic_id.extract_to(feb_electronic_id);
 
 	  for (double x = xmin - (350. * _calo_feb_config_.sampling_step); x < xmax + (850.  * _calo_feb_config_.sampling_step); x+= _calo_feb_config_.sampling_step)
@@ -687,7 +691,8 @@ namespace snemo {
       return;
     }
 
-    void calo_feb_process::_readout_process(snemo::datamodel::sim_digi_data & SDD_)
+    void calo_feb_process::_readout_process(const trigger_structures::L2_decision_gate & L2_,
+					    snemo::datamodel::sim_digi_data & SDD_)
     {
       DT_THROW_IF(!is_initialized(), std::logic_error, "Signal to calo TP algorithm is not initialized ! ");
 

@@ -743,7 +743,6 @@ namespace snemo {
 	    {
 	      bool existing_ct = false;
 	      std::vector<datatools::handle<geiger_tp> > my_list_of_gg_tp_per_eid;
-
 	      my_geiger_tp_data_.get_list_of_gg_tp_per_eid(wd_collection_[i].anodic_eid , my_list_of_gg_tp_per_eid);
 
 	      if (my_list_of_gg_tp_per_eid.empty())

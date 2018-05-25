@@ -83,6 +83,15 @@ namespace snemo {
 			/// Dump the GID <-> EID Geiger bimap
 			void dump_geiger_bimap(std::ostream & out_ = std::clog) const;
 
+			/// Dump the GID <-> EID main calo bimap
+			void dump_main_calo_bimap(std::ostream & out_ = std::clog) const;
+
+			/// Dump the GID <-> EID Xwall bimap
+			void dump_xwall_bimap(std::ostream & out_ = std::clog) const;
+
+			/// Dump the GID <-> EID Gveto bimap
+			void dump_gveto_bimap(std::ostream & out_ = std::clog) const;
+
     protected :
 
       /// Initializing
@@ -95,7 +104,7 @@ namespace snemo {
       void _init_mcalo();
 
       /// Construct the bimap for x-wall calorimeters category type
-      void _init_x_wall();
+      void _init_xwall();
 
       /// Construct the bimap for gamma-veto calorimeters category type
       void _init_gveto();

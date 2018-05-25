@@ -14,8 +14,7 @@ namespace snemo {
     trigger_algorithm::trigger_algorithm()
     {
       _initialized_ = false;
-      _coincidence_calorimeter_gate_size_ = 0;
-      _L2_decision_coincidence_gate_size_ = 0;
+      _L2_coincidence_gate_size_ = 0;
       _previous_event_circular_buffer_depth_ = 0;
       _activate_calorimeter_only_ = false;
       _activate_calo_tracker_time_coincidence_ = false;
@@ -24,16 +23,7 @@ namespace snemo {
       _activate_ape_dave_coincidence_ = false;
       _activate_ape_coincidence_only_ = false;
       _activate_any_coincidences_ = false;
-      _calo_records_25ns_.clear();
-      _coincidence_calo_records_1600ns_.clear();
-      _tracker_records_.clear();
-      _geiger_matrix_records_.clear();
-      _pair_records_.clear();
-      _coincidence_records_.clear();
-      _previous_event_records_.reset();
-      _L1_calo_decision_records_.clear();
-      _L2_decision_records_.clear();
-      _finale_trigger_decision_ = false;
+      _trigger_id_ = -1;
       return;
     }
 
@@ -50,8 +40,7 @@ namespace snemo {
     {
       DT_THROW_IF(!is_initialized(), std::logic_error, "Trigger algorithm is not initialized, it can't be reset ! ");
       _initialized_ = false;
-      _coincidence_calorimeter_gate_size_ = 0;
-      _L2_decision_coincidence_gate_size_ = 0;
+      _L2_coincidence_gate_size_ = 0;
       _previous_event_circular_buffer_depth_ = 0;
       _activate_calorimeter_only_ = false;
       _activate_calo_tracker_time_coincidence_ = false;
@@ -68,11 +57,13 @@ namespace snemo {
       _tracker_records_.clear();
       _geiger_matrix_records_.clear();
       _pair_records_.clear();
+      _L1_calo_decision_records_.clear();
+      _L2_coincidence_gate_records_.clear();
       _coincidence_records_.clear();
       _previous_event_records_.reset();
-      _L1_calo_decision_records_.clear();
       _L2_decision_records_.clear();
-      _finale_trigger_decision_ = false;
+      _L2_decision_gate_records_.clear();
+      _trigger_id_ = -1;
       return;
     }
 
@@ -84,11 +75,12 @@ namespace snemo {
       _tracker_records_.clear();
       _geiger_matrix_records_.clear();
       _pair_records_.clear();
+      _L1_calo_decision_records_.clear();
+      _L2_coincidence_gate_records_.clear();
       _coincidence_records_.clear();
       _previous_event_records_->clear();
-      _L1_calo_decision_records_.clear();
       _L2_decision_records_.clear();
-      _finale_trigger_decision_ = false;
+      _L2_decision_gate_records_.clear();
       return;
     }
 
@@ -107,33 +99,21 @@ namespace snemo {
       return;
     }
 
-    bool trigger_algorithm::has_calorimeter_gate_size() const
+    bool trigger_algorithm::has_L2_coincidence_gate_size() const
     {
-      return _coincidence_calorimeter_gate_size_ != 0;
+      return _L2_coincidence_gate_size_ != 0;
     }
 
-    void trigger_algorithm::set_calorimeter_gate_size(unsigned int calorimeter_gate_size_)
+    void trigger_algorithm::set_L2_coincidence_gate_size(unsigned int L2_coincidence_gate_size_)
     {
-      DT_THROW_IF(is_initialized(), std::logic_error, "Trigger algorithm is already initialized, coincidence calorimeter gate size can't be set ! ");
-      _coincidence_calorimeter_gate_size_ = calorimeter_gate_size_;
+      DT_THROW_IF(is_initialized(), std::logic_error, "Trigger algorithm is already initialized, L2 coincidence gate size can't be set ! ");
+      _L2_coincidence_gate_size_ = L2_coincidence_gate_size_;
       return;
     }
 
-    bool trigger_algorithm::has_L2_decision_coincidence_gate_size() const
+    unsigned int trigger_algorithm::get_L2_coincidence_gate_size()
     {
-      return _L2_decision_coincidence_gate_size_ != 0;
-    }
-
-    void trigger_algorithm::set_L2_decision_coincidence_gate_size(unsigned int L2_decision_coincidence_gate_size_)
-    {
-      DT_THROW_IF(is_initialized(), std::logic_error, "Trigger algorithm is already initialized, coincidence calorimeter gate size can't be set ! ");
-      _L2_decision_coincidence_gate_size_ = L2_decision_coincidence_gate_size_;
-      return;
-    }
-
-    unsigned int trigger_algorithm::get_L2_decision_coincidence_gate_size()
-    {
-      return _L2_decision_coincidence_gate_size_;
+      return _L2_coincidence_gate_size_;
     }
 
     bool trigger_algorithm::has_previous_event_buffer_depth() const
@@ -172,21 +152,12 @@ namespace snemo {
 
       datatools::properties general_config;
       general_config = mconfig_.get_section("general");
-      // general_config.tree_dump(std::clog, "General config from multi properties");
 
-      if (!has_calorimeter_gate_size()) {
-	if (general_config.has_key("coincidence_calorimeter_gate_size")) {
-	  int coincidence_calorimeter_gate_size = general_config.fetch_integer("coincidence_calorimeter_gate_size");
-	  DT_THROW_IF(coincidence_calorimeter_gate_size <= 0, std::domain_error, "Invalid value of coincidence_calorimeter_gate_size !");
-	  set_calorimeter_gate_size((unsigned int) coincidence_calorimeter_gate_size);
-	}
-      }
-
-      if (!has_L2_decision_coincidence_gate_size()) {
-	if (general_config.has_key("L2_decision_coincidence_gate_size")) {
-	  int L2_decision_coincidence_gate_size = general_config.fetch_integer("L2_decision_coincidence_gate_size");
-	  DT_THROW_IF(L2_decision_coincidence_gate_size <= 0, std::domain_error, "Invalid value of L2_decision_coincidence_gate_size !");
-	  set_L2_decision_coincidence_gate_size((unsigned int) L2_decision_coincidence_gate_size);
+      if (!has_L2_coincidence_gate_size()) {
+	if (general_config.has_key("L2_coincidence_gate_size")) {
+	  int L2_coincidence_gate_size = general_config.fetch_integer("L2_coincidence_gate_size");
+	  DT_THROW_IF(L2_coincidence_gate_size <= 0, std::domain_error, "Invalid value of L2_coincidence_gate_size !");
+	  set_L2_coincidence_gate_size((unsigned int) L2_coincidence_gate_size);
 	}
       }
 
@@ -225,6 +196,8 @@ namespace snemo {
       coinc_config = mconfig_.get_section("coincidence");
       // coinc_config.tree_dump(std::clog, "Coincidence config from multi properties");
       _coinc_algo_.initialize(coinc_config);
+
+      _trigger_id_ = 0;
 
       _initialized_ = true;
       return;
@@ -265,18 +238,82 @@ namespace snemo {
       return _L1_calo_decision_records_;
     }
 
+    const std::vector<trigger_structures::L2_coincidence_gate> trigger_algorithm::get_L2_coincidence_gate_records_vector() const
+    {
+      return _L2_coincidence_gate_records_;
+    }
+
     const std::vector<trigger_structures::L2_decision> trigger_algorithm::get_L2_decision_records_vector() const
     {
       return _L2_decision_records_;
     }
 
-    bool trigger_algorithm::get_finale_decision() const
+    const std::vector<trigger_structures::L2_decision_gate> trigger_algorithm::get_L2_decision_gate_records_vector() const
     {
-      return _finale_trigger_decision_;
+      return _L2_decision_gate_records_;
     }
 
-    void  trigger_algorithm::_rescale_calo_records_at_1600ns(const std::vector<trigger_structures::calo_summary_record> & calo_records_25_ns_,
-							     std::vector<trigger_structures::coincidence_calo_record> & coincidence_calo_records_1600ns_)
+    void trigger_algorithm::_increment_trigger_id()
+    {
+      _trigger_id_++;
+      return;
+    }
+
+    void trigger_algorithm::_build_L2_coincidence_gates()
+    {
+      for (std::size_t i = 0; i < _L1_calo_decision_records_.size(); i++)
+	{
+	  trigger_structures::L1_calo_decision a_l1_decision = _L1_calo_decision_records_[i];
+	  if (a_l1_decision.L1_calo_decision_bool) {
+	    uint32_t ct25 = a_l1_decision.L1_calo_ct_decision;
+	    uint32_t ct1600_begin = 0;
+	    _clock_manager_->compute_clocktick_25ns_to_1600ns(ct25, ct1600_begin);
+	    uint32_t ct1600_end = ct1600_begin + _L2_coincidence_gate_size_ - 1; // last CT1600 is included for coincidence searches
+
+	    if (_L2_coincidence_gate_records_.size() != 0)
+	      {
+		// check if L2 coincidence gate does not exist for this CT1600:
+		for (std::size_t j = 0; j < _L2_coincidence_gate_records_.size(); j++)
+		  {
+		    trigger_structures::L2_coincidence_gate & a_l2_coinc_gate = _L2_coincidence_gate_records_[j];
+		    // Update existing gate:
+		    if (ct1600_end >= a_l2_coinc_gate.L2_coincidence_gate_begin
+			&& ct1600_end <= a_l2_coinc_gate.L2_coincidence_gate_end)
+		      {
+			uint32_t number_of_ct1600_to_extend = a_l2_coinc_gate.L2_coincidence_gate_end - ct1600_end;
+			a_l2_coinc_gate.extend_gate(number_of_ct1600_to_extend);
+		      }
+		    else
+		      {
+			// Create new coincidence gate:
+			trigger_structures::L2_coincidence_gate a_l2_coinc_gate;
+			a_l2_coinc_gate.L1_calo_CT25 = ct25;
+			a_l2_coinc_gate.L2_coincidence_gate_begin = ct1600_begin;
+			a_l2_coinc_gate.L2_coincidence_gate_end = ct1600_end;
+			_L2_coincidence_gate_records_.push_back(a_l2_coinc_gate);
+		      }
+
+		  }
+	      }
+	    else
+	      {
+		// Create the first L2 coincidence gate:
+		trigger_structures::L2_coincidence_gate a_l2_coinc_gate;
+		a_l2_coinc_gate.L1_calo_CT25 = ct25;
+		a_l2_coinc_gate.L2_coincidence_gate_begin = ct1600_begin;
+		a_l2_coinc_gate.L2_coincidence_gate_end = ct1600_end;
+		_L2_coincidence_gate_records_.push_back(a_l2_coinc_gate);
+	      }
+
+	  } // end of has L1 calo decision true
+
+	} // end of L1 decision
+
+      return;
+    }
+
+    void trigger_algorithm::_rescale_calo_records_at_1600ns(const std::vector<trigger_structures::calo_summary_record> & calo_records_25_ns_,
+							    std::vector<trigger_structures::coincidence_calo_record> & coincidence_calo_records_1600ns_)
     {
       std::vector<trigger_structures::calo_summary_record>::const_iterator it = calo_records_25_ns_.begin();
       for (; it != calo_records_25_ns_.end(); it++)
@@ -290,14 +327,16 @@ namespace snemo {
 
       	      if (coincidence_calo_records_1600ns_.size() == 0)
       		{
-      		  // No coincidence calo records, creation of the first and the 10 following EMPTY
+      		  // No coincidence calo records, creation of the first and the 4 following EMPTY
       		  trigger_structures::coincidence_calo_record first_coincidence_calo_record;
       		  first_coincidence_calo_record.clocktick_1600ns = ctrec_clocktick_1600ns;
       		  coincidence_calo_records_1600ns_.push_back(first_coincidence_calo_record);
 
       		  if (coincidence_calo_records_1600ns_.size() != 0)
       		    {
-      		      for (unsigned int iclocktick = first_coincidence_calo_record.clocktick_1600ns + 1; iclocktick < first_coincidence_calo_record.clocktick_1600ns + _coincidence_calorimeter_gate_size_; iclocktick ++)
+      		      for (unsigned int iclocktick = first_coincidence_calo_record.clocktick_1600ns + 1;
+			   iclocktick < first_coincidence_calo_record.clocktick_1600ns + _L2_coincidence_gate_size_;
+			   iclocktick ++)
       			{
       			  trigger_structures::coincidence_calo_record on_gate_coincidence_calo_record;
       			  on_gate_coincidence_calo_record = first_coincidence_calo_record;
@@ -324,7 +363,7 @@ namespace snemo {
       			{
       			  for (unsigned int j = i+1; j < coincidence_calo_records_1600ns_.size(); j++)
       			    {
-      			      if (coincidence_calo_records_1600ns_[j].clocktick_1600ns <= coincidence_calo_records_1600ns_[i].clocktick_1600ns + _coincidence_calorimeter_gate_size_)
+      			      if (coincidence_calo_records_1600ns_[j].clocktick_1600ns <= coincidence_calo_records_1600ns_[i].clocktick_1600ns + _L2_coincidence_gate_size_)
       				{
 				  uint32_t clocktick_1600_before_modification = coincidence_calo_records_1600ns_[j].clocktick_1600ns;
       				  coincidence_calo_records_1600ns_[j] = coincidence_calo_records_1600ns_[i];
@@ -335,9 +374,9 @@ namespace snemo {
 
       		      // Have to grow back the gate and create new coincidence calo record
       		      unsigned int actual_index = i;
-		      unsigned int index_min = std::floor(actual_index /  _coincidence_calorimeter_gate_size_) * _coincidence_calorimeter_gate_size_;
-      		      unsigned int index_max = index_min + _coincidence_calorimeter_gate_size_ - 1;
-		      uint32_t clocktick_to_create = ctrec_clocktick_1600ns + _coincidence_calorimeter_gate_size_;
+		      unsigned int index_min = std::floor(actual_index /  _L2_coincidence_gate_size_) * _L2_coincidence_gate_size_;
+      		      unsigned int index_max = index_min + _L2_coincidence_gate_size_ - 1;
+		      uint32_t clocktick_to_create = ctrec_clocktick_1600ns + _L2_coincidence_gate_size_;
 		      uint32_t clocktick_max_1600 = coincidence_calo_records_1600ns_[index_max].clocktick_1600ns;
 
       		      for (unsigned int j = clocktick_max_1600 + 1; j <= clocktick_to_create; j++)
@@ -369,7 +408,7 @@ namespace snemo {
       		  trigger_structures::coincidence_calo_record new_coincidence_calo_record;
       		  new_coincidence_calo_record.clocktick_1600ns = ctrec_clocktick_1600ns;
       		  coincidence_calo_records_1600ns_.push_back(new_coincidence_calo_record);
-      		  for (unsigned int iclocktick = new_coincidence_calo_record.clocktick_1600ns + 1; iclocktick < new_coincidence_calo_record.clocktick_1600ns + _coincidence_calorimeter_gate_size_; iclocktick ++)
+      		  for (unsigned int iclocktick = new_coincidence_calo_record.clocktick_1600ns + 1; iclocktick < new_coincidence_calo_record.clocktick_1600ns + _L2_coincidence_gate_size_; iclocktick ++)
       		    {
       		      trigger_structures::coincidence_calo_record new_on_gate_coincidence_calo_record;
       		      new_on_gate_coincidence_calo_record = new_coincidence_calo_record;
@@ -406,7 +445,7 @@ namespace snemo {
       _clock_manager_->compute_clocktick_25ns_to_1600ns(a_calo_summary_record_25ns_.clocktick_25ns,
 							clocktick_1600_from_25);
 
-      if (clocktick_1600_from_25 <= a_coinc_calo_record_1600ns_.clocktick_1600ns + _coincidence_calorimeter_gate_size_)
+      if (clocktick_1600_from_25 <= a_coinc_calo_record_1600ns_.clocktick_1600ns + _L2_coincidence_gate_size_)
 	{
 	  a_coinc_calo_record_1600ns_.calo_zoning_word[0] = a_calo_summary_record_25ns_.zoning_word[0];
 	  a_coinc_calo_record_1600ns_.calo_zoning_word[1] = a_calo_summary_record_25ns_.zoning_word[1];
@@ -479,6 +518,14 @@ namespace snemo {
       return;
     }
 
+    /// Build the L2 gates useful for readouts from L2 decision
+    void trigger_algorithm::_build_L2_gates_from_L2_decision()
+    {
+
+      return;
+    }
+
+
     void trigger_algorithm::_build_previous_event_record()
     {
       // A PER is created or updated only if a coincidence between tracker and calorimeter is ok (so CALO_TRACKER_TIME_COINC or CARACO)
@@ -489,14 +536,14 @@ namespace snemo {
 		  && the_L2_decision.L2_trigger_mode != trigger_structures::L2_trigger_mode::CALO_TRACKER_TIME_COINC,
 		  std::logic_error, "Previous event record can't be build because L2 decision is not equal to CARACO or CALO_TRACKER_TIME_COINC !");
 
-      // Construct the PER on the coincidence records pushed back (to have the maximum of calo / tracker information (concatenate)) :2
+      // Construct the PER on the coincidence records pushed back (to have the maximum of calo / tracker information (concatenate)) :
       trigger_structures::previous_event_record a_previous_event_record;
       for (unsigned int i = 0; i < _coincidence_records_.size(); i++)
 	{
 	  trigger_structures::coincidence_event_record a_coincidence_record = _coincidence_records_[i];
 	  // Check if the coincidence record is in the L2 gate and with the good trigger mode to construct the PER :
 	  if (a_coincidence_record.clocktick_1600ns >= L2_decision_clocktick
-	      && a_coincidence_record.clocktick_1600ns < (L2_decision_clocktick + _L2_decision_coincidence_gate_size_)
+	      && a_coincidence_record.clocktick_1600ns < (L2_decision_clocktick + _L2_coincidence_gate_size_)
 	      && (a_coincidence_record.trigger_mode == trigger_structures::L2_trigger_mode::CARACO ||
 		  a_coincidence_record.trigger_mode == trigger_structures::L2_trigger_mode::CALO_TRACKER_TIME_COINC))
 	    {
@@ -587,6 +634,7 @@ namespace snemo {
 
 		    } // end of izone
 		} // end of iside
+
 	    }
 	} // end of for coinc record size
       _previous_event_records_->push_back(a_previous_event_record);
@@ -670,6 +718,11 @@ namespace snemo {
       // Any coincidences are activated and calo only is not activated, rescaling calorimeter at 1600 ns in any case
       else if (_activate_any_coincidences_ && !_activate_calorimeter_only_)
 	{
+	  // Create L2 coincidence Gate opened by L1 decision. Minimum size is 5 * 1600
+	  // But an already created coincidence gate can be pushed more time by another calo L1
+	  _build_L2_coincidence_gates();
+
+
 	  _rescale_calo_records_at_1600ns(_calo_records_25ns_,
 	  				  _coincidence_calo_records_1600ns_);
 
@@ -814,7 +867,7 @@ namespace snemo {
 		      // Maybe check if a L2_decision already exist before coinc processing ?
 
 		      if (!_L2_decision_records_.empty()
-			  && (int)_L2_decision_records_.back().L2_ct_decision >= (int)((ict1600 - _L2_decision_coincidence_gate_size_))
+			  && (int)_L2_decision_records_.back().L2_ct_decision >= (int)((ict1600 - _L2_coincidence_gate_size_))
 			  && _L2_decision_records_.back().L2_ct_decision < ict1600
 			  && _L2_decision_records_.back().L2_decision_bool)
 			{
@@ -850,14 +903,15 @@ namespace snemo {
 		  // Build a PER only at the end of the L2 decision gate :
 		  if (!_L2_decision_records_.empty())
 		    {
-		      // std::clog << "L2 ct + L2 decision = " << _L2_decision_records_.back().L2_ct_decision + _L2_decision_coincidence_gate_size_ << " ict = " << ict1600 << std::endl;
+		      std::clog << "L2 ct + L2 decision = " << _L2_decision_records_.back().L2_ct_decision + _L2_coincidence_gate_size_ << " ict = " << ict1600 << std::endl;
 
 		      trigger_structures::L2_decision the_L2_decision = _L2_decision_records_.back();
 
-		      if (ict1600 == (_L2_decision_records_.back().L2_ct_decision + _L2_decision_coincidence_gate_size_)
+		      if (ict1600 == (_L2_decision_records_.back().L2_ct_decision + _L2_coincidence_gate_size_)
 			  && (the_L2_decision.L2_trigger_mode == trigger_structures::L2_trigger_mode::CARACO
 			      || the_L2_decision.L2_trigger_mode == trigger_structures::L2_trigger_mode::CALO_TRACKER_TIME_COINC))
 			{
+			  std::clog << "BUILD PER CT" << ict1600 << std::endl;
 			  _build_previous_event_record();
 			}
 		    }
@@ -869,10 +923,10 @@ namespace snemo {
 	} // end of else if any_coinc
 
 
-      // for (unsigned int i = 0; i < _coincidence_calo_records_1600ns_.size(); i++)
-      // 	{
-      // 	  _coincidence_calo_records_1600ns_[i].display();
-      // 	}
+      for (unsigned int i = 0; i < _coincidence_calo_records_1600ns_.size(); i++)
+      	{
+      	  _coincidence_calo_records_1600ns_[i].display();
+      	}
 
       // for (unsigned int i = 0; i < _tracker_records_.size(); i++)
       // 	{
@@ -885,10 +939,37 @@ namespace snemo {
       // 	  _coincidence_records_[i].display();
       // 	}
 
-      // for (unsigned int i = 0; i < _L2_decision_records_.size(); i++)
-      // 	{
-      // 	  _L2_decision_records_[i].display();
-      // 	}
+      if (_L1_calo_decision_records_.size() != 0)
+	{
+	  for (unsigned int i = 0; i < _L1_calo_decision_records_.size(); i++)
+	    {
+	      _L1_calo_decision_records_[i].display();
+	    }
+	}
+
+      if (_L2_coincidence_gate_records_.size() != 0)
+	{
+	  for (unsigned int i = 0; i < _L2_coincidence_gate_records_.size(); i++)
+	    {
+	      _L2_coincidence_gate_records_[i].display();
+	    }
+	}
+
+      if (_L2_decision_records_.size() != 0)
+	{
+	  for (unsigned int i = 0; i < _L2_decision_records_.size(); i++)
+	    {
+	      _L2_decision_records_[i].display();
+	    }
+	}
+
+      if (_L2_decision_gate_records_.size() != 0)
+	{
+	  for (unsigned int i = 0; i < _L2_decision_gate_records_.size(); i++)
+	    {
+	      _L2_decision_gate_records_[i].display();
+	    }
+	}
 
       // boost::circular_buffer<trigger_structures::previous_event_record>::iterator it_circ = _previous_event_records_->begin();
       // for (; it_circ != _previous_event_records_->end(); it_circ++)

@@ -148,9 +148,43 @@ namespace snemo {
 	}
     }
 
+    void electronic_mapping::dump_main_calo_bimap(std::ostream & out_) const
+    {
+      DT_THROW_IF(!is_initialized(), std::logic_error, "Electronic mapping is not initialized ! ");
+
+      for (ID_bimap::const_iterator it = _mcalo_id_bimap_.begin(); it != _mcalo_id_bimap_.end(); it++)
+	{
+	  out_ << it->left << " <=> " << it->right << std::endl;
+	}
+    }
+
+    void electronic_mapping::dump_xwall_bimap(std::ostream & out_) const
+    {
+      DT_THROW_IF(!is_initialized(), std::logic_error, "Electronic mapping is not initialized ! ");
+
+      for (ID_bimap::const_iterator it = _xcalo_id_bimap_.begin(); it != _xcalo_id_bimap_.end(); it++)
+	{
+	  out_ << it->left << " <=> " << it->right << std::endl;
+	}
+    }
+
+    void electronic_mapping::dump_gveto_bimap(std::ostream & out_) const
+    {
+      DT_THROW_IF(!is_initialized(), std::logic_error, "Electronic mapping is not initialized ! ");
+
+      for (ID_bimap::const_iterator it = _gveto_id_bimap_.begin(); it != _gveto_id_bimap_.end(); it++)
+	{
+	  out_ << it->left << " <=> " << it->right << std::endl;
+	}
+    }
+
     void electronic_mapping::_initialize(const datatools::properties & config_)
     {
       _initialized_ = true;
+      add_preconstructed_type(mapping::GEIGER_ANODIC_CATEGORY_TYPE);
+      add_preconstructed_type(mapping::CALO_MAIN_WALL_CATEGORY_TYPE);
+      add_preconstructed_type(mapping::CALO_XWALL_CATEGORY_TYPE);
+      add_preconstructed_type(mapping::CALO_GVETO_CATEGORY_TYPE);
 
       if (config_.has_key("module_number")) {
 	int module_number = config_.fetch_integer("module_number");
@@ -158,13 +192,16 @@ namespace snemo {
       }
 
       _ID_convertor_.initialize(config_);
-      for (std::set<int32_t>::iterator it = _pre_constructed_types_.begin(); it != _pre_constructed_types_.end(); it++)
+      for (std::set<int32_t>::iterator it = _pre_constructed_types_.begin();
+	   it != _pre_constructed_types_.end();
+	   it++)
 	{
 	  if (*it == mapping::GEIGER_ANODIC_CATEGORY_TYPE)  _init_geiger();
 	  if (*it == mapping::CALO_MAIN_WALL_CATEGORY_TYPE) _init_mcalo();
-	  if (*it == mapping::CALO_XWALL_CATEGORY_TYPE)     _init_x_wall();
-	  if (*it == mapping::CALO_GVETO_CATEGORY_TYPE)  _init_gveto();
+	  if (*it == mapping::CALO_XWALL_CATEGORY_TYPE)     _init_xwall();
+	  if (*it == mapping::CALO_GVETO_CATEGORY_TYPE)     _init_gveto();
 	}
+
 
       return;
     }
@@ -174,7 +211,6 @@ namespace snemo {
     {
       uint32_t geiger_gid_type = -1;
       geomtools::geom_id GID(geiger_gid_type, 0, 0, 0, 0, 0);
-      geomtools::geom_id EID;
 
       for (unsigned int side = 0; side < mapping::NUMBER_OF_SIDES; side++)
 	{
@@ -187,6 +223,7 @@ namespace snemo {
 		  GID.set(mapping::ROW_INDEX, row);
 		  for (unsigned int part = 0; part < mapping::NUMBER_OF_GEIGER_CELL_PARTS; part++)
 		    {
+		      geomtools::geom_id EID;
 		      GID.set(mapping::GEIGER_CELL_PART_INDEX, part);
 		      if (part == mapping::GEIGER_CELL_ANODIC_PART)
 			{
@@ -228,9 +265,9 @@ namespace snemo {
       return ;
     }
 
-    void electronic_mapping::_init_x_wall()
+    void electronic_mapping::_init_xwall()
     {
-      geomtools::geom_id GID(mapping::CALO_XWALL_CATEGORY_TYPE, 0, 0, 0, 0);
+      geomtools::geom_id GID(mapping::CALO_XWALL_CATEGORY_TYPE, 0, 0, 0, 0, 0);
       geomtools::geom_id EID;
       for(unsigned int side = 0; side < mapping::NUMBER_OF_SIDES; side++)
 	{
@@ -240,12 +277,12 @@ namespace snemo {
 	      GID.set(mapping::WALL_INDEX, wall);
 	      for(unsigned int column = 0; column < mapping::NUMBER_OF_XWALL_COLUMNS; column++)
 		{
-		  GID.set(mapping::COLUMN_INDEX, column);
+		  GID.set(mapping::XWALL_COLUMN_INDEX, column);
 		  for(unsigned int row = 0; row < mapping::NUMBER_OF_XWALL_ROWS; row++)
 		    {
-		      GID.set(mapping::ROW_INDEX, row);
+		      GID.set(mapping::XWALL_ROW_INDEX, row);
 		      EID = _ID_convertor_.convert_GID_to_EID(GID);
-		      _mcalo_id_bimap_.insert( ID_doublet(GID , EID) ) ;
+		      _xcalo_id_bimap_.insert( ID_doublet(GID , EID) ) ;
 		    } // end of row loop
 		} // end of column loop
 	    } // end of wall loop
@@ -265,9 +302,9 @@ namespace snemo {
 	      GID.set(mapping::WALL_INDEX, wall);
 	      for(unsigned int column = 0; column < mapping::NUMBER_OF_GVETO_COLUMNS; column++)
 		{
-		  GID.set(mapping::ROW_INDEX, column);
+		  GID.set(mapping::GVETO_COLUMN_INDEX, column);
 		  EID = _ID_convertor_.convert_GID_to_EID(GID);
-		  _mcalo_id_bimap_.insert(ID_doublet(GID, EID));
+		  _gveto_id_bimap_.insert(ID_doublet(GID, EID));
 		} // end of column loop
 	    } // end of wall loop
 	} // end of side loop
@@ -286,13 +323,13 @@ namespace snemo {
 		  std::logic_error,
 		  "Give a correct tracker trigger mode (Two wires mode is not supported yet) ! ");
       geom_id_.reset();
-      ID_bimap::right_const_iterator right_iter ;
 
       unsigned int input_type = elec_id_.get_type();
 
       // Geiger case:
       if (input_type == mapping::GEIGER_FEB_CATEGORY_TYPE)
 	{
+	  ID_bimap::right_const_iterator right_iter = _geiger_id_bimap_.right.end();
       	  right_iter = _geiger_id_bimap_.right.find(elec_id_);
       	  if (right_iter != _geiger_id_bimap_.right.end())
       	    {
@@ -306,6 +343,7 @@ namespace snemo {
 	  // Search in Main Calo bimap:
 	  if (elec_id_.get(mapping::CRATE_INDEX) == mapping::MAIN_CALO_SIDE_0_CRATE || elec_id_.get(mapping::CRATE_INDEX) == mapping::MAIN_CALO_SIDE_1_CRATE)
 	    {
+	      ID_bimap::right_const_iterator right_iter = _mcalo_id_bimap_.right.end();
 	      right_iter = _mcalo_id_bimap_.right.find(elec_id_);
 	      if (right_iter != _mcalo_id_bimap_.right.end())
 		{
@@ -322,6 +360,7 @@ namespace snemo {
 		  || elec_id_.get(mapping::BOARD_INDEX) == 15
 		  || elec_id_.get(mapping::BOARD_INDEX) == 16)
 		{
+		  ID_bimap::right_const_iterator right_iter = _gveto_id_bimap_.right.end();
 		  right_iter = _gveto_id_bimap_.right.find(elec_id_);
 		  if (right_iter != _gveto_id_bimap_.right.end())
 		    {
@@ -331,6 +370,7 @@ namespace snemo {
 	      else
 		{
 		  // Search in Calo XWall bimap:
+		  ID_bimap::right_const_iterator right_iter = _xcalo_id_bimap_.right.end();
 		  right_iter = _xcalo_id_bimap_.right.find(elec_id_);
 		  if (right_iter != _xcalo_id_bimap_.right.end())
 		    {
@@ -350,74 +390,89 @@ namespace snemo {
       DT_THROW_IF(tracker_trigger_mode_ != mapping::THREE_WIRES_TRACKER_MODE, std::logic_error, " Give a correct tracker trigger mode (Two wires mode is not supported yet) ! ");
       DT_THROW_IF(!is_initialized(), std::logic_error, "Electronic mapping is not initialized ! ");
       electronic_id_.reset();
-      ID_bimap::left_const_iterator left_iter ;
 
       switch (geom_id_.get_type())
 	{
 	case mapping::GEIGER_ANODIC_CATEGORY_TYPE :
-	  left_iter = _geiger_id_bimap_.left.find(geom_id_);
-	  if (left_iter != _geiger_id_bimap_.left.end() )
-	    {
-	      electronic_id_ = left_iter->second;
+	  {
+	    // In geometry, cell GID is for anodic but it does not have the 'part' index
+	  // Little 'hack' on this GID in order to add the ANODIC_PART at the last index.
+	    geomtools::geom_id hacked_gid;
+	    hacked_gid.set_type(mapping::GEIGER_ANODIC_CATEGORY_TYPE);
+	    // Miss anodic Part on geom ID ( == 2)
+	    if (geom_id_.get_depth() == mapping::GEIGER_ROW_DEPTH) {
+	      hacked_gid.set_depth(mapping::GEIGER_CELL_PART_DEPTH);
+	      hacked_gid.set_address(geom_id_.get(mapping::MODULE_INDEX),
+				     geom_id_.get(mapping::SIDE_INDEX),
+				     geom_id_.get(mapping::LAYER_INDEX),
+				     geom_id_.get(mapping::ROW_INDEX));
+	      hacked_gid.set(mapping::GEIGER_CELL_PART_INDEX,
+			     mapping::GEIGER_CELL_ANODIC_PART);
 	    }
-	  else
-	    {
-	      electronic_id_ = _ID_convertor_.convert_GID_to_EID(geom_id_);
-	      _geiger_id_bimap_.insert( ID_doublet(geom_id_ ,electronic_id_) );
-	    }
-	  break;
+	    else hacked_gid = geom_id_;
+	    ID_bimap::left_const_iterator left_iter = _geiger_id_bimap_.left.end();
+	    left_iter = _geiger_id_bimap_.left.find(hacked_gid);
+	    if (left_iter != _geiger_id_bimap_.left.end() )
+	      {
+		electronic_id_ = left_iter->second;
+	      }
+	    break;
+	  }
 
 	case mapping::GEIGER_CATHODIC_CATEGORY_TYPE :
-	  left_iter = _geiger_id_bimap_.left.find(geom_id_);
-	  if (left_iter != _geiger_id_bimap_.left.end() )
-	    {
-	      electronic_id_ = left_iter->second;
-	    }
-	  else
-	    {
-	      electronic_id_ = _ID_convertor_.convert_GID_to_EID(geom_id_);
-	      _geiger_id_bimap_.insert( ID_doublet(geom_id_ ,electronic_id_) );
-	    }
-	  break;
+	  {
+	    ID_bimap::left_const_iterator left_iter = _geiger_id_bimap_.left.end();
+	    left_iter = _geiger_id_bimap_.left.find(geom_id_);
+	    if (left_iter != _geiger_id_bimap_.left.end() )
+	      {
+		electronic_id_ = left_iter->second;
+	      }
+	    break;
+	  }
 
 	case mapping::CALO_MAIN_WALL_CATEGORY_TYPE :
-	  left_iter = _mcalo_id_bimap_.left.find(geom_id_);
-	  if (left_iter != _mcalo_id_bimap_.left.end() )
-	    {
-	      electronic_id_ = left_iter->second;
+	  {
+	    // Hack because the depth is too much (there is an '*' part at the end for the OM)
+	    // Reduce the depth at [Module.Side.Column.Row] for Main wall OM
+	    geomtools::geom_id hacked_gid;
+	    hacked_gid.set_type(mapping::CALO_MAIN_WALL_CATEGORY_TYPE);
+	    if (geom_id_.get_depth() == mapping::MAIN_CALO_ROW_DEPTH + 1) {
+	      hacked_gid.set_depth(mapping::MAIN_CALO_ROW_DEPTH);
+	      geom_id_.extract_to(hacked_gid);
 	    }
-	  else
-	    {
-	      electronic_id_ = _ID_convertor_.convert_GID_to_EID(geom_id_);
-	      _mcalo_id_bimap_.insert( ID_doublet(geom_id_ ,electronic_id_) );
-	    }
-	  break;
+	    else hacked_gid = geom_id_;
+	    ID_bimap::left_const_iterator left_iter = _mcalo_id_bimap_.left.end();
+	    left_iter = _mcalo_id_bimap_.left.find(hacked_gid);
+	    if (left_iter != _mcalo_id_bimap_.left.end() )
+	      {
+		electronic_id_ = left_iter->second;
+	      }
+	    break;
+	  }
 
 	case mapping::CALO_XWALL_CATEGORY_TYPE :
-	  left_iter = _xcalo_id_bimap_.left.find(geom_id_);
-	  if (left_iter != _xcalo_id_bimap_.left.end() )
-	    {
-	      electronic_id_ = left_iter->second;
-	    }
-	  else
-	    {
-	      electronic_id_ = _ID_convertor_.convert_GID_to_EID(geom_id_);
-	      _xcalo_id_bimap_.insert( ID_doublet(geom_id_ ,electronic_id_) );
-	    }
-	  break;
+	  {
+	    ID_bimap::left_const_iterator left_iter = _xcalo_id_bimap_.left.end();
+	    left_iter = _xcalo_id_bimap_.left.find(geom_id_);
+	    if (left_iter != _xcalo_id_bimap_.left.end() )
+	      {
+		electronic_id_ = left_iter->second;
+	      }
+	    std::clog << "XWALL GID = " <<geom_id_ << " EID = " << electronic_id_ << std::endl;
+
+	    break;
+	  }
 
 	case mapping::CALO_GVETO_CATEGORY_TYPE :
-	  left_iter = _gveto_id_bimap_.left.find(geom_id_);
-	  if (left_iter != _gveto_id_bimap_.left.end() )
-	    {
-	      electronic_id_ = left_iter->second;
-	    }
-	  else
-	    {
-	      electronic_id_ = _ID_convertor_.convert_GID_to_EID(geom_id_);
-	      _gveto_id_bimap_.insert( ID_doublet(geom_id_ ,electronic_id_) );
-	    }
-	  break;
+	  {
+	    ID_bimap::left_const_iterator left_iter = _gveto_id_bimap_.left.end();
+	    left_iter = _gveto_id_bimap_.left.find(geom_id_);
+	    if (left_iter != _gveto_id_bimap_.left.end() )
+	      {
+		electronic_id_ = left_iter->second;
+	      }
+	    break;
+	  }
 
 	default :
 	  break;

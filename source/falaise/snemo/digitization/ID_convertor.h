@@ -46,8 +46,8 @@ namespace snemo {
       int _module_number_;
 			std::string _tracker_mapping_filename_;
       const geomtools::manager * _geo_manager_;
-      boost::scoped_ptr<geometry::gg_locator>  _gg_locator_;
-      boost::scoped_ptr<geometry::calo_locator> _calo_locator_;
+      boost::scoped_ptr<geometry::gg_locator>    _gg_locator_;
+      boost::scoped_ptr<geometry::calo_locator>  _calo_locator_;
       boost::scoped_ptr<geometry::xcalo_locator> _xcalo_locator_;
       boost::scoped_ptr<geometry::gveto_locator> _gveto_locator_;
 

@@ -23,8 +23,26 @@ namespace snemo {
 				COLUMN_INDEX     = 2,
 				WALL_INDEX       = 2,
 				ROW_INDEX        = 3,
+				XWALL_COLUMN_INDEX = 3,
+				GVETO_COLUMN_INDEX = 3,
 				XWALL_ROW_INDEX  = 4,
 				GEIGER_CELL_PART_INDEX = 4
+			};
+
+			// Geometric ID depth:
+			enum geom_ID_depth {
+				MODULE_DEPTH       = 1,
+				SIDE_DEPTH         = 2,
+				MAIN_CALO_COLUMN_DEPTH = 3,
+				MAIN_CALO_ROW_DEPTH = 4,
+				XWALL_WALL_DEPTH = 3,
+				XWALL_COLUMN_DEPTH = 4,
+				XWALL_ROW_DEPTH = 5,
+				GVETO_WALL_DEPTH = 3,
+				GVETO_COLUMN_DEPTH = 4,
+				GEIGER_LAYER_DEPTH = 3,
+				GEIGER_ROW_DEPTH   = 4,
+				GEIGER_CELL_PART_DEPTH = 5
 			};
 
       /// Electronic id index coming from a geom id
@@ -39,7 +57,7 @@ namespace snemo {
 
 
 			enum electronic_ID_depth {
-				MODULE_DEPTH   = 1,
+				// MODULE_DEPTH   = 1, already declared
 				CRATE_DEPTH    = 2,
 				BOARD_DEPTH    = 3,
 				CALO_CHANNEL_DEPTH   = 4,

@@ -44,7 +44,7 @@ namespace snemo {
       {
 	calo_record();
 	void reset();
-	void display(std::ostream & out_=std::clog) const;
+	void display(std::ostream & out_ = std::clog) const;
 	uint32_t clocktick_25ns;
 	std::bitset<trigger_info::NZONES> zoning_word[trigger_info::NSIDES];
 	std::bitset<calo::ctw::HTM_BITSET_SIZE> total_multiplicity_side_0;
@@ -61,7 +61,7 @@ namespace snemo {
 	calo_summary_record();
 	void reset();
 	void reset_summary_boolean_only();
-	void display(std::ostream & out_=std::clog) const;
+	void display(std::ostream & out_ = std::clog) const;
 	bool is_empty() const;
 	bool single_side_coinc;
 	bool total_multiplicity_threshold;
@@ -84,7 +84,7 @@ namespace snemo {
 	tracker_record();
 	void reset();
 	bool is_empty() const;
-	void display(std::ostream & out_=std::clog);
+	void display(std::ostream & out_ = std::clog);
 	uint32_t clocktick_1600ns;
 	std::bitset<trigger_info::DATA_FULL_BITSET_SIZE> finale_data_per_zone[trigger_info::NSIDES][trigger_info::NZONES];
 	std::bitset<trigger_info::NZONES> zoning_word_pattern[trigger_info::NSIDES];
@@ -98,7 +98,7 @@ namespace snemo {
 	geiger_matrix();
 	void reset();
 	bool is_empty() const;
-	void display(std::ostream & out_=std::clog) const;
+	void display(std::ostream & out_ = std::clog) const;
 	uint32_t clocktick_1600ns;
 	bool matrix[trigger_info::NSIDES][trigger_info::NLAYERS][trigger_info::NROWS];
       };
@@ -108,7 +108,7 @@ namespace snemo {
       {
 	coincidence_base_record();
 	void reset();
-	void display(std::ostream & out_=std::clog) const;
+	void display(std::ostream & out_ = std::clog) const;
 	std::bitset<trigger_info::NZONES> calo_zoning_word[trigger_info::NSIDES];
 	std::bitset<calo::ctw::HTM_BITSET_SIZE> total_multiplicity_side_0;
 	std::bitset<calo::ctw::HTM_BITSET_SIZE> total_multiplicity_side_1;
@@ -126,7 +126,7 @@ namespace snemo {
       {
 	coincidence_calo_record();
 	void reset();
-	void display(std::ostream & out_=std::clog) const;
+	void display(std::ostream & out_ = std::clog) const;
 	bool is_empty() const;
 	uint32_t clocktick_1600ns;
       };
@@ -135,7 +135,7 @@ namespace snemo {
       {
 	coincidence_event_record();
 	void reset();
-	void display(std::ostream & out_=std::clog) const;
+	void display(std::ostream & out_ = std::clog) const;
 	bool is_empty() const;
 	uint32_t clocktick_1600ns;
 	// Coincidence zoning word :
@@ -152,7 +152,7 @@ namespace snemo {
       {
 	previous_event_record();
 	void reset();
-	void display(std::ostream & out_=std::clog) const;
+	void display(std::ostream & out_ = std::clog) const;
 	uint32_t previous_clocktick_1600ns;
 	uint32_t counter_1600ns;
 	// Coincidence zoning word :
@@ -165,13 +165,13 @@ namespace snemo {
 	trigger_structures::L2_trigger_mode trigger_mode;
       };
 
-      // L1 and L2 trigger decision structures :
+      // L1 and L2 trigger gates / decision structures :
 
       struct L1_calo_decision
       {
 	L1_calo_decision();
 	void reset();
-	void display(std::ostream & out_=std::clog) const;
+	void display(std::ostream & out_ = std::clog) const;
 	bool L1_calo_decision_bool;
 	uint32_t L1_calo_ct_decision; // CT @ 25 ns
       };
@@ -180,18 +180,41 @@ namespace snemo {
       {
 	L1_tracker_decision();
 	void reset();
-	void display(std::ostream & out_=std::clog) const;
+	void display(std::ostream & out_ = std::clog) const;
 	bool L1_tracker_decision_bool;
 	uint32_t L1_tracker_ct_decision; // CT @ 1600 ns
+      };
+
+      struct L2_coincidence_gate
+      {
+	L2_coincidence_gate();
+	void reset();
+	void extend_gate(uint32_t nbr_of_ct1600_);
+	void display(std::ostream & out_ = std::clog) const;
+	uint32_t L1_calo_CT25; // The CT 25 who opened the L2 coincidence Gate
+	uint32_t L2_coincidence_gate_begin; // CT @ 1600 ns
+	uint32_t L2_coincidence_gate_end;   // CT @ 1600 ns
       };
 
       struct L2_decision
       {
 	L2_decision();
 	void reset();
-	void display(std::ostream & out_=std::clog) const;
+	void display(std::ostream & out_ = std::clog) const;
 	bool L2_decision_bool;
 	uint32_t L2_ct_decision; // CT @ 1600 ns
+	trigger_structures::L2_trigger_mode L2_trigger_mode;
+      };
+
+      struct L2_decision_gate
+      {
+	L2_decision_gate();
+	void reset();
+	void display(std::ostream & out_ = std::clog) const;
+	uint32_t L1_calo_CT25; // The CT 25 responsible of the L2
+	uint32_t L2_decision_gate_begin; // CT @ 1600 ns
+	uint32_t L2_decision_gate_end;   // CT @ 1600 ns
+
 	trigger_structures::L2_trigger_mode L2_trigger_mode;
       };
 
