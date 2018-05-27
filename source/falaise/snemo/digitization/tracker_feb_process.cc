@@ -438,7 +438,7 @@ namespace snemo {
 	      a_mutable_signal.build_signal_shape(*_ssb_,
 						  signal_name,
 						  a_mutable_signal);
-	      //a_mutable_signal.tree_dump(std::clog, "Mutable anodic signal with shape instantiated");
+	      a_mutable_signal.tree_dump(std::clog, "Mutable anodic signal with shape instantiated");
 
 	      geiger_digi_working_data a_wd;
 	      a_wd.signal_ref = & a_mutable_signal;
@@ -563,7 +563,7 @@ namespace snemo {
 	      a_wd.anodic_eid   = electronic_id;
 	      a_wd.clocktick_800 = a_geiger_signal_clocktick;
 
-	      // a_wd.tree_dump(std::clog, "A working data #" + std::to_string(i));
+	      a_wd.tree_dump(std::clog, "A working data #" + std::to_string(i));
 	      wd_collection_.push_back(a_wd);
 
 	    } // end of anodic

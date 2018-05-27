@@ -140,10 +140,6 @@ namespace snemo {
 					     trigger_structures::tracker_record> a_pair_for_a_clocktick_,
 					     trigger_structures::coincidence_event_record & a_coincidence_record_);
 
-
-      /// Build the L2 gates useful for readouts from L2 decision
-      void _build_L2_gates_from_L2_decision();
-
       // Build a previous event record useful for delayed coincidences
       void _build_previous_event_record();
 

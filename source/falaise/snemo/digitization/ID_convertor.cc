@@ -322,8 +322,8 @@ namespace snemo {
 
 	  int32_t shift_no_feb_10_index = 1;
 
-	  if      (column_index_ < mapping::CONTROL_BOARD_INDEX) board_id = column_index_;
-	  else if (column_index_ >= mapping::CONTROL_BOARD_INDEX) board_id = column_index_ + shift_no_feb_10_index;
+	  board_id = column_index_;
+	  // else if (column_index_ >= mapping::CONTROL_BOARD_INDEX) board_id = column_index_ + shift_no_feb_10_index;
 	  channel_id = row_index_;
 
 	  electronic_id.set_address(module_id,

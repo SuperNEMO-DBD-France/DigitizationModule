@@ -416,7 +416,7 @@ namespace snemo {
 						 signal_name);
 
 	  a_mutable_signal.build_signal_shape(*_ssb_,
-					      signal_name,
+ 					      signal_name,
 					      a_mutable_signal);
 
 	  // a_mutable_signal.tree_dump(std::clog, "Mutable signal");
@@ -504,7 +504,8 @@ namespace snemo {
 	      // If outside POST_TRIG window, can create a new calo digitized hit
 	      // To do : Open readout gate where the channel is locked until readout
 	      // (depending of trigger algorithm, if calo only the gate is shorter than if it is CARACO mode)
-	      if (sample_index >= low_threshold_sample_begin + _calo_feb_config_.post_trig_window_samples)
+	      if (low_threshold_trigger
+		  && sample_index >= low_threshold_sample_begin + _calo_feb_config_.post_trig_window_samples)
 	    	{
 		  calo_digi_working_data & a_calo_wd = _calo_digi_data_collection_.back();
 		  if (a_calo_wd.is_low_threshold && !a_calo_wd.is_high_threshold) a_calo_wd.is_low_threshold_only = true;
@@ -700,13 +701,13 @@ namespace snemo {
       for (unsigned int i = 0; i < _calo_digi_data_collection_.size(); i++)
 	{
 	  calo_digi_working_data a_calo_wd_to_readout = _calo_digi_data_collection_[i];
-	  a_calo_wd_to_readout.tree_dump(std::clog);
+	  // a_calo_wd_to_readout.tree_dump(std::clog);
 
 
 
 
-	  snemo::datamodel::sim_calo_digi_hit calo_digi_hit;
-	  SDD_.grab_calo_digi_hits().push_back(calo_digi_hit);
+	  // snemo::datamodel::sim_calo_digi_hit calo_digi_hit;
+	  // SDD_.grab_calo_digi_hits().push_back(calo_digi_hit);
 
 	}
       return;
