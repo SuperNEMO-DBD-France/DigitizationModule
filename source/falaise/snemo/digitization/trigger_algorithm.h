@@ -124,9 +124,6 @@ namespace snemo {
       // Increment the trigger ID assigned to the next L2 decision
       void _increment_trigger_id();
 
-      /// Build the L2 gates useful for readouts from L2 decision
-      void _build_L2_coincidence_gates();
-
       /// Rescaling calorimeter 25 ns at 1600 ns for coincidences with tracker
       void _rescale_calo_records_at_1600ns(const std::vector<trigger_structures::calo_summary_record> & calo_records_25_ns_,
 					   std::vector<trigger_structures::coincidence_calo_record> & coincidence_calo_records_1600ns_);

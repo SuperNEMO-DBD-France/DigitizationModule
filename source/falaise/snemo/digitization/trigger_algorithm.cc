@@ -259,59 +259,6 @@ namespace snemo {
       return;
     }
 
-    void trigger_algorithm::_build_L2_coincidence_gates()
-    {
-      for (std::size_t i = 0; i < _L1_calo_decision_records_.size(); i++)
-	{
-	  trigger_structures::L1_calo_decision a_l1_decision = _L1_calo_decision_records_[i];
-	  if (a_l1_decision.L1_calo_decision_bool) {
-	    uint32_t ct25 = a_l1_decision.L1_calo_ct_decision;
-	    uint32_t ct1600_begin = 0;
-	    _clock_manager_->compute_clocktick_25ns_to_1600ns(ct25, ct1600_begin);
-	    uint32_t ct1600_end = ct1600_begin + _L2_coincidence_gate_size_ - 1; // last CT1600 is included for coincidence searches
-
-	    if (_L2_coincidence_gate_records_.size() != 0)
-	      {
-		// check if L2 coincidence gate does not exist for this CT1600:
-		for (std::size_t j = 0; j < _L2_coincidence_gate_records_.size(); j++)
-		  {
-		    trigger_structures::L2_coincidence_gate & a_l2_coinc_gate = _L2_coincidence_gate_records_[j];
-		    // Update existing gate:
-		    if (ct1600_end >= a_l2_coinc_gate.L2_coincidence_gate_begin
-			&& ct1600_end <= a_l2_coinc_gate.L2_coincidence_gate_end)
-		      {
-			uint32_t number_of_ct1600_to_extend = a_l2_coinc_gate.L2_coincidence_gate_end - ct1600_end;
-			a_l2_coinc_gate.extend_gate(number_of_ct1600_to_extend);
-		      }
-		    else
-		      {
-			// Create new coincidence gate:
-			trigger_structures::L2_coincidence_gate a_l2_coinc_gate;
-			a_l2_coinc_gate.L1_calo_CT25 = ct25;
-			a_l2_coinc_gate.L2_coincidence_gate_begin = ct1600_begin;
-			a_l2_coinc_gate.L2_coincidence_gate_end = ct1600_end;
-			_L2_coincidence_gate_records_.push_back(a_l2_coinc_gate);
-		      }
-
-		  }
-	      }
-	    else
-	      {
-		// Create the first L2 coincidence gate:
-		trigger_structures::L2_coincidence_gate a_l2_coinc_gate;
-		a_l2_coinc_gate.L1_calo_CT25 = ct25;
-		a_l2_coinc_gate.L2_coincidence_gate_begin = ct1600_begin;
-		a_l2_coinc_gate.L2_coincidence_gate_end = ct1600_end;
-		_L2_coincidence_gate_records_.push_back(a_l2_coinc_gate);
-	      }
-
-	  } // end of has L1 calo decision true
-
-	} // end of L1 decision
-
-      return;
-    }
-
     void trigger_algorithm::_rescale_calo_records_at_1600ns(const std::vector<trigger_structures::calo_summary_record> & calo_records_25_ns_,
 							    std::vector<trigger_structures::coincidence_calo_record> & coincidence_calo_records_1600ns_)
     {
@@ -327,27 +274,30 @@ namespace snemo {
 
 	      if (_L2_coincidence_gate_records_.size() != 0)
 		{
+		  bool found_existing_gate = false;
 		  // check if L2 coincidence gate does not exist for this CT1600:
 		  for (std::size_t j = 0; j < _L2_coincidence_gate_records_.size(); j++)
 		    {
 		      trigger_structures::L2_coincidence_gate & a_l2_coinc_gate = _L2_coincidence_gate_records_[j];
-		      // Update existing gate:
-		      if (ct1600_end >= a_l2_coinc_gate.L2_coincidence_gate_begin
-			  && ct1600_end <= a_l2_coinc_gate.L2_coincidence_gate_end)
-			{
-			  uint32_t number_of_ct1600_to_extend = a_l2_coinc_gate.L2_coincidence_gate_end - ct1600_end;
-			  a_l2_coinc_gate.extend_gate(number_of_ct1600_to_extend);
-			}
-		      else
-			{
-			  // Create new coincidence gate:
-			  trigger_structures::L2_coincidence_gate a_l2_coinc_gate;
-			  a_l2_coinc_gate.L1_calo_CT25 = ct25;
-			  a_l2_coinc_gate.L2_coincidence_gate_begin = ct1600_begin;
-			  a_l2_coinc_gate.L2_coincidence_gate_end = ct1600_end;
-			  _L2_coincidence_gate_records_.push_back(a_l2_coinc_gate);
-			}
 
+		      if (ct1600_begin >= a_l2_coinc_gate.L2_coincidence_gate_begin
+			  && ct1600_begin <= a_l2_coinc_gate.L2_coincidence_gate_end)
+			{
+			  // Update existing gate:
+			  uint32_t number_of_ct1600_to_extend = ct1600_begin - a_l2_coinc_gate.L2_coincidence_gate_begin;
+			  a_l2_coinc_gate.extend_gate(number_of_ct1600_to_extend);
+			  found_existing_gate = true;
+			  break;
+			}
+		    }
+		  if (!found_existing_gate)
+		    {
+		      // Create new coincidence gate:
+		      trigger_structures::L2_coincidence_gate a_l2_coinc_gate;
+		      a_l2_coinc_gate.L1_calo_CT25 = ct25;
+		      a_l2_coinc_gate.L2_coincidence_gate_begin = ct1600_begin;
+		      a_l2_coinc_gate.L2_coincidence_gate_end = ct1600_end;
+		      _L2_coincidence_gate_records_.push_back(a_l2_coinc_gate);
 		    }
 		}
 	      else
@@ -362,7 +312,7 @@ namespace snemo {
 
 	      trigger_structures::calo_summary_record CSR_L1;
 
-	      // Search CSR corresponding to the L1 decision
+	      // Search the CSR corresponding to the L1 decision
 	      std::vector<trigger_structures::calo_summary_record>::const_iterator it = calo_records_25_ns_.begin();
 	      for (; it != calo_records_25_ns_.end(); it++)
 		{
@@ -397,141 +347,81 @@ namespace snemo {
 		else
 		  {
 		    // Try to find an existing coincidence calo record in a L2 coincidence gate
-		    // if (find)
-		    //   {
-      // 	      for (unsigned int i = 0; i < coincidence_calo_records_1600ns_.size(); i++)
-      // 		{
-      // 		  if (ctrec_clocktick_1600ns == coincidence_calo_records_1600ns_[i].clocktick_1600ns)
+		    uint32_t clocktick_find_begin = 0;
+		    uint32_t clocktick_find_end   = 0;
+		    bool find = false;
+		    int existing_index = -1;
 
-		    //   }
-		    // else
-		    //   {
-		    // check all L2 coincidnece gate to see if the CSR_l1 fits somewhere
-		    //   }
+		    for (unsigned int j = 0; j < coincidence_calo_records_1600ns_.size(); j++)
+		      {
+			if (ct1600_begin == coincidence_calo_records_1600ns_[j].clocktick_1600ns)
+			  {
+			    // ct1600_begin = coincidence_calo_records_1600ns_[i];
+			    // clocktick_find_begin = ct1600_begin;
+			    find = true;
+			    existing_index = j;
+			  }
+		      }
 
+		    // Find the CT1600 end synchronized with a L2 coincidence gate:
+		    if (find)
+		      {
+			// Update the current coinc calo records but also the following until the coinc gate is not closed
+			for (unsigned int j = existing_index; j < coincidence_calo_records_1600ns_.size(); j++)
+			  {
+			    trigger_structures::coincidence_calo_record & existing_coincidence_calo_record = coincidence_calo_records_1600ns_[j];
+			    if (existing_coincidence_calo_record.clocktick_1600ns >= ct1600_begin
+				&& existing_coincidence_calo_record.clocktick_1600ns <= ct1600_end)
+			      {
+				_update_coinc_calo_record(CSR_L1, existing_coincidence_calo_record);
+			      }
+			  }
 
+			// Find in which L2 coincidence gate the new CSR_L1 is in order to create
+			// coincidence calo records until the gate is not closed:
+			trigger_structures::L2_coincidence_gate the_l2_gate;
+			for (unsigned int j = 0; j < _L2_coincidence_gate_records_.size(); j++)
+			  {
+			    if (ct1600_begin >= _L2_coincidence_gate_records_[j].L2_coincidence_gate_begin
+				&& ct1600_begin <= _L2_coincidence_gate_records_[j].L2_coincidence_gate_end)
+			      {
+				the_l2_gate = _L2_coincidence_gate_records_[j];
+				break;
+			      }
+			  }
 
+			uint32_t diff_nbr_of_ct1600_closing_gate = ct1600_begin - the_l2_gate.L2_coincidence_gate_begin;
 
+			for (unsigned int iclocktick = 0;
+			     iclocktick < diff_nbr_of_ct1600_closing_gate;
+			     iclocktick++)
+			  {
+			    // Copy an already updated coinc calo record and change the CT 1600 :
+			    trigger_structures::coincidence_calo_record coincidence_calo_record_to_complete_gate = coincidence_calo_records_1600ns_[existing_index];
+			    coincidence_calo_record_to_complete_gate.clocktick_1600ns = ct1600_end - 1  + iclocktick;
+			    coincidence_calo_records_1600ns_.push_back(coincidence_calo_record_to_complete_gate);
+			  }
+		      }
+
+		    else
+		      {
+			// Create 5 new coincidence calo records:
+			for (unsigned int iclocktick = ct1600_begin;
+			     iclocktick <= ct1600_end;
+			     iclocktick++)
+			  {
+			    trigger_structures::coincidence_calo_record on_gate_coincidence_calo_record;
+			    on_gate_coincidence_calo_record.clocktick_1600ns = iclocktick;
+			    _update_coinc_calo_record(CSR_L1, on_gate_coincidence_calo_record);
+			    coincidence_calo_records_1600ns_.push_back(on_gate_coincidence_calo_record);
+			  }
+		      } // end of !find
 		  }
-
-
-
-	      }
-
+	      } // end of !CSR_L1.is_empty()
 
 	    } // end of has L1 calo decision true
 
 	} // end of for L1 decision
-
-
-
-
-
-
-
-      // std::vector<trigger_structures::calo_summary_record>::const_iterator it = calo_records_25_ns_.begin();
-      // for (; it != calo_records_25_ns_.end(); it++)
-      // 	{
-      // 	  const trigger_structures::calo_summary_record a_ctrec= *it;
-
-      // 	  if (a_ctrec.calo_finale_decision == true)
-      // 	    {
-      // 	      uint32_t ctrec_clocktick_1600ns = 0;
-      // 	      _clock_manager_->compute_clocktick_25ns_to_1600ns(a_ctrec.clocktick_25ns, ctrec_clocktick_1600ns);
-
-      // 	      if (coincidence_calo_records_1600ns_.size() == 0)
-      // 		{
-      // 		  // No coincidence calo records, creation of the first and the 4 following EMPTY
-      // 		  trigger_structures::coincidence_calo_record first_coincidence_calo_record;
-      // 		  first_coincidence_calo_record.clocktick_1600ns = ctrec_clocktick_1600ns;
-      // 		  coincidence_calo_records_1600ns_.push_back(first_coincidence_calo_record);
-
-      // 		  if (coincidence_calo_records_1600ns_.size() != 0)
-      // 		    {
-      // 		      for (unsigned int iclocktick = first_coincidence_calo_record.clocktick_1600ns + 1;
-      // 			   iclocktick < first_coincidence_calo_record.clocktick_1600ns + _L2_coincidence_gate_size_;
-      // 			   iclocktick ++)
-      // 			{
-      // 			  trigger_structures::coincidence_calo_record on_gate_coincidence_calo_record;
-      // 			  on_gate_coincidence_calo_record = first_coincidence_calo_record;
-      // 			  on_gate_coincidence_calo_record.clocktick_1600ns = iclocktick;
-      // 			  coincidence_calo_records_1600ns_.push_back(on_gate_coincidence_calo_record);
-      // 			}
-      // 		    }
-      // 		}
-
-      // 	      bool coinc_calo_record_find = false;
-
-      // 	      // Search if a coincidence calo record for clocktick ctrec 25 -> 1600 is already existing
-      // 	      for (unsigned int i = 0; i < coincidence_calo_records_1600ns_.size(); i++)
-      // 		{
-      // 		  if (ctrec_clocktick_1600ns == coincidence_calo_records_1600ns_[i].clocktick_1600ns)
-      // 		    {
-      // 		      // Updating existing coincidence calo record
-      // 		      coinc_calo_record_find = true;
-      // 		      _update_coinc_calo_record(a_ctrec, coincidence_calo_records_1600ns_[i]);
-
-      // 		      // Updating the following coincidence calo record
-      // 		      // Have to check if they are in the gate or outside
-      // 		      if (i != coincidence_calo_records_1600ns_.size() - 1)
-      // 			{
-      // 			  for (unsigned int j = i+1; j < coincidence_calo_records_1600ns_.size(); j++)
-      // 			    {
-      // 			      if (coincidence_calo_records_1600ns_[j].clocktick_1600ns <= coincidence_calo_records_1600ns_[i].clocktick_1600ns + _L2_coincidence_gate_size_)
-      // 				{
-      // 				  uint32_t clocktick_1600_before_modification = coincidence_calo_records_1600ns_[j].clocktick_1600ns;
-      // 				  coincidence_calo_records_1600ns_[j] = coincidence_calo_records_1600ns_[i];
-      // 				  coincidence_calo_records_1600ns_[j].clocktick_1600ns = clocktick_1600_before_modification;
-      // 				}
-      // 			    } // end of for j
-      // 			}
-
-      // 		      // Have to grow back the gate and create new coincidence calo record
-      // 		      unsigned int actual_index = i;
-      // 		      unsigned int index_min = std::floor(actual_index /  _L2_coincidence_gate_size_) * _L2_coincidence_gate_size_;
-      // 		      unsigned int index_max = index_min + _L2_coincidence_gate_size_ - 1;
-      // 		      uint32_t clocktick_to_create = ctrec_clocktick_1600ns + _L2_coincidence_gate_size_;
-      // 		      uint32_t clocktick_max_1600 = coincidence_calo_records_1600ns_[index_max].clocktick_1600ns;
-
-      // 		      for (unsigned int j = clocktick_max_1600 + 1; j <= clocktick_to_create; j++)
-      // 			{
-      // 			  bool no_same_clocktick = true;
-      // 			  for (unsigned int k = actual_index + 1 ; k < coincidence_calo_records_1600ns_.size(); k++)
-      // 			    {
-      // 			      // Check if the CT i between max and wanted to create exist in the coinc calo record list :
-      // 			      if (j == coincidence_calo_records_1600ns_[k].clocktick_1600ns)
-      // 				{
-      // 				  no_same_clocktick = false;
-      // 				}
-      // 			    } // end of for k
-
-      // 			  if (no_same_clocktick == true)
-      // 			    {
-      // 			      trigger_structures::coincidence_calo_record grow_back_coincidence_calo_record = coincidence_calo_records_1600ns_[index_max];
-      // 			      grow_back_coincidence_calo_record.clocktick_1600ns = j;
-      // 			      coincidence_calo_records_1600ns_.push_back(grow_back_coincidence_calo_record);
-      // 			    }
-      // 			} // end of for j
-
-      // 		    }
-      // 		} // end of for i
-
-      // 	      // If not, create the first and the 10 following empty then updated
-      // 	      if (coinc_calo_record_find == false)
-      // 		{
-      // 		  trigger_structures::coincidence_calo_record new_coincidence_calo_record;
-      // 		  new_coincidence_calo_record.clocktick_1600ns = ctrec_clocktick_1600ns;
-      // 		  coincidence_calo_records_1600ns_.push_back(new_coincidence_calo_record);
-      // 		  for (unsigned int iclocktick = new_coincidence_calo_record.clocktick_1600ns + 1; iclocktick < new_coincidence_calo_record.clocktick_1600ns + _L2_coincidence_gate_size_; iclocktick ++)
-      // 		    {
-      // 		      trigger_structures::coincidence_calo_record new_on_gate_coincidence_calo_record;
-      // 		      new_on_gate_coincidence_calo_record = new_coincidence_calo_record;
-      // 		      new_on_gate_coincidence_calo_record.clocktick_1600ns = iclocktick;
-      // 		      coincidence_calo_records_1600ns_.push_back(new_on_gate_coincidence_calo_record);
-      // 		    }
-      // 		}
-      // 	    } // end of for it calo records
-      //  	}
 
       return;
     }
@@ -1029,10 +919,10 @@ namespace snemo {
 	} // end of else if any_coinc
 
 
-      for (unsigned int i = 0; i < _coincidence_calo_records_1600ns_.size(); i++)
-      	{
-      	  _coincidence_calo_records_1600ns_[i].display();
-      	}
+      // for (unsigned int i = 0; i < _coincidence_calo_records_1600ns_.size(); i++)
+      // 	{
+      // 	  _coincidence_calo_records_1600ns_[i].display();
+      // 	}
 
       // for (unsigned int i = 0; i < _tracker_records_.size(); i++)
       // 	{
@@ -1083,16 +973,16 @@ namespace snemo {
       // 	  it_circ -> display();
       // 	}
 
-      // std::clog << "********* Size of Finale structures for one event *********" << std::endl;
-      // std::clog << "Calo collection size @ 25 ns            : " << _calo_records_25ns_.size() << std::endl;
-      // std::clog << "Calo collection size @ 1600 ns          : " << _coincidence_calo_records_1600ns_.size() << std::endl;
-      // std::clog << "Tracker collection size @ 1600 ns       : " << _tracker_records_.size() << std::endl;
-      // std::clog << "Geiger matrix collection size @ 1600 ns : " << _geiger_matrix_records_.size() << std::endl;
-      // std::clog << "Pair records collection size @ 1600 ns  : " << _pair_records_.size() << std::endl;
-      // std::clog << "Coincidence collection size @ 1600 ns   : " << _coincidence_records_.size() << std::endl;
-      // std::clog << "Previous event collection size          : " << _previous_event_records_->size() << std::endl;
-      // std::clog << "L1 calo collection size @ 25 ns         : " << _L1_calo_decision_records_.size() << std::endl;
-      // std::clog << "L2 decision collection size @ 1600 ns   : " << _L2_decision_records_.size() << std::endl;
+      std::clog << "********* Size of Finale structures for one event *********" << std::endl;
+      std::clog << "Calo collection size @ 25 ns            : " << _calo_records_25ns_.size() << std::endl;
+      std::clog << "Calo collection size @ 1600 ns          : " << _coincidence_calo_records_1600ns_.size() << std::endl;
+      std::clog << "Tracker collection size @ 1600 ns       : " << _tracker_records_.size() << std::endl;
+      std::clog << "Geiger matrix collection size @ 1600 ns : " << _geiger_matrix_records_.size() << std::endl;
+      std::clog << "Pair records collection size @ 1600 ns  : " << _pair_records_.size() << std::endl;
+      std::clog << "Coincidence collection size @ 1600 ns   : " << _coincidence_records_.size() << std::endl;
+      std::clog << "Previous event collection size          : " << _previous_event_records_->size() << std::endl;
+      std::clog << "L1 calo collection size @ 25 ns         : " << _L1_calo_decision_records_.size() << std::endl;
+      std::clog << "L2 decision collection size @ 1600 ns   : " << _L2_decision_records_.size() << std::endl;
 
       return;
     }

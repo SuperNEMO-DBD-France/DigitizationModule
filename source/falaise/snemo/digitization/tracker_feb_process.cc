@@ -712,12 +712,12 @@ namespace snemo {
 	} // end of number_of_hits
 
 
-      // Print Working Data colleciton
-      for (unsigned int j = 0; j < _gg_digi_data_collection_.size(); j++)
-	{
-	  //if (_gg_digi_data_collection_[j].cathode_top_register == "R6")
-	  // _gg_digi_data_collection_[j].tree_dump(std::clog, "GG WD #" + std::to_string(_gg_digi_data_collection_[j].hit_id));
-	}
+      // // Print Working Data collection
+      // for (unsigned int j = 0; j < _gg_digi_data_collection_.size(); j++)
+      // 	{
+      // 	  if (_gg_digi_data_collection_[j].cathode_top_register == "R6")
+      // 	  _gg_digi_data_collection_[j].tree_dump(std::clog, "GG WD #" + std::to_string(_gg_digi_data_collection_[j].hit_id));
+      // 	}
 
       return ;
     }

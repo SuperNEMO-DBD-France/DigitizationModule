@@ -194,6 +194,7 @@ namespace snemo {
 	uint32_t L1_calo_CT25; // The CT 25 who opened the L2 coincidence Gate
 	uint32_t L2_coincidence_gate_begin; // CT @ 1600 ns
 	uint32_t L2_coincidence_gate_end;   // CT @ 1600 ns
+	bool extended_gate;
       };
 
       struct L2_decision
@@ -214,6 +215,7 @@ namespace snemo {
 	uint32_t L1_calo_CT25; // The CT 25 responsible of the L2
 	uint32_t L2_decision_gate_begin; // CT @ 1600 ns
 	uint32_t L2_decision_gate_end;   // CT @ 1600 ns
+	bool extended_gate;
 
 	trigger_structures::L2_trigger_mode L2_trigger_mode;
       };

@@ -263,6 +263,61 @@ namespace snemo {
       // 	  it->get().tree_dump(std::clog, "A CALO CTW");
       // 	}
 
+
+      // Add fake CTWs in order to test trigger algorithm behaviour :
+      {
+	snemo::digitization::calo_ctw & my_calo_ctw = calo_ctw_data.add();
+	geomtools::geom_id my_ctw_gid(snemo::digitization::mapping::CALO_CONTROL_BOARD_TYPE,
+				      snemo::digitization::mapping::DEMONSTRATOR_MODULE_NUMBER,
+				      snemo::digitization::mapping::MAIN_CALO_SIDE_0_CRATE,
+				      snemo::digitization::mapping::CONTROL_BOARD_INDEX); // GID : [type]:[module],[CRATE],[BOARD]
+	my_calo_ctw.set_header(155,
+			       my_ctw_gid,
+			       550); // hit, gid, clocktick25ns
+	my_calo_ctw.grab_auxiliaries().store("author", "guillaume");
+	my_calo_ctw.grab_auxiliaries().store_flag("mock");
+	my_calo_ctw.set_htm_main_wall(1);
+	int zone_touched = snemo::digitization::calo::ctw::W_ZW_BIT0 + 5;
+	my_calo_ctw.set_zoning_bit(zone_touched, true);
+	 my_calo_ctw.tree_dump(std::clog, "My_calo_CTW [0] : ", "INFO : ");
+      }
+
+      {
+	snemo::digitization::calo_ctw & my_calo_ctw = calo_ctw_data.add();
+	geomtools::geom_id my_ctw_gid(snemo::digitization::mapping::CALO_CONTROL_BOARD_TYPE,
+				      snemo::digitization::mapping::DEMONSTRATOR_MODULE_NUMBER,
+				      snemo::digitization::mapping::MAIN_CALO_SIDE_0_CRATE,
+				      snemo::digitization::mapping::CONTROL_BOARD_INDEX); // GID : [type]:[module],[CRATE],[BOARD]
+	my_calo_ctw.set_header(155,
+			       my_ctw_gid,
+			       1600); // hit, gid, clocktick25ns
+	my_calo_ctw.grab_auxiliaries().store("author", "guillaume");
+	my_calo_ctw.grab_auxiliaries().store_flag("mock");
+	my_calo_ctw.set_htm_main_wall(1);
+	int zone_touched = snemo::digitization::calo::ctw::W_ZW_BIT0 + 8;
+	my_calo_ctw.set_zoning_bit(zone_touched, true);
+	 my_calo_ctw.tree_dump(std::clog, "My_calo_CTW [0] : ", "INFO : ");
+      }
+
+      {
+	snemo::digitization::calo_ctw & my_calo_ctw = calo_ctw_data.add();
+	geomtools::geom_id my_ctw_gid(snemo::digitization::mapping::CALO_CONTROL_BOARD_TYPE,
+				      snemo::digitization::mapping::DEMONSTRATOR_MODULE_NUMBER,
+				      snemo::digitization::mapping::MAIN_CALO_SIDE_0_CRATE,
+				      snemo::digitization::mapping::CONTROL_BOARD_INDEX); // GID : [type]:[module],[CRATE],[BOARD]
+	my_calo_ctw.set_header(155,
+			       my_ctw_gid,
+			       1510); // hit, gid, clocktick25ns
+	my_calo_ctw.grab_auxiliaries().store("author", "guillaume");
+	my_calo_ctw.grab_auxiliaries().store_flag("mock");
+	my_calo_ctw.set_htm_main_wall(1);
+	int zone_touched = snemo::digitization::calo::ctw::W_ZW_BIT1 + 1;
+	my_calo_ctw.set_zoning_bit(zone_touched, true);
+	my_calo_ctw.tree_dump(std::clog, "My_calo_CTW [0] : ", "INFO : ");
+      }
+
+
+
       _trigger_algo_.process(calo_ctw_data,
 			     gg_ctw_data);
 
