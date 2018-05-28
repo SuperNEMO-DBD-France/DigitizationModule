@@ -80,7 +80,7 @@ namespace snemo {
       this->VLNT = -0.015 * CLHEP::volt;
       this->VHNT = -0.12 * CLHEP::volt;
       this->VHPT = +0.12 * CLHEP::volt;
-      this->VCPT = +0.0019 * CLHEP::volt;
+      this->VCPT = +0.049 * CLHEP::volt;
       return;
     }
 
@@ -437,8 +437,8 @@ namespace snemo {
 
 	      a_mutable_signal.build_signal_shape(*_ssb_,
 						  signal_name,
-						  a_mutable_signal);
-	      a_mutable_signal.tree_dump(std::clog, "Mutable anodic signal with shape instantiated");
+						  a_mutable_signal, datatools::logger::PRIO_DEBUG);
+	      // a_mutable_signal.tree_dump(std::clog, "Mutable anodic signal with shape instantiated");
 
 	      geiger_digi_working_data a_wd;
 	      a_wd.signal_ref = & a_mutable_signal;
@@ -549,6 +549,7 @@ namespace snemo {
 		  former_y = y;
 		}
 
+
 	      const geomtools::geom_id & geom_id = a_wd.signal_ref->get_geom_id();
 	      geomtools::geom_id electronic_id;
 	      _electronic_mapping_->convert_GID_to_EID(mapping::THREE_WIRES_TRACKER_MODE, geom_id, electronic_id);
@@ -563,7 +564,7 @@ namespace snemo {
 	      a_wd.anodic_eid   = electronic_id;
 	      a_wd.clocktick_800 = a_geiger_signal_clocktick;
 
-	      a_wd.tree_dump(std::clog, "A working data #" + std::to_string(i));
+	      // a_wd.tree_dump(std::clog, "A working data #" + std::to_string(i));
 	      wd_collection_.push_back(a_wd);
 
 	    } // end of anodic
@@ -590,14 +591,28 @@ namespace snemo {
 						  a_mutable_signal);
 
 	      const mygsl::i_unary_function * signal_functor = & a_mutable_signal.get_shape();
+	      mygsl::unary_function_promoted_with_numeric_derivative deriv_cathod;
+	      deriv_cathod.set_functor(*signal_functor);
+
 
 	      unsigned int nsamples = 500;
-	      double xmin = signal_functor->get_non_zero_domain_min();
-	      double xmax = signal_functor->get_non_zero_domain_max();
+	      double xmin = deriv_cathod.get_non_zero_domain_min();
+	      double xmax = deriv_cathod.get_non_zero_domain_max();
 
 	      if (i == 71) {
 		const std::string filename = "/tmp/gg_signal_cathodic.dat";
 		signal_functor->write_ascii_file(filename, xmin, xmax, nsamples);
+
+		std::ofstream gg_deriv_stream;
+		const std::string gg_deriv_filename = "/tmp/gg_signal_cathodic_deriv.dat";
+		gg_deriv_stream.open(gg_deriv_filename);
+		for (double x = xmin - (50 * xmin / nsamples); x < xmax + (50 * xmin / nsamples); x+= (xmax - xmin) / nsamples) {
+		  double y = deriv_cathod.eval_df(x);
+		  y *= CLHEP::meter / CLHEP::volt;
+		  gg_deriv_stream << x  << ' ' << y << std::endl;
+		}
+		gg_deriv_stream.close();
+
 	      }
 
 	      // Find the anodic working data already created:
@@ -652,9 +667,9 @@ namespace snemo {
 
 		  for (double x = xmin - (50 * xmin / nsamples); x < xmax + (50 * xmin / nsamples); x+= (xmax - xmin) / nsamples)
 		    {
-		      double y = signal_functor->eval(x);
-		      y *= 1. / CLHEP::volt;
-
+		      //double y = signal_functor->eval(x);
+		      double y = deriv_cathod.eval_df(x);
+		      y *= CLHEP::meter / CLHEP::volt;
 
 		      if (y > 0
 			  && former_y <= _gg_feb_config_.VCPT / CLHEP::volt
@@ -712,12 +727,11 @@ namespace snemo {
 	} // end of number_of_hits
 
 
-      // // Print Working Data collection
-      // for (unsigned int j = 0; j < _gg_digi_data_collection_.size(); j++)
-      // 	{
-      // 	  if (_gg_digi_data_collection_[j].cathode_top_register == "R6")
-      // 	  _gg_digi_data_collection_[j].tree_dump(std::clog, "GG WD #" + std::to_string(_gg_digi_data_collection_[j].hit_id));
-      // 	}
+      // Print Working Data collection
+      for (unsigned int j = 0; j < _gg_digi_data_collection_.size(); j++)
+      	{
+      	  _gg_digi_data_collection_[j].tree_dump(std::clog, "GG WD #" + std::to_string(_gg_digi_data_collection_[j].hit_id));
+      	}
 
       return ;
     }
