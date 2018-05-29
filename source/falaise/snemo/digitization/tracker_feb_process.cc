@@ -416,6 +416,13 @@ namespace snemo {
       return;
     }
 
+    void tracker_feb_process::_increment_running_readout_id()
+    {
+      _running_readout_id_++;
+      return;
+    }
+
+
     void tracker_feb_process::_prepare_working_data(const mctools::signal::signal_data & SSD_,
 							 gg_digi_working_data_collection_type & wd_collection_)
     {
@@ -727,11 +734,11 @@ namespace snemo {
 	} // end of number_of_hits
 
 
-      // Print Working Data collection
-      for (unsigned int j = 0; j < _gg_digi_data_collection_.size(); j++)
-      	{
-      	  _gg_digi_data_collection_[j].tree_dump(std::clog, "GG WD #" + std::to_string(_gg_digi_data_collection_[j].hit_id));
-      	}
+      // // Print Working Data collection
+      // for (unsigned int j = 0; j < _gg_digi_data_collection_.size(); j++)
+      // 	{
+      // 	  _gg_digi_data_collection_[j].tree_dump(std::clog, "GG WD #" + std::to_string(_gg_digi_data_collection_[j].hit_id));
+      // 	}
 
       return ;
     }
@@ -873,6 +880,36 @@ namespace snemo {
     void tracker_feb_process::_readout_process(snemo::datamodel::sim_digi_data & SDD_)
     {
       DT_THROW_IF (!is_initialized(), std::logic_error, "Signal to geiger TP algorithm is not initialized ! ");
+
+      auto & tracker_collection = SDD_.grab_tracker_digi_hits();
+
+      // Add if bla bla :...
+
+      for (unsigned int i = 0; i < _gg_digi_data_collection_.size(); i++)
+       	{
+      	  //_gg_digi_data_collection_[j].tree_dump(std::clog, "GG WD #" + std::to_string(_gg_digi_data_collection_[j].hit_id));
+	  geiger_digi_working_data  a_gg_wd = _gg_digi_data_collection_[i];
+
+	  snemo::datamodel::sim_digi_data::tracker_digi_hit_handle_type new_handle(new snemo::datamodel::sim_tracker_digi_hit);
+
+	  snemo::datamodel::sim_tracker_digi_hit & a_sim_tracker_digi_hit = new_handle.grab();
+	  // Set trigger ID comming from the L2 decision
+	  // a_sim_tracker_digi_hit.set_trigger_id(TRIGGER_ID
+	  a_sim_tracker_digi_hit.set_geom_id(a_gg_wd.anodic_gid);
+	  a_sim_tracker_digi_hit.set_elec_id(a_gg_wd.anodic_eid);
+	  a_sim_tracker_digi_hit.set_hit_id(_running_readout_id_);
+	  _increment_running_readout_id();
+
+	  a_sim_tracker_digi_hit.set_anode_R0(a_gg_wd.anodic_R0);
+	  a_sim_tracker_digi_hit.set_anode_R1(a_gg_wd.anodic_R1);
+	  a_sim_tracker_digi_hit.set_anode_R2(a_gg_wd.anodic_R2);
+	  a_sim_tracker_digi_hit.set_anode_R3(a_gg_wd.anodic_R3);
+	  a_sim_tracker_digi_hit.set_anode_R4(a_gg_wd.anodic_R4);
+	  a_sim_tracker_digi_hit.set_cathode_R5(a_gg_wd.cathodic_R5);
+	  a_sim_tracker_digi_hit.set_cathode_R6(a_gg_wd.cathodic_R6);
+
+	  tracker_collection.push_back(new_handle);
+ 	}
 
       return;
     }

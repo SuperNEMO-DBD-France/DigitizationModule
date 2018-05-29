@@ -157,13 +157,13 @@ namespace snemo {
       int _previous_event_circular_buffer_depth_; //!< Depth for the previous events circular buffer (Pile of PERs)
 
       // Trigger configuration (to be implemented with variants in .conf file) :
-      bool _activate_calorimeter_only_;
-      bool _activate_calo_tracker_time_coincidence_;
-      bool _activate_caraco_;
-      bool _activate_take_all_delayed_;
-      bool _activate_ape_dave_coincidence_;
-      bool _activate_ape_coincidence_only_;
-      bool _activate_any_coincidences_; //!< Boolean activating any coincidence
+      bool _activate_calorimeter_only_; //!< Boolean activating calorimeter only
+      bool _activate_calo_tracker_time_coincidence_; //!< Boolean activating Calo / Tracker without spatial coincidence
+      bool _activate_caraco_;               //!< Boolean activating CARACO
+      bool _activate_take_all_delayed_;     //!< Boolean to take all delayed with a fixed gate (no spatial coincidences)
+      bool _activate_ape_dave_coincidence_; //!< Boolean activating DAVE coincidence only
+      bool _activate_ape_coincidence_only_; //!< Boolean activating APE coincidence only
+      bool _activate_any_coincidences_;     //!< Boolean activating any coincidence
 
       // Trigger algorithms :
       tracker_trigger_algorithm      _tracker_algo_; //!< Tracker trigger algorithm @ 1600ns

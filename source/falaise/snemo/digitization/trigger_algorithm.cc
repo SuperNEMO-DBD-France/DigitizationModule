@@ -107,7 +107,7 @@ namespace snemo {
     void trigger_algorithm::set_L2_coincidence_gate_size(unsigned int L2_coincidence_gate_size_)
     {
       DT_THROW_IF(is_initialized(), std::logic_error, "Trigger algorithm is already initialized, L2 coincidence gate size can't be set ! ");
-      _L2_coincidence_gate_size_ = L2_coincidence_gate_size_;
+      _L2_coincidence_gate_size_ = L2_coincidence_gate_size_ + clock_utils::TRIGGER_COMPUTING_SHIFT_CLOCKTICK_1600NS; // Add 1 CT 1600 in order to take into account calculation and shifts time
       return;
     }
 
@@ -337,13 +337,13 @@ namespace snemo {
 		    for (unsigned int iclocktick = a_l2_coinc_gate.L2_coincidence_gate_begin;
 			 iclocktick <= a_l2_coinc_gate.L2_coincidence_gate_end;
 			 iclocktick++)
-      			{
-      			  trigger_structures::coincidence_calo_record on_gate_coincidence_calo_record;
-			  on_gate_coincidence_calo_record.clocktick_1600ns = iclocktick;
-			  _update_coinc_calo_record(CSR_L1, on_gate_coincidence_calo_record);
-      			  coincidence_calo_records_1600ns_.push_back(on_gate_coincidence_calo_record);
-      			}
-      		    }
+		      {
+			trigger_structures::coincidence_calo_record on_gate_coincidence_calo_record;
+			on_gate_coincidence_calo_record.clocktick_1600ns = iclocktick;
+			_update_coinc_calo_record(CSR_L1, on_gate_coincidence_calo_record);
+			coincidence_calo_records_1600ns_.push_back(on_gate_coincidence_calo_record);
+		      }
+		  }
 		else
 		  {
 		    // Try to find an existing coincidence calo record in a L2 coincidence gate
@@ -445,12 +445,7 @@ namespace snemo {
       bool total_multiplicity_threshold = a_coinc_calo_record_1600ns_.total_multiplicity_threshold;
       bool calo_decision = a_coinc_calo_record_1600ns_.decision;
 
-      // unsigned int clocktick_1600_from_25 = 0;
-      // _clock_manager_->compute_clocktick_25ns_to_1600ns(a_calo_summary_record_25ns_.clocktick_25ns,
-      // 							clocktick_1600_from_25);
 
-      // if (clocktick_1600_from_25 <= a_coinc_calo_record_1600ns_.clocktick_1600ns + _L2_coincidence_gate_size_)
-      // 	{
       a_coinc_calo_record_1600ns_.calo_zoning_word[0] = a_calo_summary_record_25ns_.zoning_word[0];
       a_coinc_calo_record_1600ns_.calo_zoning_word[1] = a_calo_summary_record_25ns_.zoning_word[1];
 
@@ -528,7 +523,7 @@ namespace snemo {
 
       trigger_structures::L2_decision the_L2_decision = _L2_decision_records_.back();
       uint32_t L2_decision_clocktick = the_L2_decision.L2_ct_decision;
-      DT_THROW_IF(the_L2_decision.L2_trigger_mode != trigger_structures::L2_trigger_mode::CARACO
+      DT_THROW_IF(the_L2_decision.L2_trigger_mode    != trigger_structures::L2_trigger_mode::CARACO
 		  && the_L2_decision.L2_trigger_mode != trigger_structures::L2_trigger_mode::CALO_TRACKER_TIME_COINC,
 		  std::logic_error, "Previous event record can't be build because L2 decision is not equal to CARACO or CALO_TRACKER_TIME_COINC !");
 
@@ -629,6 +624,7 @@ namespace snemo {
 			}
 
 		    } // end of izone
+
 		} // end of iside
 
 	    }
@@ -706,6 +702,14 @@ namespace snemo {
 		      a_L2_decision.L2_ct_decision = _L1_calo_decision_records_[i].L1_calo_ct_decision;
 		      a_L2_decision.L2_trigger_mode = trigger_structures::CALO_ONLY;
 		      _L2_decision_records_.push_back(a_L2_decision);
+
+		      // Here L1 = L2 so CT are at 25 ns:
+		      trigger_structures::L2_decision_gate L2_decision_gate;
+		      L2_decision_gate.L1_calo_CT25 = a_L2_decision.L2_ct_decision;
+		      L2_decision_gate.L2_trigger_mode =  a_L2_decision.L2_trigger_mode;
+		      L2_decision_gate.L2_decision_gate_begin = a_L2_decision.L2_ct_decision;
+		      L2_decision_gate.L2_decision_gate_end = L2_decision_gate.L2_decision_gate_begin;
+		      _L2_decision_gate_records_.push_back(L2_decision_gate);
 		    }
 		}
 	    }
@@ -715,10 +719,7 @@ namespace snemo {
       else if (_activate_any_coincidences_ && !_activate_calorimeter_only_)
 	{
 	  // Create L2 coincidence Gate opened by L1 decision. Minimum size is 5 * 1600
-	  // But an already created coincidence gate can be pushed more time by another calo L1
-	  // _build_L2_coincidence_gates();
-
-
+	  // But an already created coincidence gate can be extended more time by another calo L1
 	  _rescale_calo_records_at_1600ns(_calo_records_25ns_,
 	  				  _coincidence_calo_records_1600ns_);
 
@@ -751,18 +752,16 @@ namespace snemo {
 	  else if (calorimeter_ct_max_1600 != clock_utils::INVALID_CLOCKTICK) clocktick_max = calorimeter_ct_max_1600;
 	  if ((tracker_ct_max_1600 != clock_utils::INVALID_CLOCKTICK && calorimeter_ct_max_1600 != clock_utils::INVALID_CLOCKTICK) && calorimeter_ct_max_1600 > clocktick_max) clocktick_max = calorimeter_ct_max_1600;
 
-	  // std::clog << "Calo CT min 1600    = " << calorimeter_ct_min_1600 << std::endl;
-	  // std::clog << "Calo CT max 1600    = " << calorimeter_ct_max_1600 << std::endl;
-	  // std::clog << "Tracker CT min 1600 = " << tracker_ct_min_1600 << std::endl;
-	  // std::clog << "Tracker CT max 1600 = " << tracker_ct_max_1600 << std::endl;
-	  // std::clog << "CT min 1600         = " << clocktick_min << std::endl;
-	  // std::clog << "CT max 1600         = " << clocktick_max << std::endl;
+	  std::clog << "Calo CT min 1600    = " << calorimeter_ct_min_1600 << std::endl;
+	  std::clog << "Calo CT max 1600    = " << calorimeter_ct_max_1600 << std::endl;
+	  std::clog << "Tracker CT min 1600 = " << tracker_ct_min_1600 << std::endl;
+	  std::clog << "Tracker CT max 1600 = " << tracker_ct_max_1600 << std::endl;
+	  std::clog << "CT min 1600         = " << clocktick_min << std::endl;
+	  std::clog << "CT max 1600         = " << clocktick_max << std::endl;
 
-	  if (clocktick_min != clock_utils::INVALID_CLOCKTICK && clocktick_max != clock_utils::INVALID_CLOCKTICK)
+	  if (clocktick_min != clock_utils::INVALID_CLOCKTICK
+	      && clocktick_max != clock_utils::INVALID_CLOCKTICK)
 	    {
-	      // Maybe time optimisation to do here, is it mandatory to go for each clocktick ?
-	      // Maybe prepare tracker record outside this loop but it breaks the time implementation (close to the electronics)
-
 	      std::pair <bool, unsigned int> per_to_delete;
 	      per_to_delete.first = false;
 	      per_to_delete.second = -1;
@@ -770,6 +769,7 @@ namespace snemo {
 		{
 		  //std::clog << "************* CT1600 : " << ict1600 << " ****************" <<std::endl;
 
+		  // WIP : TO CHECK : PER counter decrease process
 		  // Decrease PERs counters if exist and delete if a counter is set to 0.
 		  if (!_previous_event_records_->empty())
 		    {
@@ -815,11 +815,12 @@ namespace snemo {
 		      pers_counter++;
 		    }
 
-		  // std::clog << "Size of PERs = " << _previous_event_records_->size() << " Empty : " << _previous_event_records_->empty() << std::endl;
+		  // std::clog << "Size of PERs = " << _previous_event_records_->size()
+		  //           << " Empty : " << _previous_event_records_->empty() << std::endl;
+
 
 		  trigger_structures::tracker_record a_tracker_record;
 		  a_tracker_record.clocktick_1600ns = ict1600;
-
 
 		  if (geiger_ctw_data_1600ns.get_geiger_ctws().size() != 0)
 		    {
@@ -859,23 +860,13 @@ namespace snemo {
 		      trigger_structures::coincidence_event_record a_coincidence_event_record;
 		      trigger_structures::L2_decision a_L2_decision;
 
-		      bool L2_decision_already_created = false;
-		      // Maybe check if a L2_decision already exist before coinc processing ?
-
-		      if (!_L2_decision_records_.empty()
-			  && (int)_L2_decision_records_.back().L2_ct_decision >= (int)((ict1600 - _L2_coincidence_gate_size_))
-			  && _L2_decision_records_.back().L2_ct_decision < ict1600
-			  && _L2_decision_records_.back().L2_decision_bool)
-			{
-			  L2_decision_already_created = true;
-			}
-
 		      // CARACO or APE or DAVE in coinc algo :
 		      _coinc_algo_.process(pair_for_a_clocktick,
 					   a_coincidence_event_record,
 					   a_L2_decision,
 					   _previous_event_records_);
 
+		      // Push back the coincidence in the record
 		      if (a_coincidence_event_record.clocktick_1600ns != clock_utils::INVALID_CLOCKTICK
 			  && a_coincidence_event_record.clocktick_1600ns == ict1600
 			  && a_coincidence_event_record.decision == true
@@ -884,33 +875,118 @@ namespace snemo {
 			  _coincidence_records_.push_back(a_coincidence_event_record);
 			}
 
-		      // L2 decision to push back (not at each clocktick). Only if there is no other L2 decision in the
-		      // L2 decision gate [CTi-5; CTi]
-		      if (a_L2_decision.L2_decision_bool == true
-			  && a_L2_decision.L2_ct_decision != clock_utils::INVALID_CLOCKTICK
-			  && a_L2_decision.L2_trigger_mode != trigger_structures::L2_trigger_mode::INVALID
-			  && L2_decision_already_created == false)
+		      // Check if a L2 coincidence gate is open in order
+
+		      // Find the current L2 coincidence Gate allowing coincidence searche
+		      // If is not valid -> not in L2 coinc gate but it can be an APE or DAVE coincidence outside a L2 coinc gate
+		      trigger_structures::L2_coincidence_gate the_current_L2_coincidence_gate;
+		      for (unsigned int j = 0; j < _L2_coincidence_gate_records_.size(); j++)
 			{
-			  _L2_decision_records_.push_back(a_L2_decision);
+			  if (ict1600 >= _L2_coincidence_gate_records_[j].L2_coincidence_gate_begin
+			      && ict1600 <= _L2_coincidence_gate_records_[j].L2_coincidence_gate_end)
+			    {
+			      the_current_L2_coincidence_gate = _L2_coincidence_gate_records_[j];
+			    }
+			}
+
+		      // If the gate is valid coincidence is probably CARACO because a L1 calo opened the L2 coinc gate
+		      if (the_current_L2_coincidence_gate.is_valid())
+		        {
+			  // Push back L2 decision if not existing and open a new gate L2 decision
+			  bool already_in_L2_decision_gate = false;
+
+			  // If L2 decision is already in L2 decision gate do nothing because L2 / Readout process is in progress
+			  if (_L2_decision_gate_records_.size() != 0)
+			    {
+			      trigger_structures::L2_decision_gate last_L2_decision_gate = _L2_decision_gate_records_.back();
+			      if (ict1600    >= last_L2_decision_gate.L2_decision_gate_begin
+				  && ict1600 <= last_L2_decision_gate.L2_decision_gate_end)
+				{
+				  already_in_L2_decision_gate = true;
+				}
+			    }
+
+			  // L2 decision to push back. Only if the L2 decision gate is not in an existing L2 decision gate
+			  // Also create a new L2 decision gate
+			  if (!already_in_L2_decision_gate
+			      && a_L2_decision.L2_decision_bool == true
+			      && a_L2_decision.L2_ct_decision != clock_utils::INVALID_CLOCKTICK
+			      && a_L2_decision.L2_trigger_mode != trigger_structures::L2_trigger_mode::INVALID)
+			    {
+			      trigger_structures::L2_decision_gate L2_decision_gate;
+			      L2_decision_gate.trigger_id = _trigger_id_;
+			      std::clog << "TID = " << _trigger_id_ << std::endl;
+			      L2_decision_gate.L1_calo_CT25 = a_L2_decision.L2_ct_decision;
+			      L2_decision_gate.L2_trigger_mode =  a_L2_decision.L2_trigger_mode;
+			      L2_decision_gate.L2_decision_gate_begin = a_L2_decision.L2_ct_decision;
+			      L2_decision_gate.L2_decision_gate_end = the_current_L2_coincidence_gate.L2_coincidence_gate_end;
+			      _L2_decision_gate_records_.push_back(L2_decision_gate);
+
+			      a_L2_decision.trigger_id = _trigger_id_;
+			      _L2_decision_records_.push_back(a_L2_decision);
+
+			      _increment_trigger_id();
+			    }
+			} // end of current L2 coinc gate is valid
+		      else
+			{
+			  // L2 coincidence gate is not valid so push back only APE or DAVE coincidences
+			  // Push back L2 decision if not existing and open a new gate L2 decision
+			  bool already_in_L2_decision_gate = false;
+
+			  // If L2 decision is already in L2 decision gate do nothing because L2 / Readout process is in progress
+			  if (_L2_decision_gate_records_.size() != 0)
+			    {
+			      trigger_structures::L2_decision_gate last_L2_decision_gate = _L2_decision_gate_records_.back();
+			      if (ict1600    >= last_L2_decision_gate.L2_decision_gate_begin
+				  && ict1600 <= last_L2_decision_gate.L2_decision_gate_end)
+				{
+				  already_in_L2_decision_gate = true;
+				}
+			    }
+
+			  if (!already_in_L2_decision_gate
+			      && (a_L2_decision.L2_trigger_mode == trigger_structures::L2_trigger_mode::APE
+				  || a_L2_decision.L2_trigger_mode == trigger_structures::L2_trigger_mode::DAVE
+				  || a_L2_decision.L2_trigger_mode == trigger_structures::L2_trigger_mode::OPEN_DELAYED))
+			    {
+
+			      std::clog << "APE || DAVE || OPEN_DELAYED" << std::endl;
+			      a_L2_decision.display(std::clog);
+
+			      trigger_structures::L2_decision_gate L2_decision_gate;
+			      L2_decision_gate.trigger_id = _trigger_id_;
+			      std::clog << "TID = " << _trigger_id_ << std::endl;
+			      L2_decision_gate.L1_calo_CT25 = a_L2_decision.L2_ct_decision;
+			      L2_decision_gate.L2_trigger_mode =  a_L2_decision.L2_trigger_mode;
+			      L2_decision_gate.L2_decision_gate_begin = a_L2_decision.L2_ct_decision;
+			      L2_decision_gate.L2_decision_gate_end = L2_decision_gate.L2_decision_gate_begin + _L2_coincidence_gate_size_; // standard L2 coincidence size even for APE and DAVE coincidences
+			      _L2_decision_gate_records_.push_back(L2_decision_gate);
+
+			      a_L2_decision.trigger_id = _trigger_id_;
+			      _L2_decision_records_.push_back(a_L2_decision);
+
+			      _increment_trigger_id();
+			    }
 			}
 
 		    } // end of if calo is empty || tracker is empty
 
-		  // Build a PER only at the end of the L2 decision gate :
-		  if (!_L2_decision_records_.empty())
+		      // Build a PER only at the end of the L2 decision gate :
+		  if (!_L2_decision_gate_records_.empty())
 		    {
-		      std::clog << "L2 ct + L2 decision = " << _L2_decision_records_.back().L2_ct_decision + _L2_coincidence_gate_size_ << " ict = " << ict1600 << std::endl;
+		      trigger_structures::L2_decision_gate the_L2_decision_gate = _L2_decision_gate_records_.back();
 
-		      trigger_structures::L2_decision the_L2_decision = _L2_decision_records_.back();
-
-		      if (ict1600 == (_L2_decision_records_.back().L2_ct_decision + _L2_coincidence_gate_size_)
-			  && (the_L2_decision.L2_trigger_mode == trigger_structures::L2_trigger_mode::CARACO
-			      || the_L2_decision.L2_trigger_mode == trigger_structures::L2_trigger_mode::CALO_TRACKER_TIME_COINC))
+		      if (ict1600 == the_L2_decision_gate.L2_decision_gate_end
+			  && (the_L2_decision_gate.L2_trigger_mode == trigger_structures::L2_trigger_mode::CARACO
+			      || the_L2_decision_gate.L2_trigger_mode == trigger_structures::L2_trigger_mode::CALO_TRACKER_TIME_COINC))
 			{
-			  std::clog << "BUILD PER CT" << ict1600 << std::endl;
 			  _build_previous_event_record();
 			}
 		    }
+
+
+		  // } // end of current L2 coincidence gate is valid
 
 		} // end of ict1600
 
@@ -967,11 +1043,11 @@ namespace snemo {
 	    }
 	}
 
-      // boost::circular_buffer<trigger_structures::previous_event_record>::iterator it_circ = _previous_event_records_->begin();
-      // for (; it_circ != _previous_event_records_->end(); it_circ++)
-      // 	{
-      // 	  it_circ -> display();
-      // 	}
+      boost::circular_buffer<trigger_structures::previous_event_record>::iterator it_circ = _previous_event_records_->begin();
+      for (; it_circ != _previous_event_records_->end(); it_circ++)
+      	{
+      	  it_circ -> display();
+      	}
 
       std::clog << "********* Size of Finale structures for one event *********" << std::endl;
       std::clog << "Calo collection size @ 25 ns            : " << _calo_records_25ns_.size() << std::endl;
@@ -982,7 +1058,9 @@ namespace snemo {
       std::clog << "Coincidence collection size @ 1600 ns   : " << _coincidence_records_.size() << std::endl;
       std::clog << "Previous event collection size          : " << _previous_event_records_->size() << std::endl;
       std::clog << "L1 calo collection size @ 25 ns         : " << _L1_calo_decision_records_.size() << std::endl;
-      std::clog << "L2 decision collection size @ 1600 ns   : " << _L2_decision_records_.size() << std::endl;
+      std::clog << "L2 coincidence gate collection size     : " << _L2_coincidence_gate_records_.size() << std::endl;
+      std::clog << "L2 decision collection size             : " << _L2_decision_records_.size() << std::endl;
+      std::clog << "L2 decision gate collection size        : " << _L2_decision_gate_records_.size() << std::endl;
 
       return;
     }

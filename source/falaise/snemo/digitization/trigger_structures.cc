@@ -634,13 +634,26 @@ namespace snemo {
       return;
     }
 
+    bool trigger_structures::L2_coincidence_gate::is_valid() const
+    {
+      bool is_valid = false;
+      if (L1_calo_CT25 != clock_utils::INVALID_CLOCKTICK
+	  && L2_coincidence_gate_begin != clock_utils::INVALID_CLOCKTICK
+	  && L2_coincidence_gate_end   != clock_utils::INVALID_CLOCKTICK)
+	{
+	  is_valid = true;
+	}
+
+      return is_valid;
+    }
+
     void trigger_structures::L2_coincidence_gate::display(std::ostream & out_) const
     {
       out_ << "Display L2 coincidence gate" << std::endl;
-      out_ << "L2 gate begin CT1600     = [" << L2_coincidence_gate_begin << "]" << std::endl;
-      out_ << "L2 gate end CT1600       = [" << L2_coincidence_gate_end << "]"  << std::endl;
-      out_ << "Opener gate L1 calo CT25 = [" << L1_calo_CT25 << "]" << std::endl;
-      out_ << "Gate extended            = " << extended_gate << std::endl << std::endl;
+      out_ << "L2 gate begin       = [" << L2_coincidence_gate_begin << "]" << std::endl;
+      out_ << "L2 gate end         = [" << L2_coincidence_gate_end   << "]"  << std::endl;
+      out_ << "Opener gate L1 calo = [" << L1_calo_CT25  << "]" << std::endl;
+      out_ << "Gate extended       = [" << extended_gate << "]" << std::endl << std::endl;
       return;
     }
 
@@ -652,6 +665,7 @@ namespace snemo {
 
     void trigger_structures::L2_decision::reset()
     {
+      trigger_id = -1;
       L2_decision_bool = false;
       L2_ct_decision = clock_utils::INVALID_CLOCKTICK;
       L2_trigger_mode = INVALID;
@@ -659,10 +673,11 @@ namespace snemo {
 
     void trigger_structures::L2_decision::display(std::ostream & out_) const
     {
-      out_ << "Display L2 decision @ 1600 ns" << std::endl;
-      out_ << "Decision clocktick 1600 ns =  " << L2_ct_decision << std::endl;
-      out_ << "L2 Trigger mode            = [" << L2_trigger_mode << "]" << std::endl;
-      out_ << "L2 decision                = [" << L2_decision_bool << "]" << std::endl << std::endl;
+      out_ << "Display L2 decision" << std::endl;
+      out_ << "Trigger ID         = [" << trigger_id   << "]" << std::endl;
+      out_ << "Decision clocktick = [" << L2_ct_decision   << "]" << std::endl;
+      out_ << "L2 Trigger mode    = [" << L2_trigger_mode  << "]" << std::endl;
+      out_ << "L2 decision        = [" << L2_decision_bool << "]" << std::endl << std::endl;
       return;
     }
 
@@ -674,6 +689,7 @@ namespace snemo {
 
     void trigger_structures::L2_decision_gate::reset()
     {
+      trigger_id = -1;
       L2_decision_gate_begin = clock_utils::INVALID_CLOCKTICK;
       L2_decision_gate_end = clock_utils::INVALID_CLOCKTICK;
       L1_calo_CT25 = clock_utils::INVALID_CLOCKTICK;
@@ -684,11 +700,12 @@ namespace snemo {
     void trigger_structures::L2_decision_gate::display(std::ostream & out_) const
     {
       out_ << "Display L2 decision gate" << std::endl;
-      out_ << "L2 gate begin CT1600       = [" << L2_decision_gate_begin << "]" << std::endl;
-      out_ << "L2 gate end CT1600         = [" << L2_decision_gate_end << "]" << std::endl;
-      out_ << "Associated L1 calo CT25    = [" << L1_calo_CT25 << "]"  << std::endl;
-      out_ << "L2 Trigger mode            = [" << L2_trigger_mode << "]" << std::endl;
-      out_ << "Gate extended              = " << extended_gate << std::endl << std::endl;
+      out_ << "Trigger ID              = [" << trigger_id << "]" << std::endl;
+      out_ << "L2 gate begin           = [" << L2_decision_gate_begin << "]" << std::endl;
+      out_ << "L2 gate end             = [" << L2_decision_gate_end   << "]" << std::endl;
+      out_ << "Associated L1 calo CT25 = [" << L1_calo_CT25    << "]"  << std::endl;
+      out_ << "L2 Trigger mode         = [" << L2_trigger_mode << "]" << std::endl;
+      out_ << "Gate extended           = [" << extended_gate   << "]" << std::endl << std::endl;
       return;
     }
 

@@ -167,6 +167,7 @@ namespace snemo {
       low_threshold_CT_25 = clock_utils::INVALID_CLOCKTICK;
       high_threshold_CT_25 = clock_utils::INVALID_CLOCKTICK;
       calo_digitized_signal.clear();
+      has_been_readout = false;
     }
 
     bool calo_feb_process::calo_digi_working_data::operator<(const calo_digi_working_data & other_) const
@@ -230,6 +231,9 @@ namespace snemo {
 
       out_ << indent_ << datatools::i_tree_dumpable::inherit_tag (inherit_)
            << "High Threshold CT 25 ns : " << high_threshold_CT_25  << std::endl;
+
+      out_ << indent_ << datatools::i_tree_dumpable::inherit_tag (inherit_)
+           << "Hit has been readout    : " << has_been_readout  << std::endl;
       return;
     }
 

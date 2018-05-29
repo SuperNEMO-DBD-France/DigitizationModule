@@ -102,6 +102,7 @@ namespace snemo {
 				uint32_t					 high_threshold_CT_25;
 
 				circular_buffer    calo_digitized_signal;
+				bool has_been_readout;
 			};
 
 			/// Default constructor

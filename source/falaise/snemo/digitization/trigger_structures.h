@@ -173,7 +173,7 @@ namespace snemo {
 	void reset();
 	void display(std::ostream & out_ = std::clog) const;
 	bool L1_calo_decision_bool;
-	uint32_t L1_calo_ct_decision; // CT @ 25 ns
+	uint64_t L1_calo_ct_decision; // CT @ 25 ns
       };
 
       struct L1_tracker_decision
@@ -190,6 +190,7 @@ namespace snemo {
 	L2_coincidence_gate();
 	void reset();
 	void extend_gate(uint32_t nbr_of_ct1600_);
+	bool is_valid() const;
 	void display(std::ostream & out_ = std::clog) const;
 	uint32_t L1_calo_CT25; // The CT 25 who opened the L2 coincidence Gate
 	uint32_t L2_coincidence_gate_begin; // CT @ 1600 ns
@@ -202,6 +203,7 @@ namespace snemo {
 	L2_decision();
 	void reset();
 	void display(std::ostream & out_ = std::clog) const;
+	uint32_t trigger_id; // Current trigger ID given by the L2 gate
 	bool L2_decision_bool;
 	uint32_t L2_ct_decision; // CT @ 1600 ns
 	trigger_structures::L2_trigger_mode L2_trigger_mode;
@@ -212,6 +214,7 @@ namespace snemo {
 	L2_decision_gate();
 	void reset();
 	void display(std::ostream & out_ = std::clog) const;
+	uint32_t trigger_id; // Current gate trigger ID
 	uint32_t L1_calo_CT25; // The CT 25 responsible of the L2
 	uint32_t L2_decision_gate_begin; // CT @ 1600 ns
 	uint32_t L2_decision_gate_end;   // CT @ 1600 ns

@@ -203,6 +203,9 @@ namespace snemo {
 			int _running_tp_id_; //!< Give a new unique hit ID to calo TP
       int _running_readout_id_;
 
+			uint64_t last_readout_CT_1600;
+
+
 			bool _activated_bits_[geiger::tp::TP_SIZE]; //!< Table of booleans to see which bits were activated
 			gg_digi_working_data_collection_type _gg_digi_data_collection_; //!< Temporary collection of tracker digitized data
 
