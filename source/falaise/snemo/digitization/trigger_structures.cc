@@ -674,7 +674,7 @@ namespace snemo {
     void trigger_structures::L2_decision::display(std::ostream & out_) const
     {
       out_ << "Display L2 decision" << std::endl;
-      out_ << "Trigger ID         = [" << trigger_id   << "]" << std::endl;
+      out_ << "Trigger ID         = [" << trigger_id       << "]" << std::endl;
       out_ << "Decision clocktick = [" << L2_ct_decision   << "]" << std::endl;
       out_ << "L2 Trigger mode    = [" << L2_trigger_mode  << "]" << std::endl;
       out_ << "L2 decision        = [" << L2_decision_bool << "]" << std::endl << std::endl;

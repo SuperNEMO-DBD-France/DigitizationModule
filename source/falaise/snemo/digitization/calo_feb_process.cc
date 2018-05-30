@@ -3,7 +3,7 @@
 // Author(s): Guillaume OLIVIERO <goliviero@lpccaen.in2p3.fr>
 
 // - Falaise:
-#include <falaise/snemo/datamodels/sim_calo_digi_hit.h>
+
 
 // This project :
 #include <snemo/digitization/clock_utils.h>
@@ -168,6 +168,31 @@ namespace snemo {
       high_threshold_CT_25 = clock_utils::INVALID_CLOCKTICK;
       calo_digitized_signal.clear();
       has_been_readout = false;
+    }
+
+    void calo_feb_process::calo_digi_working_data::calculate_metadata()
+    {
+      // From the waveform calculate all metadata (baseline, charge, peak, rising, falling cell / offset)
+
+      return;
+    }
+
+    void calo_feb_process::calo_digi_working_data::readout(snemo::datamodel::sim_calo_digi_hit & SCDH_)
+    {
+      SCDH_.set_lto(is_low_threshold_only);
+      SCDH_.set_lt(is_low_threshold);
+      SCDH_.set_ht(is_high_threshold);
+      SCDH_.set_lt_ct_25(low_threshold_CT_25);
+      SCDH_.set_ht_ct_25(high_threshold_CT_25);
+
+      // Convert values in circular buffer into digitized sampled values and push them into a vector
+      std::vector<int16_t> waveform;
+
+
+      SCDH_.set_waveform(waveform);
+
+      has_been_readout = true;
+      return;
     }
 
     bool calo_feb_process::calo_digi_working_data::operator<(const calo_digi_working_data & other_) const
@@ -701,17 +726,24 @@ namespace snemo {
     {
       DT_THROW_IF(!is_initialized(), std::logic_error, "Signal to calo TP algorithm is not initialized ! ");
 
+      uint64_t readout_CT = L2_.L2_decision_gate_end;
+      uint64_t trigger_id = L2_.trigger_id;
+      trigger_structures::L2_trigger_mode trigger_mode = L2_.L2_trigger_mode;
+
+      // All anodic hits below readout CT are readout with this trigger ID:
 
       for (unsigned int i = 0; i < _calo_digi_data_collection_.size(); i++)
 	{
 	  calo_digi_working_data a_calo_wd_to_readout = _calo_digi_data_collection_[i];
 	  // a_calo_wd_to_readout.tree_dump(std::clog);
 
-
-
-
-	  // snemo::datamodel::sim_calo_digi_hit calo_digi_hit;
-	  // SDD_.grab_calo_digi_hits().push_back(calo_digi_hit);
+	  // check if the hit has not been already readout
+	  if (!a_calo_wd_to_readout.has_been_readout)
+	    {
+	      // Then add a calo hit and grab the reference on it
+	      snemo::datamodel::sim_calo_digi_hit & a_calo_digi_hit = SDD_.add_calo_digi_hit();
+	      a_calo_wd_to_readout.readout(a_calo_digi_hit);
+	    }
 
 	}
       return;

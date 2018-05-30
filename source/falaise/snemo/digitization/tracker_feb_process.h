@@ -24,6 +24,7 @@
 
 // - Falaise:
 #include <falaise/snemo/datamodels/sim_digi_data.h>
+#include <falaise/snemo/datamodels/sim_tracker_digi_hit.h>
 
 // This project :
 #include <snemo/digitization/electronic_mapping.h>
@@ -32,6 +33,7 @@
 #include <snemo/digitization/clock_utils.h>
 #include <snemo/digitization/geiger_tp_data.h>
 #include <snemo/digitization/geiger_tp_constants.h>
+#include <snemo/digitization/trigger_structures.h>
 
 namespace snemo {
 
@@ -72,6 +74,7 @@ namespace snemo {
 				geiger_digi_working_data();
         virtual ~geiger_digi_working_data();
 				void reset();
+				void readout(snemo::datamodel::sim_tracker_digi_hit & STDH_);
  				bool operator<(const geiger_digi_working_data &) const;
 				void tree_dump(std::ostream & out_         = std::clog,
 											 const std::string & title_  = "",
@@ -156,7 +159,8 @@ namespace snemo {
 													 geiger_tp_data & my_geiger_tp_data_);
 
       /// Process to fill simulated digitized data tracker digitized hit collection
-			void readout_process(snemo::datamodel::sim_digi_data & SDD_);
+			void readout_process(const trigger_structures::L2_decision_gate & L2_,
+													 snemo::datamodel::sim_digi_data & SDD_);
 
     protected:
 
@@ -185,7 +189,8 @@ namespace snemo {
 														geiger_tp_data & my_geiger_tp_data_);
 
       /// Process to fill simulated digitized data tracker digitized hit collection
-			void _readout_process(snemo::datamodel::sim_digi_data & SDD_);
+			void _readout_process(const trigger_structures::L2_decision_gate & L2_,
+														snemo::datamodel::sim_digi_data & SDD_);
 
     private :
 

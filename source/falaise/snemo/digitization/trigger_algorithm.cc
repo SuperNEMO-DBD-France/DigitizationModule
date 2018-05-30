@@ -916,7 +916,7 @@ namespace snemo {
 			      trigger_structures::L2_decision_gate L2_decision_gate;
 			      L2_decision_gate.trigger_id = _trigger_id_;
 			      std::clog << "TID = " << _trigger_id_ << std::endl;
-			      L2_decision_gate.L1_calo_CT25 = a_L2_decision.L2_ct_decision;
+			      L2_decision_gate.L1_calo_CT25 = the_current_L2_coincidence_gate.L1_calo_CT25;
 			      L2_decision_gate.L2_trigger_mode =  a_L2_decision.L2_trigger_mode;
 			      L2_decision_gate.L2_decision_gate_begin = a_L2_decision.L2_ct_decision;
 			      L2_decision_gate.L2_decision_gate_end = the_current_L2_coincidence_gate.L2_coincidence_gate_end;
@@ -957,7 +957,6 @@ namespace snemo {
 			      trigger_structures::L2_decision_gate L2_decision_gate;
 			      L2_decision_gate.trigger_id = _trigger_id_;
 			      std::clog << "TID = " << _trigger_id_ << std::endl;
-			      L2_decision_gate.L1_calo_CT25 = a_L2_decision.L2_ct_decision;
 			      L2_decision_gate.L2_trigger_mode =  a_L2_decision.L2_trigger_mode;
 			      L2_decision_gate.L2_decision_gate_begin = a_L2_decision.L2_ct_decision;
 			      L2_decision_gate.L2_decision_gate_end = L2_decision_gate.L2_decision_gate_begin + _L2_coincidence_gate_size_; // standard L2 coincidence size even for APE and DAVE coincidences

@@ -328,27 +328,14 @@ namespace snemo {
     {
       DT_THROW_IF(!is_initialized(), std::logic_error, "Not initialized !");
 
+      // Browse all L2 decision gate and readout at the end of the last CT 1600
+      for (unsigned int i = 0; i < _trigger_algo_.get_L2_decision_gate_records_vector().size(); i++)
+      	{
+      	  trigger_structures::L2_decision_gate a_L2_decision_gate = _trigger_algo_.get_L2_decision_gate_records_vector()[i];
+	  _calo_feb_process_.readout_process(a_L2_decision_gate, SDD_);
 
-
-
-
-      // for (unsigned int i = 0; i < _L2_decision_records_.size(); i++)
-      // 	{
-      // 	  trigger_structures L2 = get_L2_decision_records_[i];
-
-
-      // 	  if (L2.L2_decision_bool) {
-      // 	    // Process as many readout as needed
-
-      // 	    // todo
-      // 	    _calo_feb_process_.readout_process(SDD_);
-      // 	  }
-
-      // 	}
-
-
-
-
+	  _tracker_feb_process_.readout_process(a_L2_decision_gate, SDD_);
+      	}
 
       return;
     }

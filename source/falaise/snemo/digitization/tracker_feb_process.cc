@@ -145,6 +145,21 @@ namespace snemo {
       clocktick_800 = clock_utils::INVALID_CLOCKTICK;
     }
 
+    void tracker_feb_process::geiger_digi_working_data::readout(snemo::datamodel::sim_tracker_digi_hit & STDH_)
+    {
+      STDH_.set_geom_id(anodic_gid);
+      STDH_.set_elec_id(anodic_eid);
+
+      STDH_.set_anode_R0(anodic_R0);
+      STDH_.set_anode_R1(anodic_R1);
+      STDH_.set_anode_R2(anodic_R2);
+      STDH_.set_anode_R3(anodic_R3);
+      STDH_.set_anode_R4(anodic_R4);
+      STDH_.set_cathode_R5(cathodic_R5);
+      STDH_.set_cathode_R6(cathodic_R6);
+      return;
+    }
+
     bool tracker_feb_process::geiger_digi_working_data::operator<(const geiger_digi_working_data & other_) const
     {
       return this-> clocktick_800 < other_.clocktick_800;
@@ -828,7 +843,8 @@ namespace snemo {
       return;
     }
 
-    void tracker_feb_process::readout_process(snemo::datamodel::sim_digi_data & SDD_)
+    void tracker_feb_process::readout_process(const trigger_structures::L2_decision_gate & L2_,
+					      snemo::datamodel::sim_digi_data & SDD_)
     {
       DT_THROW_IF (!is_initialized(), std::logic_error, "Signal to geiger TP algorithm is not initialized ! ");
 
@@ -840,7 +856,7 @@ namespace snemo {
 	   ********************/
 
 	  // Main processing method :
-	  _readout_process(SDD_);
+	  _readout_process(L2_, SDD_);
 	}
 
       return;
@@ -877,7 +893,8 @@ namespace snemo {
       return;
     }
 
-    void tracker_feb_process::_readout_process(snemo::datamodel::sim_digi_data & SDD_)
+    void tracker_feb_process::_readout_process(const trigger_structures::L2_decision_gate & L2_,
+					       snemo::datamodel::sim_digi_data & SDD_)
     {
       DT_THROW_IF (!is_initialized(), std::logic_error, "Signal to geiger TP algorithm is not initialized ! ");
 
@@ -888,27 +905,15 @@ namespace snemo {
       for (unsigned int i = 0; i < _gg_digi_data_collection_.size(); i++)
        	{
       	  //_gg_digi_data_collection_[j].tree_dump(std::clog, "GG WD #" + std::to_string(_gg_digi_data_collection_[j].hit_id));
-	  geiger_digi_working_data  a_gg_wd = _gg_digi_data_collection_[i];
+	  geiger_digi_working_data a_gg_wd = _gg_digi_data_collection_[i];
 
-	  snemo::datamodel::sim_digi_data::tracker_digi_hit_handle_type new_handle(new snemo::datamodel::sim_tracker_digi_hit);
-
-	  snemo::datamodel::sim_tracker_digi_hit & a_sim_tracker_digi_hit = new_handle.grab();
-	  // Set trigger ID comming from the L2 decision
-	  // a_sim_tracker_digi_hit.set_trigger_id(TRIGGER_ID
-	  a_sim_tracker_digi_hit.set_geom_id(a_gg_wd.anodic_gid);
-	  a_sim_tracker_digi_hit.set_elec_id(a_gg_wd.anodic_eid);
+	  snemo::datamodel::sim_tracker_digi_hit & a_sim_tracker_digi_hit = SDD_.add_tracker_digi_hit();
+	  a_gg_wd.readout(a_sim_tracker_digi_hit);
 	  a_sim_tracker_digi_hit.set_hit_id(_running_readout_id_);
 	  _increment_running_readout_id();
 
-	  a_sim_tracker_digi_hit.set_anode_R0(a_gg_wd.anodic_R0);
-	  a_sim_tracker_digi_hit.set_anode_R1(a_gg_wd.anodic_R1);
-	  a_sim_tracker_digi_hit.set_anode_R2(a_gg_wd.anodic_R2);
-	  a_sim_tracker_digi_hit.set_anode_R3(a_gg_wd.anodic_R3);
-	  a_sim_tracker_digi_hit.set_anode_R4(a_gg_wd.anodic_R4);
-	  a_sim_tracker_digi_hit.set_cathode_R5(a_gg_wd.cathodic_R5);
-	  a_sim_tracker_digi_hit.set_cathode_R6(a_gg_wd.cathodic_R6);
-
-	  tracker_collection.push_back(new_handle);
+	  // Set trigger ID comming from the L2 decision
+	  // a_sim_tracker_digi_hit.set_trigger_id(TRIGGER_ID
  	}
 
       return;

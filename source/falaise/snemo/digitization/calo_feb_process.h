@@ -8,6 +8,8 @@
 // Standard library :
 #include <stdexcept>
 
+// Boost :
+#include <boost/circular_buffer.hpp>
 // Third party:
 // - Bayeux/datatools :
 #include <datatools/logger.h>
@@ -21,9 +23,7 @@
 
 // - Falaise:
 #include <falaise/snemo/datamodels/sim_digi_data.h>
-
-// Boost :
-#include <boost/circular_buffer.hpp>
+#include <falaise/snemo/datamodels/sim_calo_digi_hit.h>
 
 // This project :
 #include <snemo/digitization/calo_tp_data.h>
@@ -59,8 +59,8 @@ namespace snemo {
 				const double DEFAULT_VOLTAGE_DYNAMIC = 2.5 * CLHEP::volt;
 				static const unsigned int DEFAULT_ZERO_ADC_POS = 2048;
 				const double VOLT_ADC_VALUE = DEFAULT_VOLTAGE_DYNAMIC / DEFAULT_ADC_DYNAMIC;
-
 				unsigned int adc_dynamic = DEFAULT_ADC_DYNAMIC; //!< ADC dynamic
+
 				bool    external_trigger; //!< External trigger activated
 				bool    calo_tp_spare;    //!< Calo TP spare bit activated
 				int16_t acquisition_window_length; //<! Number of samples of the acquisition window
@@ -83,6 +83,8 @@ namespace snemo {
 				calo_digi_working_data();
 				virtual ~calo_digi_working_data();
 				void reset();
+				void calculate_metadata();
+				void readout(snemo::datamodel::sim_calo_digi_hit & SCDH_);
  				bool operator<(const calo_digi_working_data &) const;
 				void tree_dump(std::ostream & out_         = std::clog,
 											 const std::string & title_  = "",
@@ -102,7 +104,7 @@ namespace snemo {
 				uint32_t					 high_threshold_CT_25;
 
 				circular_buffer    calo_digitized_signal;
-				bool has_been_readout;
+				bool               has_been_readout;
 			};
 
 			/// Default constructor
@@ -143,9 +145,7 @@ namespace snemo {
 													 calo_tp_data & my_calo_tp_data_);
 
       /// Process to fill simulated digitized data calo digitized hit collection
-			void readout_process(
-
-													 const trigger_structures::L2_decision_gate & L2_,
+			void readout_process(const trigger_structures::L2_decision_gate & L2_,
 													 snemo::datamodel::sim_digi_data & SDD_);
 
     protected:
