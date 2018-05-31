@@ -153,7 +153,13 @@ namespace snemo {
 						       uint32_t & clocktick_1600ns_) const
     {
       clocktick_1600ns_ = (clocktick_25ns_ * MAIN_CLOCKTICK) / TRIGGER_CLOCKTICK;
-      clocktick_1600ns_ = clocktick_1600ns_ + TRIGGER_COMPUTING_SHIFT_CLOCKTICK_1600NS;
+      return;
+    }
+
+    void clock_utils::compute_clocktick_1600ns_to_25ns(const uint32_t clocktick_1600ns_,
+						       uint32_t & clocktick_25ns_) const
+    {
+      clocktick_25ns_ = (clocktick_1600ns_ * TRIGGER_CLOCKTICK) / MAIN_CLOCKTICK;
       return;
     }
 
@@ -161,7 +167,13 @@ namespace snemo {
 							uint32_t & clocktick_1600ns_) const
     {
       clocktick_1600ns_ = (clocktick_800ns_ * TRACKER_CLOCKTICK) / TRIGGER_CLOCKTICK;
-      clocktick_1600ns_ = clocktick_1600ns_ + TRIGGER_COMPUTING_SHIFT_CLOCKTICK_1600NS;
+      return;
+    }
+
+    void clock_utils::compute_clocktick_1600ns_to_800ns(const uint32_t clocktick_1600ns_,
+							uint32_t & clocktick_800ns_) const
+    {
+      clocktick_800ns_ = (clocktick_1600ns_ * TRIGGER_CLOCKTICK) / TRACKER_CLOCKTICK;
       return;
     }
 

@@ -143,6 +143,7 @@ namespace snemo {
       cathode_top_register = "";
       cathode_bottom_register = "";
       clocktick_800 = clock_utils::INVALID_CLOCKTICK;
+      has_been_readout = false;
     }
 
     void tracker_feb_process::geiger_digi_working_data::readout(snemo::datamodel::sim_tracker_digi_hit & STDH_)
@@ -157,6 +158,8 @@ namespace snemo {
       STDH_.set_anode_R4(anodic_R4);
       STDH_.set_cathode_R5(cathodic_R5);
       STDH_.set_cathode_R6(cathodic_R6);
+
+      has_been_readout = true;
       return;
     }
 
@@ -230,8 +233,11 @@ namespace snemo {
       out_ << indent_ << datatools::i_tree_dumpable::tag
 	   << "Cathodic bot reg     : " << cathode_bottom_register << std::endl;
 
-      out_ << indent_ << datatools::i_tree_dumpable::inherit_tag (inherit_)
+      out_ << indent_ << datatools::i_tree_dumpable::tag
            << "Clocktick 800 ns     : " << clocktick_800  << std::endl;
+
+      out_ << indent_ << datatools::i_tree_dumpable::inherit_tag (inherit_)
+           << "Hit has been readout    : " << has_been_readout  << std::endl;
 
       return;
     }
@@ -577,6 +583,7 @@ namespace snemo {
 	      _electronic_mapping_->convert_GID_to_EID(mapping::THREE_WIRES_TRACKER_MODE, geom_id, electronic_id);
 
 	      uint32_t a_geiger_signal_clocktick = _clock_utils_->compute_clocktick_800ns_from_time(trigger_time);
+
 	      // See with Jihane and Thierry to add shift computation
 	      // a_geiger_signal_clocktick += clock_utils::TRACKER_FEB_SHIFT_CLOCKTICK_NUMBER;
 
@@ -898,22 +905,25 @@ namespace snemo {
     {
       DT_THROW_IF (!is_initialized(), std::logic_error, "Signal to geiger TP algorithm is not initialized ! ");
 
-      auto & tracker_collection = SDD_.grab_tracker_digi_hits();
-
-      // Add if bla bla :...
+      uint64_t readout_CT = L2_.L2_decision_gate_end;
+      uint64_t trigger_id = L2_.trigger_id;
+      trigger_structures::L2_trigger_mode trigger_mode = L2_.L2_trigger_mode;
 
       for (unsigned int i = 0; i < _gg_digi_data_collection_.size(); i++)
        	{
       	  //_gg_digi_data_collection_[j].tree_dump(std::clog, "GG WD #" + std::to_string(_gg_digi_data_collection_[j].hit_id));
 	  geiger_digi_working_data a_gg_wd = _gg_digi_data_collection_[i];
+	  if (!a_gg_wd.has_been_readout)
+	    {
 
-	  snemo::datamodel::sim_tracker_digi_hit & a_sim_tracker_digi_hit = SDD_.add_tracker_digi_hit();
-	  a_gg_wd.readout(a_sim_tracker_digi_hit);
-	  a_sim_tracker_digi_hit.set_hit_id(_running_readout_id_);
-	  _increment_running_readout_id();
+	      snemo::datamodel::sim_tracker_digi_hit & a_sim_tracker_digi_hit = SDD_.add_tracker_digi_hit();
+	      a_sim_tracker_digi_hit.set_hit_id(_running_readout_id_);
+	      _increment_running_readout_id();
+	      a_sim_tracker_digi_hit.set_trigger_id(trigger_id);
 
-	  // Set trigger ID comming from the L2 decision
-	  // a_sim_tracker_digi_hit.set_trigger_id(TRIGGER_ID
+
+	      a_gg_wd.readout(a_sim_tracker_digi_hit);
+	    }
  	}
 
       return;

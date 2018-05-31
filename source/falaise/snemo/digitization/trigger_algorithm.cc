@@ -270,6 +270,7 @@ namespace snemo {
 	      uint32_t ct25 = a_l1_decision.L1_calo_ct_decision;
 	      uint32_t ct1600_begin = 0;
 	      _clock_manager_->compute_clocktick_25ns_to_1600ns(ct25, ct1600_begin);
+	      ct1600_begin += clock_utils::TRIGGER_COMPUTING_SHIFT_CLOCKTICK_1600NS;
 	      uint32_t ct1600_end = ct1600_begin + _L2_coincidence_gate_size_ - 1; // last CT1600 is included for coincidence searches
 
 	      if (_L2_coincidence_gate_records_.size() != 0)
@@ -661,6 +662,7 @@ namespace snemo {
       	      uint32_t gg_ctw_clocktick_1600ns = clock_utils::INVALID_CLOCKTICK;
       	      _clock_manager_->compute_clocktick_800ns_to_1600ns(a_gg_ctw.get_clocktick_800ns(),
       								 gg_ctw_clocktick_1600ns);
+	      gg_ctw_clocktick_1600ns += clock_utils::TRIGGER_COMPUTING_SHIFT_CLOCKTICK_1600NS;
       	      to_add_gg_ctw.set_clocktick_800ns(gg_ctw_clocktick_1600ns);
       	    }
       	}

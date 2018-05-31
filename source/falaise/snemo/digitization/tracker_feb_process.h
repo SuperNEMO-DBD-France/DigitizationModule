@@ -111,6 +111,7 @@ namespace snemo {
 				std::string cathode_bottom_register;
 
 				uint32_t  clocktick_800;
+				bool has_been_readout;
 			};
 
 			typedef std::vector<geiger_digi_working_data> gg_digi_working_data_collection_type;

@@ -2,8 +2,8 @@
 // Author(s): Yves LEMIERE <lemiere@lpccaen.in2p3.fr>
 // Author(s): Guillaume OLIVIERO <goliviero@lpccaen.in2p3.fr>
 
-// - Falaise:
-
+// Standard library :
+#include <stdint.h>
 
 // This project :
 #include <snemo/digitization/clock_utils.h>
@@ -59,6 +59,17 @@ namespace snemo {
 	this->sampling_step = 1. / this->sampling_rate;
       }
 
+      if (config_.has_key("timestamping_frequency")) {
+	std::string timestamping_frequency = config_.fetch_string("timestamping_frequency");
+
+	if (timestamping_frequency == "SNEMO_DEFAULT_CALO_FEB_TIMESTAMPING_FREQUENCY")
+	  {
+	    this->timestamping_rate = 160 * 1e6 * CLHEP::hertz;
+	  }
+
+	this->timestamping_step = 1. / this->timestamping_rate;
+      }
+
       if (config_.has_key("readout_post_trig_window")) {
         double post_trig_window_ns = config_.fetch_real_with_explicit_dimension("readout_post_trig_window", "time");
         this->post_trig_window_ns = post_trig_window_ns;
@@ -71,7 +82,6 @@ namespace snemo {
       }
 
       initialized = true;
-
       return;
     }
 
@@ -90,6 +100,8 @@ namespace snemo {
       datatools::invalidate(high_threshold);
       datatools::invalidate(sampling_rate);
       datatools::invalidate(sampling_step);
+      datatools::invalidate(timestamping_rate);
+      datatools::invalidate(timestamping_step);
       datatools::invalidate(post_trig_window_ns);
       post_trig_window_samples = 0;
       return;
@@ -97,6 +109,9 @@ namespace snemo {
 
     void calo_feb_process::calo_feb_config::_set_defaults()
     {
+      DEFAULT_VOLTAGE_DYNAMIC = 2.5 * CLHEP::volt;
+      VOLT_ADC_VALUE = DEFAULT_VOLTAGE_DYNAMIC / ADC_DYNAMIC;
+
       external_trigger = false;
       calo_tp_spare = false;
       acquisition_window_length = 1000;
@@ -110,9 +125,9 @@ namespace snemo {
     }
 
     void calo_feb_process::calo_feb_config::tree_dump(std::ostream & out_,
-							    const std::string & title_,
-							    const std::string & indent_,
-							    bool inherit_) const
+						      const std::string & title_,
+						      const std::string & indent_,
+						      bool inherit_) const
     {
       if (!title_.empty()) out_ << indent_ << title_ << std::endl;
 
@@ -170,28 +185,139 @@ namespace snemo {
       has_been_readout = false;
     }
 
-    void calo_feb_process::calo_digi_working_data::calculate_metadata()
+    void calo_feb_process::calo_digi_working_data::calculate_metadata(const calo_feb_config * feb_config_,
+								      snemo::datamodel::sim_calo_digi_hit & SCDH_)
     {
       // From the waveform calculate all metadata (baseline, charge, peak, rising, falling cell / offset)
+
+      // Fill waveform and compute charge calculation on all samples :
+
+      int32_t baseline_adc = 0;
+      int32_t baseline_adc_zero_substracted = 0;
+
+      // Calcul baseline first (on 16 first samples)
+      for (std::size_t i = 0; i < calo_feb_config::NUMBER_OF_SAMPLES_FOR_BASELINE; i++)
+	{
+	  double sample = calo_digitized_signal[i];
+	  int16_t sample_adc = calo_feb_config::DEFAULT_ZERO_ADC_POS + (sample / feb_config_->VOLT_ADC_VALUE);
+	  int16_t sample_adc_zero_substracted = sample_adc - calo_feb_config::DEFAULT_ZERO_ADC_POS;
+
+	  baseline_adc += sample_adc;
+	  baseline_adc_zero_substracted += sample_adc_zero_substracted;
+	}
+      // Mean value is the baseline
+      baseline_adc /= calo_feb_config::NUMBER_OF_SAMPLES_FOR_BASELINE;
+      baseline_adc_zero_substracted /= calo_feb_config::NUMBER_OF_SAMPLES_FOR_BASELINE;
+
+      std::vector<int16_t> waveform;
+      int32_t charge_adc = 0;
+      int16_t peak_adc = calo_feb_config::DEFAULT_ADC_DYNAMIC;
+
+      bool falling_cell_found = false;
+      bool rising_cell_found  = false;
+      uint32_t falling_cell = 0;
+      uint32_t falling_cell_plus_one = 0;
+      int16_t  falling_cell_adc = 0;
+      int16_t  falling_cell_plus_one_adc = 0;
+
+      uint32_t rising_cell_minus_one = 0;
+      uint32_t rising_cell= 0;
+      int16_t rising_cell_minus_one_adc = 0;
+      int16_t rising_cell_adc = 0;
+
+      int16_t low_threshold_adc = feb_config_->low_threshold / feb_config_->VOLT_ADC_VALUE;
+
+      for (std::size_t i = 0; i < calo_digitized_signal.size(); i++)
+	{
+	  double sample = calo_digitized_signal[i];
+	  int16_t sample_adc = calo_feb_config::DEFAULT_ZERO_ADC_POS + (sample / feb_config_->VOLT_ADC_VALUE);
+	  int16_t sample_adc_baseline_corrected = sample_adc - baseline_adc;
+
+	  waveform.push_back(sample_adc);
+	  charge_adc += sample_adc_baseline_corrected;
+
+	  if (sample_adc < peak_adc)
+	    {
+	      peak_adc = sample_adc;
+	    }
+
+	  if (!falling_cell_found) {
+	    if (sample_adc_baseline_corrected <= low_threshold_adc) {
+	      falling_cell_found = true;
+	      // Falling cell : last before peak
+	      falling_cell = i-1;
+	      falling_cell_adc = calo_feb_config::DEFAULT_ZERO_ADC_POS + (calo_digitized_signal[i-1] / feb_config_->VOLT_ADC_VALUE)  - baseline_adc;
+
+	      falling_cell_plus_one = i;
+	      falling_cell_plus_one_adc = sample_adc_baseline_corrected;
+	    }
+	  }
+	  if (falling_cell_found && !rising_cell_found) {
+	    if (sample_adc_baseline_corrected >= low_threshold_adc) {
+	      rising_cell_found = true;
+	      // Rising cell : first after peak
+	      rising_cell = i;
+	      rising_cell_adc = sample_adc_baseline_corrected;
+
+	      rising_cell_minus_one = i-1;
+	      rising_cell_minus_one_adc = calo_feb_config::DEFAULT_ZERO_ADC_POS + (calo_digitized_signal[i-1] / feb_config_->VOLT_ADC_VALUE)  - baseline_adc;
+	    }
+	  }
+	}
+
+      uint16_t falling_offset = 0;
+      // Linear interpolation between Falling cell and Falling cell + 1 to determine the falling offset
+      if (falling_cell_found) {
+	if (falling_cell_plus_one_adc - falling_cell_adc != 0) {
+	  falling_offset = 255. * ((static_cast<double>(low_threshold_adc - falling_cell_adc) / static_cast<double>(falling_cell_plus_one_adc - falling_cell_adc)));
+	}
+      }
+
+      uint16_t rising_offset = 0;
+      // Linear interpolation between Rising cell and Rising cell + 1 to determine the rising offset
+      if (rising_cell_found) {
+
+	if (rising_cell - rising_cell_minus_one_adc != 0) {
+	  rising_offset = 255. * ((static_cast<double>(low_threshold_adc - rising_cell_minus_one_adc) / static_cast<double>(rising_cell_adc - rising_cell_minus_one_adc)));
+	}
+      }
+
+      int32_t peak_adc_encoded = (peak_adc - calo_feb_config::DEFAULT_ZERO_ADC_POS) * 8;
+
+      SCDH_.set_baseline(baseline_adc_zero_substracted);
+      SCDH_.set_waveform(waveform);
+      SCDH_.set_charge(charge_adc);
+      SCDH_.set_peak(peak_adc_encoded);
+      SCDH_.set_falling_cell(falling_cell);
+      SCDH_.set_rising_cell(rising_cell);
+      SCDH_.set_falling_offset(falling_offset);
+      SCDH_.set_rising_offset(rising_offset);
 
       return;
     }
 
-    void calo_feb_process::calo_digi_working_data::readout(snemo::datamodel::sim_calo_digi_hit & SCDH_)
+    void calo_feb_process::calo_digi_working_data::readout(const calo_feb_config * feb_config_,
+							   snemo::datamodel::sim_calo_digi_hit & SCDH_)
     {
+
+      SCDH_.set_geom_id(geom_id);
+      SCDH_.set_elec_id(channel_electronic_id);
+
       SCDH_.set_lto(is_low_threshold_only);
       SCDH_.set_lt(is_low_threshold);
       SCDH_.set_ht(is_high_threshold);
       SCDH_.set_lt_ct_25(low_threshold_CT_25);
       SCDH_.set_ht_ct_25(high_threshold_CT_25);
 
+      SCDH_.set_time(low_threshold_trigger_time);
+      int64_t timestamp = low_threshold_trigger_time / feb_config_->timestamping_step;
+      SCDH_.set_timestamp(timestamp);
+
       // Convert values in circular buffer into digitized sampled values and push them into a vector
-      std::vector<int16_t> waveform;
+      calculate_metadata(feb_config_,
+			 SCDH_);
 
-
-      SCDH_.set_waveform(waveform);
-
-      has_been_readout = true;
+      this->has_been_readout = true;
       return;
     }
 
@@ -201,10 +327,10 @@ namespace snemo {
     }
 
     void calo_feb_process::calo_digi_working_data::tree_dump(std::ostream & out_,
-								   const std::string & title_,
-								   bool dump_signal_,
-								   const std::string & indent_,
-								   bool inherit_) const
+							     const std::string & title_,
+							     bool dump_signal_,
+							     const std::string & indent_,
+							     bool inherit_) const
     {
 
       if (!title_.empty()) out_ << indent_ << title_ << std::endl;
@@ -254,7 +380,7 @@ namespace snemo {
       out_ << indent_ << datatools::i_tree_dumpable::tag
            << "Low Threshold CT 25 ns : " << low_threshold_CT_25  << std::endl;
 
-      out_ << indent_ << datatools::i_tree_dumpable::inherit_tag (inherit_)
+      out_ << indent_ << datatools::i_tree_dumpable::tag
            << "High Threshold CT 25 ns : " << high_threshold_CT_25  << std::endl;
 
       out_ << indent_ << datatools::i_tree_dumpable::inherit_tag (inherit_)
@@ -280,9 +406,9 @@ namespace snemo {
     }
 
     void calo_feb_process::initialize(const datatools::properties & config_,
-					    clock_utils & my_clock_utils_,
-					    electronic_mapping & my_electronic_mapping_,
-					    mctools::signal::signal_shape_builder & my_ssb_)
+				      clock_utils & my_clock_utils_,
+				      electronic_mapping & my_electronic_mapping_,
+				      mctools::signal::signal_shape_builder & my_ssb_)
     {
       DT_THROW_IF(is_initialized(), std::logic_error, "Calo FEB process is already initialized ! ");
       _set_defaults();
@@ -734,7 +860,7 @@ namespace snemo {
 
       for (unsigned int i = 0; i < _calo_digi_data_collection_.size(); i++)
 	{
-	  calo_digi_working_data a_calo_wd_to_readout = _calo_digi_data_collection_[i];
+	  calo_digi_working_data & a_calo_wd_to_readout = _calo_digi_data_collection_[i];
 	  // a_calo_wd_to_readout.tree_dump(std::clog);
 
 	  // check if the hit has not been already readout
@@ -742,7 +868,14 @@ namespace snemo {
 	    {
 	      // Then add a calo hit and grab the reference on it
 	      snemo::datamodel::sim_calo_digi_hit & a_calo_digi_hit = SDD_.add_calo_digi_hit();
-	      a_calo_wd_to_readout.readout(a_calo_digi_hit);
+	      a_calo_digi_hit.set_hit_id(_running_readout_id_);
+	      _increment_running_readout_id();
+	      a_calo_digi_hit.set_trigger_id(trigger_id);
+	      a_calo_wd_to_readout.readout(&_calo_feb_config_,
+					   a_calo_digi_hit);
+
+
+	      a_calo_digi_hit.tree_dump(std::clog, "A calo digi hit #" + std::to_string(i));
 	    }
 
 	}

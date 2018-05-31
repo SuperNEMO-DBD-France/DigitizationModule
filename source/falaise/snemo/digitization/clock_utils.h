@@ -94,9 +94,17 @@ namespace snemo {
 			void compute_clocktick_25ns_to_1600ns(const uint32_t clocktick_25ns_,
 																						uint32_t & clocktick_1600ns_) const;
 
+			/// Compute a clocktick 1600ns into a clocktick 25ns
+			void compute_clocktick_1600ns_to_25ns(const uint32_t clocktick_1600ns_,
+																						uint32_t & clocktick_25ns_) const;
+
 			/// Compute a clocktick 800ns into a clocktick 1600ns
 			void compute_clocktick_800ns_to_1600ns(const uint32_t clocktick_800ns_,
 																						 uint32_t & clocktick_1600ns_) const;
+
+			/// Compute a clocktick 800ns into a clocktick 1600ns
+			void compute_clocktick_1600ns_to_800ns(const uint32_t clocktick_1600ns_,
+																						 uint32_t & clocktick_800ns_) const;
 
 			/// Compute clockticks reference
 			void compute_clockticks_ref(mygsl::rng & prng_);
