@@ -40,10 +40,10 @@ namespace snemo {
 			// To define with Thierry ? :
 			static const uint32_t TRACKER_FEB_SHIFT_CLOCKTICK_NUMBER = 1; //!< Number of clocktick 800 ns which shift the internal clocktick in a trackerFEB
 			static const uint32_t TRACKER_CB_SHIFT_CLOCKTICK_NUMBER = 0;  //!< Number of clocktick 800 ns which shift the internal clocktick in a trackerCB
-
 			static const uint32_t TRACKER_FEB_TO_CB_SHIFT_CLOCKTICK_NUMBER = 1; //!< Number of clocktick 800 ns to take into account the transit between FEB and CB
 			static const uint32_t TRACKER_CB_TO_TB_SHIFT_CLOCKTICK_NUMBER = 1; //!< Number of clocktick 800 ns to take into account the transit between CB and TB
 
+			static const uint32_t TRIGGER_FEB_TO_TB_SHIFT_CLOCKTICK_1600NS = 1; //!< Shift to take into account the time travel between FEB and TB
 			static const uint32_t TRIGGER_COMPUTING_SHIFT_CLOCKTICK_1600NS = 1; //!< Shift to take into account the time of computing and when it is published (CT+1)
 
 			static const uint32_t PREVIOUS_EVENT_RECORD_LIVING_NUMBER_OF_CLOCKTICK = 625; //!< Number of CT 1600 a previous event record "live" 625 * 1600 = 1 ms

@@ -9,6 +9,9 @@
 #include <string>
 #include <bitset>
 
+// - Falaise:
+#include <falaise/snemo/datamodels/sim_digi_data.h>
+
 // This project :
 #include <snemo/digitization/calo_ctw_data.h>
 #include <snemo/digitization/geiger_ctw_data.h>
@@ -114,6 +117,9 @@ namespace snemo {
 
       /// Get the vector of L2 decision gate record
       const std::vector<trigger_structures::L2_decision_gate> get_L2_decision_gate_records_vector() const;
+
+      /// Readout Trigger Data in the trigger board for each L2 decision
+      void readout_process(snemo::datamodel::sim_digi_data & SDD_);
 
       /// General process
       void process(const calo_ctw_data   & calo_ctw_data_,

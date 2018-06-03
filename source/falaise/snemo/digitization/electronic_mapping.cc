@@ -458,7 +458,6 @@ namespace snemo {
 	      {
 		electronic_id_ = left_iter->second;
 	      }
-	    std::clog << "XWALL GID = " <<geom_id_ << " EID = " << electronic_id_ << std::endl;
 
 	    break;
 	  }

@@ -852,31 +852,50 @@ namespace snemo {
     {
       DT_THROW_IF(!is_initialized(), std::logic_error, "Signal to calo TP algorithm is not initialized ! ");
 
-      uint64_t readout_CT = L2_.L2_decision_gate_end;
+      uint32_t readout_begin_CT1600 = L2_.L2_decision_gate_begin - 2 * _clock_utils_->TRIGGER_COMPUTING_SHIFT_CLOCKTICK_1600NS;
+      uint32_t readout_end_CT1600   = L2_.L2_decision_gate_end;
       uint64_t trigger_id = L2_.trigger_id;
       trigger_structures::L2_trigger_mode trigger_mode = L2_.L2_trigger_mode;
 
-      // All anodic hits below readout CT are readout with this trigger ID:
+      uint32_t readout_begin_CT25 = _clock_utils_->INVALID_CLOCKTICK;
+      _clock_utils_->compute_clocktick_1600ns_to_25ns(readout_begin_CT1600, readout_begin_CT25);
+
+      uint32_t readout_end_CT25 = _clock_utils_->INVALID_CLOCKTICK;
+      _clock_utils_->compute_clocktick_1600ns_to_25ns(readout_end_CT1600, readout_end_CT25);
+
+      // All anodic hits below readout CT25 are readout with this trigger ID:
 
       for (unsigned int i = 0; i < _calo_digi_data_collection_.size(); i++)
 	{
 	  calo_digi_working_data & a_calo_wd_to_readout = _calo_digi_data_collection_[i];
 	  // a_calo_wd_to_readout.tree_dump(std::clog);
 
-	  // check if the hit has not been already readout
-	  if (!a_calo_wd_to_readout.has_been_readout)
+	  // Readout the hit only if it is below the readout CT (end of the L2 decision gate)
+	  if (a_calo_wd_to_readout.low_threshold_CT_25 >= readout_begin_CT25
+	      && a_calo_wd_to_readout.low_threshold_CT_25 <= readout_end_CT25)
 	    {
-	      // Then add a calo hit and grab the reference on it
-	      snemo::datamodel::sim_calo_digi_hit & a_calo_digi_hit = SDD_.add_calo_digi_hit();
-	      a_calo_digi_hit.set_hit_id(_running_readout_id_);
-	      _increment_running_readout_id();
-	      a_calo_digi_hit.set_trigger_id(trigger_id);
-	      a_calo_wd_to_readout.readout(&_calo_feb_config_,
-					   a_calo_digi_hit);
+	      // check if the hit has not been already readout
+	      if (!a_calo_wd_to_readout.has_been_readout)
+		{
+		  // Then add a calo hit and grab the reference on it
+		  snemo::datamodel::sim_calo_digi_hit & a_calo_digi_hit = SDD_.add_calo_digi_hit();
+		  a_calo_digi_hit.set_hit_id(_running_readout_id_);
+		  _increment_running_readout_id();
+		  a_calo_digi_hit.set_trigger_id(trigger_id);
+		  a_calo_wd_to_readout.readout(&_calo_feb_config_,
+					       a_calo_digi_hit);
 
 
-	      a_calo_digi_hit.tree_dump(std::clog, "A calo digi hit #" + std::to_string(i));
+		  // a_calo_digi_hit.tree_dump(std::clog, "A calo digi hit #" + std::to_string(i));
+		}
 	    }
+
+	  // std::clog << "CALO : Readout_begin_CT1600 = " << readout_begin_CT1600
+	  // 	    << " Readout_end_CT1600 = " << readout_end_CT1600
+	  // 	    << " Readout_begin_CT25 = " << readout_begin_CT25
+	  // 	    << " Readout_end_CT25 = " << readout_end_CT25
+	  // 	    << " Calo_WD_CT25 = " << a_calo_wd_to_readout.low_threshold_CT_25
+	  // 	    << " has been readout = " << a_calo_wd_to_readout.has_been_readout << std::endl;
 
 	}
       return;

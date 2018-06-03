@@ -279,7 +279,7 @@ namespace snemo {
 	my_calo_ctw.set_htm_main_wall(1);
 	int zone_touched = snemo::digitization::calo::ctw::W_ZW_BIT0 + 5;
 	my_calo_ctw.set_zoning_bit(zone_touched, true);
-	 my_calo_ctw.tree_dump(std::clog, "My_calo_CTW [0] : ", "INFO : ");
+	// my_calo_ctw.tree_dump(std::clog, "My_calo_CTW [0] : ", "INFO : ");
       }
 
       {
@@ -296,7 +296,7 @@ namespace snemo {
 	my_calo_ctw.set_htm_main_wall(1);
 	int zone_touched = snemo::digitization::calo::ctw::W_ZW_BIT0 + 8;
 	my_calo_ctw.set_zoning_bit(zone_touched, true);
-	 my_calo_ctw.tree_dump(std::clog, "My_calo_CTW [0] : ", "INFO : ");
+	//my_calo_ctw.tree_dump(std::clog, "My_calo_CTW [0] : ", "INFO : ");
       }
 
       {
@@ -328,12 +328,13 @@ namespace snemo {
     {
       DT_THROW_IF(!is_initialized(), std::logic_error, "Not initialized !");
 
+      _trigger_algo_.readout_process(SDD_);
+
       // Browse all L2 decision gate and readout at the end of the last CT 1600
       for (unsigned int i = 0; i < _trigger_algo_.get_L2_decision_gate_records_vector().size(); i++)
       	{
       	  trigger_structures::L2_decision_gate a_L2_decision_gate = _trigger_algo_.get_L2_decision_gate_records_vector()[i];
 	  _calo_feb_process_.readout_process(a_L2_decision_gate, SDD_);
-
 	  _tracker_feb_process_.readout_process(a_L2_decision_gate, SDD_);
       	}
 

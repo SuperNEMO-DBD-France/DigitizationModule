@@ -635,6 +635,31 @@ namespace snemo {
       return;
     }
 
+    void trigger_algorithm::readout_process(snemo::datamodel::sim_digi_data & SDD_)
+    {
+      DT_THROW_IF(!is_initialized(), std::logic_error, "Trigger algorithm is not initialized, it can't process ! ");
+
+      // Browse all L2 decision and fill a Trigger Digitized Data object:
+
+      for (unsigned int i = 0; i < get_L2_decision_records_vector().size(); i++)
+      	{
+      	  trigger_structures::L2_decision a_L2_decision = get_L2_decision_records_vector()[i];
+	  uint32_t L2_decision_CT = a_L2_decision.L2_ct_decision;
+
+	  snemo::datamodel::sim_trigger_digi_data & a_tdd = SDD_.add_trigger_digi_data();
+
+	  // Browse all records to find the right CT 1
+
+
+
+      	}
+
+
+
+
+      return;
+    }
+
     void trigger_algorithm::process(const calo_ctw_data & calo_ctw_data_,
 				    const geiger_ctw_data & geiger_ctw_data_)
     {
@@ -754,12 +779,12 @@ namespace snemo {
 	  else if (calorimeter_ct_max_1600 != clock_utils::INVALID_CLOCKTICK) clocktick_max = calorimeter_ct_max_1600;
 	  if ((tracker_ct_max_1600 != clock_utils::INVALID_CLOCKTICK && calorimeter_ct_max_1600 != clock_utils::INVALID_CLOCKTICK) && calorimeter_ct_max_1600 > clocktick_max) clocktick_max = calorimeter_ct_max_1600;
 
-	  std::clog << "Calo CT min 1600    = " << calorimeter_ct_min_1600 << std::endl;
-	  std::clog << "Calo CT max 1600    = " << calorimeter_ct_max_1600 << std::endl;
-	  std::clog << "Tracker CT min 1600 = " << tracker_ct_min_1600 << std::endl;
-	  std::clog << "Tracker CT max 1600 = " << tracker_ct_max_1600 << std::endl;
-	  std::clog << "CT min 1600         = " << clocktick_min << std::endl;
-	  std::clog << "CT max 1600         = " << clocktick_max << std::endl;
+	  // std::clog << "Calo CT min 1600    = " << calorimeter_ct_min_1600 << std::endl;
+	  // std::clog << "Calo CT max 1600    = " << calorimeter_ct_max_1600 << std::endl;
+	  // std::clog << "Tracker CT min 1600 = " << tracker_ct_min_1600 << std::endl;
+	  // std::clog << "Tracker CT max 1600 = " << tracker_ct_max_1600 << std::endl;
+	  // std::clog << "CT min 1600         = " << clocktick_min << std::endl;
+	  // std::clog << "CT max 1600         = " << clocktick_max << std::endl;
 
 	  if (clocktick_min != clock_utils::INVALID_CLOCKTICK
 	      && clocktick_max != clock_utils::INVALID_CLOCKTICK)
@@ -1012,56 +1037,56 @@ namespace snemo {
       // 	  _coincidence_records_[i].display();
       // 	}
 
-      if (_L1_calo_decision_records_.size() != 0)
-	{
-	  for (unsigned int i = 0; i < _L1_calo_decision_records_.size(); i++)
-	    {
-	      _L1_calo_decision_records_[i].display();
-	    }
-	}
+      // if (_L1_calo_decision_records_.size() != 0)
+      // 	{
+      // 	  for (unsigned int i = 0; i < _L1_calo_decision_records_.size(); i++)
+      // 	    {
+      // 	      _L1_calo_decision_records_[i].display();
+      // 	    }
+      // 	}
 
-      if (_L2_coincidence_gate_records_.size() != 0)
-	{
-	  for (unsigned int i = 0; i < _L2_coincidence_gate_records_.size(); i++)
-	    {
-	      _L2_coincidence_gate_records_[i].display();
-	    }
-	}
+      // if (_L2_coincidence_gate_records_.size() != 0)
+      // 	{
+      // 	  for (unsigned int i = 0; i < _L2_coincidence_gate_records_.size(); i++)
+      // 	    {
+      // 	      _L2_coincidence_gate_records_[i].display();
+      // 	    }
+      // 	}
 
-      if (_L2_decision_records_.size() != 0)
-	{
-	  for (unsigned int i = 0; i < _L2_decision_records_.size(); i++)
-	    {
-	      _L2_decision_records_[i].display();
-	    }
-	}
+      // if (_L2_decision_records_.size() != 0)
+      // 	{
+      // 	  for (unsigned int i = 0; i < _L2_decision_records_.size(); i++)
+      // 	    {
+      // 	      _L2_decision_records_[i].display();
+      // 	    }
+      // 	}
 
-      if (_L2_decision_gate_records_.size() != 0)
-	{
-	  for (unsigned int i = 0; i < _L2_decision_gate_records_.size(); i++)
-	    {
-	      _L2_decision_gate_records_[i].display();
-	    }
-	}
+      // if (_L2_decision_gate_records_.size() != 0)
+      // 	{
+      // 	  for (unsigned int i = 0; i < _L2_decision_gate_records_.size(); i++)
+      // 	    {
+      // 	      _L2_decision_gate_records_[i].display();
+      // 	    }
+      // 	}
 
-      boost::circular_buffer<trigger_structures::previous_event_record>::iterator it_circ = _previous_event_records_->begin();
-      for (; it_circ != _previous_event_records_->end(); it_circ++)
-      	{
-      	  it_circ -> display();
-      	}
+      // boost::circular_buffer<trigger_structures::previous_event_record>::iterator it_circ = _previous_event_records_->begin();
+      // for (; it_circ != _previous_event_records_->end(); it_circ++)
+      // 	{
+      // 	  it_circ -> display();
+      // 	}
 
-      std::clog << "********* Size of Finale structures for one event *********" << std::endl;
-      std::clog << "Calo collection size @ 25 ns            : " << _calo_records_25ns_.size() << std::endl;
-      std::clog << "Calo collection size @ 1600 ns          : " << _coincidence_calo_records_1600ns_.size() << std::endl;
-      std::clog << "Tracker collection size @ 1600 ns       : " << _tracker_records_.size() << std::endl;
-      std::clog << "Geiger matrix collection size @ 1600 ns : " << _geiger_matrix_records_.size() << std::endl;
-      std::clog << "Pair records collection size @ 1600 ns  : " << _pair_records_.size() << std::endl;
-      std::clog << "Coincidence collection size @ 1600 ns   : " << _coincidence_records_.size() << std::endl;
-      std::clog << "Previous event collection size          : " << _previous_event_records_->size() << std::endl;
-      std::clog << "L1 calo collection size @ 25 ns         : " << _L1_calo_decision_records_.size() << std::endl;
-      std::clog << "L2 coincidence gate collection size     : " << _L2_coincidence_gate_records_.size() << std::endl;
-      std::clog << "L2 decision collection size             : " << _L2_decision_records_.size() << std::endl;
-      std::clog << "L2 decision gate collection size        : " << _L2_decision_gate_records_.size() << std::endl;
+      // std::clog << "********* Size of Finale structures for one event *********" << std::endl;
+      // std::clog << "Calo collection size @ 25 ns            : " << _calo_records_25ns_.size() << std::endl;
+      // std::clog << "Calo collection size @ 1600 ns          : " << _coincidence_calo_records_1600ns_.size() << std::endl;
+      // std::clog << "Tracker collection size @ 1600 ns       : " << _tracker_records_.size() << std::endl;
+      // std::clog << "Geiger matrix collection size @ 1600 ns : " << _geiger_matrix_records_.size() << std::endl;
+      // std::clog << "Pair records collection size @ 1600 ns  : " << _pair_records_.size() << std::endl;
+      // std::clog << "Coincidence collection size @ 1600 ns   : " << _coincidence_records_.size() << std::endl;
+      // std::clog << "Previous event collection size          : " << _previous_event_records_->size() << std::endl;
+      // std::clog << "L1 calo collection size @ 25 ns         : " << _L1_calo_decision_records_.size() << std::endl;
+      // std::clog << "L2 coincidence gate collection size     : " << _L2_coincidence_gate_records_.size() << std::endl;
+      // std::clog << "L2 decision collection size             : " << _L2_decision_records_.size() << std::endl;
+      // std::clog << "L2 decision gate collection size        : " << _L2_decision_gate_records_.size() << std::endl;
 
       return;
     }

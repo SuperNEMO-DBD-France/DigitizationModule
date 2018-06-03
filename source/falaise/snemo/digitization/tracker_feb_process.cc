@@ -443,7 +443,6 @@ namespace snemo {
       return;
     }
 
-
     void tracker_feb_process::_prepare_working_data(const mctools::signal::signal_data & SSD_,
 							 gg_digi_working_data_collection_type & wd_collection_)
     {
@@ -465,7 +464,7 @@ namespace snemo {
 
 	      a_mutable_signal.build_signal_shape(*_ssb_,
 						  signal_name,
-						  a_mutable_signal, datatools::logger::PRIO_DEBUG);
+						  a_mutable_signal);
 	      // a_mutable_signal.tree_dump(std::clog, "Mutable anodic signal with shape instantiated");
 
 	      geiger_digi_working_data a_wd;
@@ -905,26 +904,49 @@ namespace snemo {
     {
       DT_THROW_IF (!is_initialized(), std::logic_error, "Signal to geiger TP algorithm is not initialized ! ");
 
-      uint64_t readout_CT = L2_.L2_decision_gate_end;
-      uint64_t trigger_id = L2_.trigger_id;
+      // Take 5 CT before (size of the gate)  the L2 decision begin for the readout
+      // Tracker hits can have trigger 1 or 2 ct1600 before, participate at the trigger but the L2 decision happen only 3 ct1600 after
+      // We have to 'go back' in the past, in order to readout these hits.
+
+      // int64_t tmp_ct = (int64_t) L2_.L2_decision_gate_begin - 5;
+      // std::clog << "Tmp CT = " << tmp_ct << "  L2_.L2_decision_gate_begin = " <<  L2_.L2_decision_gate_begin << std::endl;
+      // if (tmp_ct <= 0) tmp_ct = 0;
+      // uint32_t readout_begin_CT1600 = tmp_ct;
+
+
+      uint32_t readout_begin_CT1600 = L2_.L2_decision_gate_begin - 2 * _clock_utils_->TRIGGER_COMPUTING_SHIFT_CLOCKTICK_1600NS;
+      uint32_t readout_end_CT1600   = L2_.L2_decision_gate_end;
+      uint64_t trigger_id           = L2_.trigger_id;
       trigger_structures::L2_trigger_mode trigger_mode = L2_.L2_trigger_mode;
+
+      uint32_t readout_begin_CT800 = _clock_utils_->INVALID_CLOCKTICK;
+      _clock_utils_->compute_clocktick_1600ns_to_800ns(readout_begin_CT1600, readout_begin_CT800);
+
+      uint32_t readout_end_CT800 = _clock_utils_->INVALID_CLOCKTICK;
+      _clock_utils_->compute_clocktick_1600ns_to_800ns(readout_end_CT1600, readout_end_CT800);
 
       for (unsigned int i = 0; i < _gg_digi_data_collection_.size(); i++)
        	{
-      	  //_gg_digi_data_collection_[j].tree_dump(std::clog, "GG WD #" + std::to_string(_gg_digi_data_collection_[j].hit_id));
-	  geiger_digi_working_data a_gg_wd = _gg_digi_data_collection_[i];
-	  if (!a_gg_wd.has_been_readout)
+	  geiger_digi_working_data & a_gg_wd = _gg_digi_data_collection_[i];
+	  if (a_gg_wd.clocktick_800 >= readout_begin_CT800 && a_gg_wd.clocktick_800 <= readout_end_CT800)
 	    {
-
-	      snemo::datamodel::sim_tracker_digi_hit & a_sim_tracker_digi_hit = SDD_.add_tracker_digi_hit();
-	      a_sim_tracker_digi_hit.set_hit_id(_running_readout_id_);
-	      _increment_running_readout_id();
-	      a_sim_tracker_digi_hit.set_trigger_id(trigger_id);
-
-
-	      a_gg_wd.readout(a_sim_tracker_digi_hit);
+	      if (!a_gg_wd.has_been_readout)
+		{
+		  snemo::datamodel::sim_tracker_digi_hit & a_sim_tracker_digi_hit = SDD_.add_tracker_digi_hit();
+		  a_sim_tracker_digi_hit.set_hit_id(_running_readout_id_);
+		  _increment_running_readout_id();
+		  a_sim_tracker_digi_hit.set_trigger_id(trigger_id);
+		  a_gg_wd.readout(a_sim_tracker_digi_hit);
+		}
 	    }
- 	}
+
+	  // std::clog << "TRACKER : Readout_begin_CT1600 = " << readout_begin_CT1600
+	  // 	    << " Readout_end_CT1600 = " << readout_end_CT1600
+	  // 	    << " Readout_begin_CT800 = " << readout_begin_CT800
+	  // 	    << " Readout_end_CT800 = " << readout_end_CT800
+	  // 	    << " GG_WD_CT800 = " << a_gg_wd.clocktick_800
+	  // 	    << " has been readout = " << a_gg_wd.has_been_readout << std::endl;
+	}
 
       return;
     }
