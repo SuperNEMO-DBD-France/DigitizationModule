@@ -227,7 +227,7 @@ install(DIRECTORY ${PROJECT_SOURCE_DIR}/resources/modules/Digitization/
   DESTINATION ${CMAKE_INSTALL_DATADIR}/Falaise/resources/modules/Digitization)
 
 # Test support:
-option(FalaiseDigitizationPlugin_ENABLE_TESTING "Build unit testing system for FalaiseDigitization" OFF)
+option(FalaiseDigitizationPlugin_ENABLE_TESTING "Build unit testing system for FalaiseDigitization" ON)
 message(STATUS "[DEBUG] With tests : ${FalaiseDigitizationPlugin_ENABLE_TESTING}")
 if(FalaiseDigitizationPlugin_ENABLE_TESTING)
   enable_testing()
