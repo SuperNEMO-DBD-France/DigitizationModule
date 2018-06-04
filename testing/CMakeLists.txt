@@ -38,7 +38,7 @@ set(FalaiseDigitizationPlugin_TESTS
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 set(_FalaiseDigitizationPlugin_TEST_ENVIRONMENT
-  "FALAISE_DIGI_RESOURCE_DIR=${PROJECT_SOURCE_DIR}/resources/modules/Digitization "
+  "FALAISE_DIGI_RESOURCE_DIR=${PROJECT_SOURCE_DIR}/resources/modules/Digitization"
   "FALAISE_DIGI_TESTING_DIR=${CMAKE_CURRENT_SOURCE_DIR}"
   "FALAISE_DIGI_SYS_LOGGING=trace"
   )

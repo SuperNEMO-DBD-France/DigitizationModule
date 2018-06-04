@@ -88,7 +88,7 @@ namespace {
   //! Return relative path from application directory to root of resource dir
   std::string relativePathToResourceDir()
   {
-    return "@FalaiseDIGI_LIBDIR_TO_RESOURCEDIR@";
+    return "@FalaiseDigi_LIBDIR_TO_RESOURCEDIR@";
   }
 
   std::string getLibraryDir()

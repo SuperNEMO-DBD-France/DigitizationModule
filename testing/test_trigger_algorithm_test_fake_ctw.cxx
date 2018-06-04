@@ -74,8 +74,6 @@ int main( int  argc_ , char **argv_  )
 
     snemo::digitization::electronic_mapping my_e_mapping;
     my_e_mapping.set_geo_manager(my_manager);
-    my_e_mapping.add_preconstructed_type(snemo::digitization::mapping::GEIGER_ANODIC_CATEGORY_TYPE);
-    my_e_mapping.add_preconstructed_type(snemo::digitization::mapping::CALO_MAIN_WALL_CATEGORY_TYPE);
     my_e_mapping.initialize(elec_config);
 
     // Clock manager :
@@ -204,6 +202,7 @@ int main( int  argc_ , char **argv_  )
     // Creation and initialization of trigger algorithm :
     snemo::digitization::trigger_algorithm my_trigger_algo;
     my_trigger_algo.set_clock_manager(my_clock_manager);
+    my_trigger_algo.set_electronic_mapping(my_e_mapping);
     my_trigger_algo.initialize(trigger_config);
 
     my_clock_manager.compute_clockticks_ref(random_generator);
