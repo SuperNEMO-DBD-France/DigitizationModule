@@ -136,7 +136,7 @@ namespace snemo {
 
       /// Process the simulated signal data and build the simulated digitized data
       void _process_(const mctools::signal::signal_data & SSD_,
-                    snemo::datamodel::sim_digi_data & SDD_);
+		     snemo::datamodel::sim_digi_data & SDD_);
 
       /// Give default values to specific class members.
       void _set_defaults_();
@@ -154,11 +154,12 @@ namespace snemo {
 
       const geomtools::manager * _geometry_manager_;  //!< The SuperNEMO geometry manager
       // const snemo::XXX::manager * _database_manager_ = nullptr; //!< The database manager
-      boost::scoped_ptr<snemo::digitization::digitization_driver> _driver_; //!< Digitization driver :
+      boost::scoped_ptr<snemo::digitization::digitization_driver> _digi_driver_; //!< Digitization driver :
 
       // Macro to automate the registration of the module :
       DPP_MODULE_REGISTRATION_INTERFACE(digitization_module)
     };
+
   } // end of namespace digitization
 
 } // end of namespace snemo

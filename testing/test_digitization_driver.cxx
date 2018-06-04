@@ -212,9 +212,18 @@ void test_driver_1(const params_type & params_)
 
 	  snemo::datamodel::sim_digi_data SDD;
 
-	  std::clog << "DEBUG 00000 " << std::endl;
 	  digi_driver.process(SSD, SDD);
-	  std::clog << "DEBUG 00001 " << std::endl;
+
+	  // for (unsigned int i = 0; i < SDD.get_calo_digi_hits().size(); i++)
+	  //   {
+	  //     SDD.get_calo_digi_hits()[i].get().tree_dump(std::clog, "A CDH");
+	  //   }
+
+	  // for (unsigned int i = 0; i < SDD.get_trigger_digi_data().size(); i++)
+	  //   {
+	  //     SDD.get_trigger_digi_data()[i].get().tree_dump(std::clog, "A TDD");
+	  //   }
+
 	} // end if (ER.has(SSD_bank_label)...)
 
 

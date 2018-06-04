@@ -195,11 +195,8 @@ namespace snemo {
     {
       DT_THROW_IF(!is_initialized(), std::logic_error, "Not initialized !");
 
-      std::clog << "DEBUG 000 " << std::endl;
       _process_digitization_algorithms(SSD_, SDD_);
-      std::clog << "DEBUG 001 " << std::endl;
       _process_readout_algorithms(SDD_);
-      std::clog << "DEBUG 002" << std::endl;
 
       _clear_working_data();
 
@@ -213,110 +210,23 @@ namespace snemo {
 
       // For each event, clocktick reference and shifts have to be recalculated and set in the algos:
       _clock_utils_.compute_clockticks_ref(_rdm_gen_);
-      // _clock_utils_.tree_dump(std::clog, "Clock utils");
 
-      std::clog << "DEBUG 100 " << std::endl;
       calo_tp_data calo_tp_data;
       _calo_feb_process_.trigger_process(SSD_,
 					 calo_tp_data);
 
-      std::clog << "DEBUG 101 " << std::endl;
       calo_ctw_data calo_ctw_data;
       _calo_tp_to_ctw_algo_.process(calo_tp_data,
 				    calo_ctw_data);
 
 
-      std::clog << "DEBUG 102 " << std::endl;
       geiger_tp_data gg_tp_data;
       _tracker_feb_process_.trigger_process(SSD_,
 					    gg_tp_data);
 
-      std::clog << "DEBUG 103 " << std::endl;
       geiger_ctw_data gg_ctw_data;
       _geiger_tp_to_ctw_algo_.process(gg_tp_data,
 				      gg_ctw_data);
-
-      std::clog << "DEBUG 104 " << std::endl;
-
-
-      // gg_tp_data.tree_dump(std::clog, "Geiger TP(s) data : ", "INFO : ");
-      // for (auto it = gg_tp_data.get_geiger_tps().begin(); it != gg_tp_data.get_geiger_tps().end(); it++)
-      // 	{
-      // 	  it->get().tree_dump(std::clog, "A GG TP");
-      // 	}
-
-      // gg_ctw_data.tree_dump(std::clog, "Geiger CTW(s) data : ", "INFO : ");
-      // for (auto it = gg_ctw_data.get_geiger_ctws().begin(); it != gg_ctw_data.get_geiger_ctws().end(); it++)
-      // 	{
-      // 	  it->get().tree_dump(std::clog, "A GG CTW");
-      // 	}
-
-      // calo_tp_data.tree_dump(std::clog, "Calorimeter TP(s) data : ", "INFO : ");
-      // for (auto it = calo_tp_data.get_calo_tps().begin(); it != calo_tp_data.get_calo_tps().end(); it++)
-      // 	{
-      // 	  it->get().tree_dump(std::clog, "A CALO TP");
-      // 	}
-
-      // calo_ctw_data.tree_dump(std::clog, "Calorimeter CTW(s) data : ", "INFO : ");
-      // for (auto it = calo_ctw_data.get_calo_ctws().begin(); it != calo_ctw_data.get_calo_ctws().end(); it++)
-      // 	{
-      // 	  it->get().tree_dump(std::clog, "A CALO CTW");
-      // 	}
-
-
-      // Add fake CTWs in order to test trigger algorithm behaviour :
-      {
-	snemo::digitization::calo_ctw & my_calo_ctw = calo_ctw_data.add();
-	geomtools::geom_id my_ctw_gid(snemo::digitization::mapping::CALO_CONTROL_BOARD_TYPE,
-				      snemo::digitization::mapping::DEMONSTRATOR_MODULE_NUMBER,
-				      snemo::digitization::mapping::MAIN_CALO_SIDE_0_CRATE,
-				      snemo::digitization::mapping::CONTROL_BOARD_INDEX); // GID : [type]:[module],[CRATE],[BOARD]
-	my_calo_ctw.set_header(155,
-			       my_ctw_gid,
-			       550); // hit, gid, clocktick25ns
-	my_calo_ctw.grab_auxiliaries().store("author", "guillaume");
-	my_calo_ctw.grab_auxiliaries().store_flag("mock");
-	my_calo_ctw.set_htm_main_wall(1);
-	int zone_touched = snemo::digitization::calo::ctw::W_ZW_BIT0 + 5;
-	my_calo_ctw.set_zoning_bit(zone_touched, true);
-	// my_calo_ctw.tree_dump(std::clog, "My_calo_CTW [0] : ", "INFO : ");
-      }
-
-      {
-	snemo::digitization::calo_ctw & my_calo_ctw = calo_ctw_data.add();
-	geomtools::geom_id my_ctw_gid(snemo::digitization::mapping::CALO_CONTROL_BOARD_TYPE,
-				      snemo::digitization::mapping::DEMONSTRATOR_MODULE_NUMBER,
-				      snemo::digitization::mapping::MAIN_CALO_SIDE_0_CRATE,
-				      snemo::digitization::mapping::CONTROL_BOARD_INDEX); // GID : [type]:[module],[CRATE],[BOARD]
-	my_calo_ctw.set_header(155,
-			       my_ctw_gid,
-			       1600); // hit, gid, clocktick25ns
-	my_calo_ctw.grab_auxiliaries().store("author", "guillaume");
-	my_calo_ctw.grab_auxiliaries().store_flag("mock");
-	my_calo_ctw.set_htm_main_wall(1);
-	int zone_touched = snemo::digitization::calo::ctw::W_ZW_BIT0 + 8;
-	my_calo_ctw.set_zoning_bit(zone_touched, true);
-	//my_calo_ctw.tree_dump(std::clog, "My_calo_CTW [0] : ", "INFO : ");
-      }
-
-      {
-	snemo::digitization::calo_ctw & my_calo_ctw = calo_ctw_data.add();
-	geomtools::geom_id my_ctw_gid(snemo::digitization::mapping::CALO_CONTROL_BOARD_TYPE,
-				      snemo::digitization::mapping::DEMONSTRATOR_MODULE_NUMBER,
-				      snemo::digitization::mapping::MAIN_CALO_SIDE_0_CRATE,
-				      snemo::digitization::mapping::CONTROL_BOARD_INDEX); // GID : [type]:[module],[CRATE],[BOARD]
-	my_calo_ctw.set_header(155,
-			       my_ctw_gid,
-			       1510); // hit, gid, clocktick25ns
-	my_calo_ctw.grab_auxiliaries().store("author", "guillaume");
-	my_calo_ctw.grab_auxiliaries().store_flag("mock");
-	my_calo_ctw.set_htm_main_wall(1);
-	int zone_touched = snemo::digitization::calo::ctw::W_ZW_BIT1 + 1;
-	my_calo_ctw.set_zoning_bit(zone_touched, true);
-	my_calo_ctw.tree_dump(std::clog, "My_calo_CTW [0] : ", "INFO : ");
-      }
-
-
 
       _trigger_algo_.process(calo_ctw_data,
 			     gg_ctw_data);
@@ -333,7 +243,8 @@ namespace snemo {
       // Browse all L2 decision gate and readout at the end of the last CT 1600
       for (unsigned int i = 0; i < _trigger_algo_.get_L2_decision_gate_records_vector().size(); i++)
       	{
-      	  trigger_structures::L2_decision_gate a_L2_decision_gate = _trigger_algo_.get_L2_decision_gate_records_vector()[i];
+      	  const trigger_structures::L2_decision_gate & a_L2_decision_gate = _trigger_algo_.get_L2_decision_gate_records_vector()[i];
+
 	  _calo_feb_process_.readout_process(a_L2_decision_gate, SDD_);
 	  _tracker_feb_process_.readout_process(a_L2_decision_gate, SDD_);
       	}

@@ -208,47 +208,47 @@ namespace snemo {
       return _initialized_;
     }
 
-    const std::vector<trigger_structures::calo_summary_record> trigger_algorithm::get_calo_records_25ns_vector() const
+    const std::vector<trigger_structures::calo_summary_record> & trigger_algorithm::get_calo_records_25ns_vector() const
     {
       return _calo_records_25ns_;
     }
 
-    const std::vector<trigger_structures::coincidence_calo_record> trigger_algorithm::get_coincidence_calo_records_1600ns_vector() const
+    const std::vector<trigger_structures::coincidence_calo_record> & trigger_algorithm::get_coincidence_calo_records_1600ns_vector() const
     {
       return _coincidence_calo_records_1600ns_;
     }
 
-    const std::vector<trigger_structures::tracker_record> trigger_algorithm::get_tracker_records_vector() const
+    const std::vector<trigger_structures::tracker_record> & trigger_algorithm::get_tracker_records_vector() const
     {
       return _tracker_records_;
     }
 
-    const std::vector<trigger_structures::geiger_matrix> trigger_algorithm::get_geiger_matrix_records_vector() const
+    const std::vector<trigger_structures::geiger_matrix> & trigger_algorithm::get_geiger_matrix_records_vector() const
     {
       return _geiger_matrix_records_;
     }
 
-    const std::vector<trigger_structures::coincidence_event_record> trigger_algorithm::get_coincidence_records_vector() const
+    const std::vector<trigger_structures::coincidence_event_record> & trigger_algorithm::get_coincidence_records_vector() const
     {
       return _coincidence_records_;
     }
 
-    const std::vector<trigger_structures::L1_calo_decision> trigger_algorithm::get_L1_calo_decision_records_vector() const
+    const std::vector<trigger_structures::L1_calo_decision> & trigger_algorithm::get_L1_calo_decision_records_vector() const
     {
       return _L1_calo_decision_records_;
     }
 
-    const std::vector<trigger_structures::L2_coincidence_gate> trigger_algorithm::get_L2_coincidence_gate_records_vector() const
+    const std::vector<trigger_structures::L2_coincidence_gate> & trigger_algorithm::get_L2_coincidence_gate_records_vector() const
     {
       return _L2_coincidence_gate_records_;
     }
 
-    const std::vector<trigger_structures::L2_decision> trigger_algorithm::get_L2_decision_records_vector() const
+    const std::vector<trigger_structures::L2_decision> & trigger_algorithm::get_L2_decision_records_vector() const
     {
       return _L2_decision_records_;
     }
 
-    const std::vector<trigger_structures::L2_decision_gate> trigger_algorithm::get_L2_decision_gate_records_vector() const
+    const std::vector<trigger_structures::L2_decision_gate> & trigger_algorithm::get_L2_decision_gate_records_vector() const
     {
       return _L2_decision_gate_records_;
     }
@@ -265,6 +265,7 @@ namespace snemo {
       for (std::size_t i = 0; i < _L1_calo_decision_records_.size(); i++)
 	{
 	  trigger_structures::L1_calo_decision a_l1_decision = _L1_calo_decision_records_[i];
+
 	  if (a_l1_decision.L1_calo_decision_bool)
 	    {
 	      uint32_t ct25 = a_l1_decision.L1_calo_ct_decision;
@@ -643,19 +644,107 @@ namespace snemo {
 
       for (unsigned int i = 0; i < get_L2_decision_records_vector().size(); i++)
       	{
-      	  trigger_structures::L2_decision a_L2_decision = get_L2_decision_records_vector()[i];
+      	  const trigger_structures::L2_decision & a_L2_decision = get_L2_decision_records_vector()[i];
 	  uint32_t L2_decision_CT = a_L2_decision.L2_ct_decision;
 
+	  trigger_structures::L2_decision_gate associated_L2_decision_gate;
+	  for (unsigned int j = 0; j < get_L2_decision_gate_records_vector().size(); j++)
+	    {
+	      const trigger_structures::L2_decision_gate & tmp_L2_gate = get_L2_decision_gate_records_vector()[j];
+	      if (L2_decision_CT >= tmp_L2_gate.L2_decision_gate_begin
+		  && L2_decision_CT <= tmp_L2_gate.L2_decision_gate_end)
+		{
+		  associated_L2_decision_gate = tmp_L2_gate;
+		  break;
+		}
+	    }
+
+	  uint32_t L1_decision_CT = associated_L2_decision_gate.L1_calo_CT25;
 	  snemo::datamodel::sim_trigger_digi_data & a_tdd = SDD_.add_trigger_digi_data();
+	  a_tdd.set_trigger_id(a_L2_decision.trigger_id);
 
-	  // Browse all records to find the right CT 1
+	  for (unsigned int j = 0; j < get_calo_records_25ns_vector().size(); j++)
+	    {
+	      const trigger_structures::calo_summary_record & a_csr = get_calo_records_25ns_vector()[j];
+	    }
 
+	  // Fill L1 trigger data:
+	  if (L1_decision_CT != clock_utils::INVALID_CLOCKTICK)
+	    {
+	      for (unsigned int j = 0; j < get_calo_records_25ns_vector().size(); j++)
+		{
+		  const trigger_structures::calo_summary_record & a_csr = get_calo_records_25ns_vector()[j];
+		  if (a_csr.clocktick_25ns == L1_decision_CT)
+		    {
+		      a_tdd.set_L1_decision_25ns(a_csr.calo_finale_decision);
+		      a_tdd.set_L1_decision_clocktick_25ns(a_csr.clocktick_25ns);
+		      a_tdd.set_calo_zoning_word_S0_25ns(a_csr.zoning_word[0]);
+		      a_tdd.set_calo_zoning_word_S1_25ns(a_csr.zoning_word[1]);
+		      a_tdd.set_calo_HTM_S0_25ns(a_csr.total_multiplicity_side_0);
+		      a_tdd.set_calo_HTM_S1_25ns(a_csr.total_multiplicity_side_1);
+		      a_tdd.set_calo_HTM_gveto_25ns(a_csr.total_multiplicity_gveto);
+		      a_tdd.set_calo_LTO_S0_25ns(a_csr.LTO_side_0);
+		      a_tdd.set_calo_LTO_S1_25ns(a_csr.LTO_side_1);
+		      a_tdd.set_calo_LTO_gveto_25ns(a_csr.LTO_gveto);
+		      a_tdd.set_calo_SS_coinc_25ns(a_csr.single_side_coinc);
+		      a_tdd.set_calo_TTM_25ns(a_csr.total_multiplicity_threshold);
+		      a_tdd.set_calo_XT_info_25ns(a_csr.xt_info_bitset);
+		      break;
+		    }
+		}
+	    } // end of if L1 decision CT !=
 
+	  // Fill L2 trigger data:
+	  if (L2_decision_CT != clock_utils::INVALID_CLOCKTICK)
+	    {
+	      a_tdd.set_L2_decision_1600ns(a_L2_decision.L2_decision_bool);
+	      a_tdd.set_L2_decision_clocktick_1600ns(a_L2_decision.L2_ct_decision);
+	      snemo::electronics::constants::L2_trigger_mode L2_elec_trig_mode = snemo::electronics::constants::L2_trigger_mode::INVALID;
+	      if (a_L2_decision.L2_trigger_mode == trigger_structures::L2_trigger_mode::CALO_ONLY) L2_elec_trig_mode = snemo::electronics::constants::L2_trigger_mode::CALO_ONLY;
+	      if (a_L2_decision.L2_trigger_mode == trigger_structures::L2_trigger_mode::CALO_TRACKER_TIME_COINC) L2_elec_trig_mode = snemo::electronics::constants::L2_trigger_mode::CALO_TRACKER_TIME_COINC;
+	      if (a_L2_decision.L2_trigger_mode == trigger_structures::L2_trigger_mode::CARACO) L2_elec_trig_mode = snemo::electronics::constants::L2_trigger_mode::CARACO;
+	      if (a_L2_decision.L2_trigger_mode == trigger_structures::L2_trigger_mode::OPEN_DELAYED) L2_elec_trig_mode = snemo::electronics::constants::L2_trigger_mode::OPEN_DELAYED;
+	      if (a_L2_decision.L2_trigger_mode == trigger_structures::L2_trigger_mode::APE) L2_elec_trig_mode = snemo::electronics::constants::L2_trigger_mode::APE;
+	      if (a_L2_decision.L2_trigger_mode == trigger_structures::L2_trigger_mode::DAVE) L2_elec_trig_mode = snemo::electronics::constants::L2_trigger_mode::DAVE;
+	      a_tdd.set_L2_decision_trigger_mode(L2_elec_trig_mode);
 
-      	}
+	      for (unsigned int j = 0; j < get_geiger_matrix_records_vector().size(); j++)
+		{
+		  const trigger_structures::geiger_matrix & a_gg_matrix = get_geiger_matrix_records_vector()[j];
+		  if (a_gg_matrix.clocktick_1600ns == L2_decision_CT)
+		    {
+		      a_tdd.set_geiger_matrix_1600ns(a_gg_matrix.matrix);
+		      break;
+		    }
+		}
 
+	      for (unsigned int j = 0; j < get_coincidence_records_vector().size(); j++)
+		{
+		  const trigger_structures::coincidence_event_record & a_l2_coinc = get_coincidence_records_vector()[j];
+		  if (a_l2_coinc.clocktick_1600ns == L2_decision_CT)
+		    {
+		      a_tdd.set_L2_decision_1600ns(a_l2_coinc.decision);
+		      a_tdd.set_L2_decision_clocktick_1600ns(a_l2_coinc.clocktick_1600ns);
+		      a_tdd.set_calo_zoning_word_S0_1600ns(a_l2_coinc.calo_zoning_word[0]);
+		      a_tdd.set_calo_zoning_word_S1_1600ns(a_l2_coinc.calo_zoning_word[1]);
+		      a_tdd.set_calo_HTM_S0_1600ns(a_l2_coinc.total_multiplicity_side_0);
+		      a_tdd.set_calo_HTM_S1_1600ns(a_l2_coinc.total_multiplicity_side_1);
+		      a_tdd.set_calo_HTM_gveto_1600ns(a_l2_coinc.total_multiplicity_gveto);
+		      a_tdd.set_calo_LTO_S0_1600ns(a_l2_coinc.LTO_side_0);
+		      a_tdd.set_calo_LTO_S1_1600ns(a_l2_coinc.LTO_side_1);
+		      a_tdd.set_calo_LTO_gveto_1600ns(a_l2_coinc.LTO_gveto);
+		      a_tdd.set_calo_SS_coinc_1600ns(a_l2_coinc.single_side_coinc);
+		      a_tdd.set_calo_TTM_1600ns(a_l2_coinc.total_multiplicity_threshold);
+		      a_tdd.set_calo_XT_info_1600ns(a_l2_coinc.xt_info_bitset);
+		      a_tdd.set_tracker_finale_data_1600ns(a_l2_coinc.tracker_finale_data_per_zone);
+		      a_tdd.set_coincidence_ZW_S0_1600ns(a_l2_coinc.coincidence_zoning_word[0]);
+		      a_tdd.set_coincidence_ZW_S1_1600ns(a_l2_coinc.coincidence_zoning_word[1]);
+		      break;
+		    }
+		}
+	    } // end of L2 decision CT
 
-
+	} // end of for i
 
       return;
     }
@@ -732,7 +821,7 @@ namespace snemo {
 
 		      // Here L1 = L2 so CT are at 25 ns:
 		      trigger_structures::L2_decision_gate L2_decision_gate;
-		      L2_decision_gate.L1_calo_CT25 = a_L2_decision.L2_ct_decision;
+		      L2_decision_gate.L1_calo_CT25 = _L1_calo_decision_records_[i].L1_calo_ct_decision;
 		      L2_decision_gate.L2_trigger_mode =  a_L2_decision.L2_trigger_mode;
 		      L2_decision_gate.L2_decision_gate_begin = a_L2_decision.L2_ct_decision;
 		      L2_decision_gate.L2_decision_gate_end = L2_decision_gate.L2_decision_gate_begin;
@@ -942,7 +1031,6 @@ namespace snemo {
 			    {
 			      trigger_structures::L2_decision_gate L2_decision_gate;
 			      L2_decision_gate.trigger_id = _trigger_id_;
-			      std::clog << "TID = " << _trigger_id_ << std::endl;
 			      L2_decision_gate.L1_calo_CT25 = the_current_L2_coincidence_gate.L1_calo_CT25;
 			      L2_decision_gate.L2_trigger_mode =  a_L2_decision.L2_trigger_mode;
 			      L2_decision_gate.L2_decision_gate_begin = a_L2_decision.L2_ct_decision;
@@ -977,13 +1065,8 @@ namespace snemo {
 				  || a_L2_decision.L2_trigger_mode == trigger_structures::L2_trigger_mode::DAVE
 				  || a_L2_decision.L2_trigger_mode == trigger_structures::L2_trigger_mode::OPEN_DELAYED))
 			    {
-
-			      std::clog << "APE || DAVE || OPEN_DELAYED" << std::endl;
-			      a_L2_decision.display(std::clog);
-
 			      trigger_structures::L2_decision_gate L2_decision_gate;
 			      L2_decision_gate.trigger_id = _trigger_id_;
-			      std::clog << "TID = " << _trigger_id_ << std::endl;
 			      L2_decision_gate.L2_trigger_mode =  a_L2_decision.L2_trigger_mode;
 			      L2_decision_gate.L2_decision_gate_begin = a_L2_decision.L2_ct_decision;
 			      L2_decision_gate.L2_decision_gate_end = L2_decision_gate.L2_decision_gate_begin + _L2_coincidence_gate_size_; // standard L2 coincidence size even for APE and DAVE coincidences
@@ -1020,6 +1103,10 @@ namespace snemo {
 
 	} // end of else if any_coinc
 
+      // for (unsigned int i = 0; i < _calo_records_25ns_.size(); i++)
+      // 	{
+      // 	  _calo_records_25ns_[i].display();
+      // 	}
 
       // for (unsigned int i = 0; i < _coincidence_calo_records_1600ns_.size(); i++)
       // 	{

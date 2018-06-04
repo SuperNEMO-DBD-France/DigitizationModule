@@ -483,7 +483,7 @@ namespace snemo {
     }
 
     void calo_trigger_algorithm::process(const calo_ctw_data & calo_ctw_data_,
-						   std::vector<trigger_structures::calo_summary_record> & calo_records_)
+					 std::vector<trigger_structures::calo_summary_record> & calo_records_)
     {
       DT_THROW_IF(!is_initialized(), std::logic_error, "Calo trigger algorithm is not initialized, it can't process ! ");
       _process(calo_ctw_data_, calo_records_);
@@ -491,7 +491,7 @@ namespace snemo {
     }
 
     void calo_trigger_algorithm::_process(const calo_ctw_data & calo_ctw_data_,
-						    std::vector<trigger_structures::calo_summary_record> & calo_records_)
+					  std::vector<trigger_structures::calo_summary_record> & calo_records_)
     {
       _calo_record_per_clocktick_.reset();
       _calo_level_1_finale_decision_.reset();

@@ -87,9 +87,9 @@ namespace snemo {
     void trigger_structures::calo_summary_record::display(std::ostream & out_) const
     {
       calo_record::display(out_);
-      out_ << "Single Side coinc           = [" << single_side_coinc << std::endl;
-      out_ << "Threshold total mult        = [" << total_multiplicity_threshold << std::endl;
-      out_ << "Calo trigger final decision = [" << calo_finale_decision  << std::endl;
+      out_ << "Single Side coinc            = [" << single_side_coinc << "]" << std::endl;
+      out_ << "Threshold total mult         = [" << total_multiplicity_threshold << "]" << std::endl;
+      out_ << "Calo trigger finale decision = [" << calo_finale_decision << "]" << std::endl;
       out_ << std::endl;
       return;
     }

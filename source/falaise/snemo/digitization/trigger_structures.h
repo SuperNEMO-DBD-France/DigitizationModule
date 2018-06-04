@@ -204,8 +204,8 @@ namespace snemo {
 	void reset();
 	void display(std::ostream & out_ = std::clog) const;
 	uint32_t trigger_id; // Current trigger ID given by the L2 gate
-	bool     L2_decision_bool;
-	uint32_t L2_ct_decision; // CT @ 1600 ns
+	bool     L2_decision_bool; // The L2 decision bool
+	uint32_t L2_ct_decision;   // CT @ 1600 ns
 	trigger_structures::L2_trigger_mode L2_trigger_mode;
       };
 

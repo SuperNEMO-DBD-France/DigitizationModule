@@ -12,6 +12,7 @@
 #include <falaise/snemo/datamodels/data_model.h>
 
 // Ourselves:
+#include <snemo/digitization/fldigi.h>
 #include <snemo/digitization/digitization_module.h>
 
 namespace snemo {
@@ -31,7 +32,7 @@ namespace snemo {
       _abort_at_missing_input_ = true;
       _abort_at_former_output_ = false;
       _preserve_former_output_ = false;
-      _driver_->reset();
+      _digi_driver_.reset();
       return;
     }
 
@@ -46,6 +47,7 @@ namespace snemo {
     digitization_module::~digitization_module()
     {
       if (is_initialized()) digitization_module::reset();
+      snemo::digitization::terminate();
       return;
     }
 
@@ -58,6 +60,7 @@ namespace snemo {
                    "Module '" << get_name() << "' is already initialized ! ");
 
       dpp::base_module::_common_initialize(config_);
+      snemo::digitization::initialize();
 
       /// Input SSD bank:
       if (_SSD_label_.empty()) {
@@ -132,8 +135,37 @@ namespace snemo {
         set_preserve_former_output(config_.fetch_boolean("preserve_former_output"));
       }
 
-      // Driver :
-      _driver_->initialize(config_);
+      // Digitization algorithm :
+      DT_THROW_IF(!config_.has_key("driver"), std::logic_error, "Missing 'driver' algorithm");
+      const std::string algorithm_id = config_.fetch_string("driver");
+      if (algorithm_id == "digitization") {
+	_digi_driver_.reset(new snemo::digitization::digitization_driver);
+      } else {
+	DT_THROW_IF(true, std::logic_error,
+		    "Unsupported '" << algorithm_id << "'digitization algorithm ");
+      }
+
+      // Plug the geometry manager :
+      _digi_driver_.get()->set_geometry_manager(get_geometry_manager());
+
+      // Initialize the clustering driver :
+      std::string driver_name = "digitization";
+
+      std::string key_prefix = "driver." + driver_name + ".";
+      std::string type_id_key = key_prefix + "type_id";
+      std::string config_key_prefix = key_prefix + "config.";
+      DT_THROW_IF(!config_.has_key(type_id_key),
+		  std::logic_error,
+		  "Missing type ID for signal generator driver '" << driver_name << "'!");
+      std::string driver_type_id = config_.fetch_string(type_id_key);
+      DT_THROW_IF(driver_type_id.empty(),
+		  std::logic_error,
+		  "Empty type ID for signal generator driver '" << driver_name << "'!");
+      datatools::properties driver_config;
+      config_.export_and_rename_starting_with(driver_config, config_key_prefix, "");
+
+      _digi_driver_.get()->initialize(driver_config);
+      _digi_driver_.get()->tree_dump(std::clog, "Digitization driver configuration");
 
       _set_initialized(true);
       return;
@@ -145,11 +177,11 @@ namespace snemo {
                   "Module '" << get_name() << "' is not initialized !");
 
       _set_initialized(false);
-      if (_driver_.get() != 0) {
-        if (_driver_->is_initialized()) {
-          _driver_->reset();
+      if (_digi_driver_.get() != 0) {
+        if (_digi_driver_->is_initialized()) {
+          _digi_driver_->reset();
         }
-        _driver_.reset();
+        _digi_driver_.reset();
       }
       _geometry_manager_ = nullptr;
       // _database_manager_ = nullptr;
@@ -245,8 +277,6 @@ namespace snemo {
 
     const geomtools::manager & digitization_module::get_geometry_manager() const
     {
-      DT_THROW_IF(!is_initialized(), std::logic_error,
-                  "Module '" << get_name() << "' is not initialized ! ");
       return * _geometry_manager_;
     }
 
@@ -337,7 +367,7 @@ namespace snemo {
     {
       DT_LOG_TRACE(get_logging_priority(), "Entering...");
 
-      _driver_->process(SSD_, SDD_);
+      _digi_driver_->process(SSD_, SDD_);
 
       DT_LOG_TRACE(get_logging_priority(), "Exiting.");
       return;
