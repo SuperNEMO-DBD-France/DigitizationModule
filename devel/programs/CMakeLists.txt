@@ -10,6 +10,7 @@ set(FalaiseDigitizationPlugin_DEVEL_PROGRAMS
   trigger_board_implementation.cxx
   trigger_program.cxx
   trigger_program_on_signals.cxx
+  thesis_trigger_program.cxx
   )
 
 # Use C++11
