@@ -27,6 +27,7 @@
 // Falaise:
 #include <falaise/falaise.h>
 #include <falaise/snemo/datamodels/sim_digi_data.h>
+#include <falaise/snemo/electronics/constants.h>
 
 // This project :
 #include <snemo/digitization/fldigi.h>
@@ -314,11 +315,83 @@ int main( int  argc_ , char **argv_  )
 			    }
 			}
 		    }
+		  // Event pass fake trigger :
+		  bool ft_passed = false;
+		  std::size_t total_number_of_calo_hits = number_of_main_calo_hits + number_of_xwall_calo_hits;
+		  if (total_number_of_calo_hits >= 1 && number_of_geiger_hits >= 3)
+		    {
+		      ft_writer.process(ER);
+		      total_number_of_fake_trigger_events++;
+		      ft_passed = true;
+		    }
+
+
+		  bool caraco_decision = false;
+		  std::size_t number_of_caraco_decision = 0;
+		  std::vector<uint32_t> caraco_clockticks;
+		  bool ape_decision = false;
+		  std::size_t number_of_ape_decision = 0;
+		  std::vector<uint32_t> ape_clockticks;
+		  bool dave_decision = false;
+		  std::size_t number_of_dave_decision = 0;
+		  std::vector<uint32_t> dave_clockticks;
+
+		  bool delayed_decision = false;
+
 
 		  // Browse TDD struct in SDD :
+		  for (std::size_t itdd = 0; itdd < SDD.get_trigger_digi_data().size(); itdd++)
+		    {
+		      snemo::datamodel::sim_trigger_digi_data a_tdd = SDD.get_trigger_digi_data()[itdd].get();
+		      if (a_tdd.get_L2_decision_trigger_mode == snemo::electronics::constants::L2_trigger_mode::CARACO) {
+			caraco_decision = true;
+			number_of_caraco_decision++;
+		      }
+		      if (a_tdd.get_L2_decision_trigger_mode == snemo::electronics::constants::L2_trigger_mode::APE) {
+			ape_decision = true;
+			number_of_ape_decision++;
+			delayed_decision = true;
+		      }
+
+		      if (a_tdd.get_L2_decision_trigger_mode == snemo::electronics::constants::L2_trigger_mode::DAVE) {
+			dave_decision = true;
+			number_of_dave_decision++;
+			delayed_decision = true;
+		      }
+
+		    }
+
+		  if (caraco_decision && has_delayed_geiger)
+		    {
+		      total_number_of_fake_delayed_trigger_events++;
+		    }
+
+		  bool real_trigger_decision = false;
+		  if (caraco_decision)
+		    {
+		      caraco_writer.process(ER);
+		      total_number_of_caraco_trigger_events++;
+		      real_trigger_decision = true;
+		    }
+		  if (delayed_decision)
+		    {
+		      alpha_writer.process(ER);
+		      total_number_of_delayed_trigger_events++;
 
 
+		      if (ape_decision) total_number_of_ape_trigger_events++;
+		      if (dave_decision) total_number_of_dave_trigger_events++;
 
+		      real_trigger_decision = true;
+		    }
+
+		  if (real_trigger_decision) total_number_of_real_trigger_events++;
+
+		  if (ft_passed && !real_trigger_decision)
+		    {
+		      ft_no_rt_writer.process(ER);
+		      total_number_of_fake_trigger_no_real_trigger_events++;
+		    }
 
 
 
@@ -335,107 +408,6 @@ int main( int  argc_ , char **argv_  )
 	std::clog << "DEBUG : psd count " << psd_count << std::endl;
 	DT_LOG_NOTICE(logging, "Simulated Signal data #" << psd_count);
       } // end of reader
-
-
-    // 	    uint16_t number_of_L2_decision = L2_decision_record.size();
-    // 	    bool caraco_decision = false;
-    // 	    uint32_t caraco_clocktick_1600ns = snemo::digitization::clock_utils::INVALID_CLOCKTICK;
-    // 	    bool delayed_decision = false;
-    // 	    uint32_t delayed_clocktick_1600ns = snemo::digitization::clock_utils::INVALID_CLOCKTICK;
-    // 	    bool already_delayed_trig = false;
-    // 	    snemo::digitization::trigger_structures::L2_trigger_mode delayed_trigger_mode = snemo::digitization::trigger_structures::L2_trigger_mode::INVALID;
-
-    // 	    if (number_of_L2_decision != 0)
-    // 	      {
-    // 		for (unsigned int isize = 0; isize < number_of_L2_decision; isize++)
-    // 		  {
-    // 		    if (L2_decision_record[isize].L2_decision_bool && L2_decision_record[isize].L2_trigger_mode == snemo::digitization::trigger_structures::L2_trigger_mode::CARACO)
-    // 		      {
-    // 			caraco_decision         = L2_decision_record[isize].L2_decision_bool;
-    // 			caraco_clocktick_1600ns = L2_decision_record[isize].L2_ct_decision;
-    // 		      }
-    // 		    else if (L2_decision_record[isize].L2_decision_bool &&  (L2_decision_record[isize].L2_trigger_mode == snemo::digitization::trigger_structures::L2_trigger_mode::APE
-    // 									     || L2_decision_record[isize].L2_trigger_mode == snemo::digitization::trigger_structures::L2_trigger_mode::DAVE) && already_delayed_trig == false)
-    // 		      {
-    // 			delayed_decision         = L2_decision_record[isize].L2_decision_bool;
-    // 			delayed_clocktick_1600ns = L2_decision_record[isize].L2_ct_decision;
-    // 			delayed_trigger_mode     = L2_decision_record[isize].L2_trigger_mode;
-    // 			already_delayed_trig     = true;
-    // 		      }
-    // 		  }
-    // 	      }
-
-    // 	    // for (std::size_t i = 0; i  < calo_collection_records.size(); i++) {
-    // 	    //   calo_collection_records[i].display();
-    // 	    // }
-
-    // 	    // for (std::size_t i = 0; i  < coincidence_collection_calo_records.size(); i++) {
-    // 	    //   coincidence_collection_calo_records[i].display();
-    // 	    // }
-
-    // 	    // for (std::size_t i = 0; i  < tracker_collection_records.size(); i++) {
-    // 	    //   tracker_collection_records[i].display();
-    // 	    // }
-
-    // 	    // for (std::size_t i = 0; i  < coincidence_collection_records.size(); i++) {
-    // 	    //   coincidence_collection_records[i].display();
-    // 	    // }
-    // 	    std::size_t total_number_of_calo_hits = number_of_main_calo_hits + number_of_xwall_calo_hits;
-    // 	    bool ft_passed = false;
-    // 	    if (total_number_of_calo_hits >= 1 && number_of_geiger_hits >= 3)
-    // 	      {
-    // 		ft_writer.process(ER);
-    // 		total_number_of_fake_trigger_events++;
-    // 		ft_passed = true;
-    // 	      }
-    // 	    if (caraco_decision && has_delayed_geiger)
-    // 	      {
-    // 		total_number_of_fake_delayed_trigger_events++;
-    // 	      }
-
-    // 	    bool real_trigger_decision = false;
-    // 	    if (caraco_decision)
-    // 	      {
-    // 		caraco_writer.process(ER);
-    // 		total_number_of_caraco_trigger_events++;
-    // 		real_trigger_decision = true;
-    // 	      }
-    // 	    if (delayed_decision)
-    // 	      {
-    // 		alpha_writer.process(ER);
-    // 		total_number_of_delayed_trigger_events++;
-    // 		if (delayed_trigger_mode == snemo::digitization::trigger_structures::L2_trigger_mode::APE) total_number_of_ape_trigger_events++;
-    // 		if (delayed_trigger_mode == snemo::digitization::trigger_structures::L2_trigger_mode::DAVE) total_number_of_dave_trigger_events++;
-
-    // 		real_trigger_decision = true;
-    // 	      }
-
-    // 	    if (real_trigger_decision) total_number_of_real_trigger_events++;
-
-    // 	    if (ft_passed && !real_trigger_decision)
-    // 	      {
-    // 		ft_no_rt_writer.process(ER);
-    // 		total_number_of_fake_trigger_no_real_trigger_events++;
-    // 	      }
-
-    // 	    DT_LOG_INFORMATION(logging, "Number of L2 decision : " << number_of_L2_decision);
-    // 	    DT_LOG_INFORMATION(logging, "CARACO decision :       " << caraco_decision);
-    // 	    DT_LOG_INFORMATION(logging, "CARACO CT1600ns :       " << caraco_clocktick_1600ns);
-    // 	    DT_LOG_INFORMATION(logging, "Delayed decision :      " << delayed_decision);
-    // 	    DT_LOG_INFORMATION(logging, "Delayed CT1600ns :      " << delayed_clocktick_1600ns);
-    // 	    DT_LOG_INFORMATION(logging, "Delayed trigger mode :  " << delayed_trigger_mode);
-
-    // 	    my_trigger_algo.reset_data();
-
-    // 	  } //end of if has bank label "SD"
-    // 	total_number_of_events++;
-
-    // 	ER.clear();
-    // 	psd_count++;
-    // 	if (debug) std::clog << "DEBUG : psd count " << psd_count << std::endl;
-    // 	DT_LOG_NOTICE(logging, "Simulated data #" << psd_count);
-
-    // } // end of reader is terminated
 
     // Display some stats
 

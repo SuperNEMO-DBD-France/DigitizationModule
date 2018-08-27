@@ -22,7 +22,7 @@
 // Falaise:
 #include <falaise/falaise.h>
 #include <falaise/snemo/geometry/calo_locator.h>
-// #include <falaise/snemo/geometry/gveto_locator.h>
+#include <falaise/snemo/geometry/gveto_locator.h>
 #include <falaise/snemo/geometry/gg_locator.h>
 
 // Third part :
@@ -33,6 +33,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/program_options.hpp>
+#include <boost/algorithm/string.hpp>
 
 
 void generate_pool_of_calo_spurious_SD(mygsl::rng * rdm_gen_,
@@ -46,6 +47,10 @@ void generate_pool_of_geiger_spurious_SD(mygsl::rng * rdm_gen_,
 					 const datatools::properties & config_,
 					 const std::vector<geomtools::geom_id> & gid_collection_,
 					 std::vector<mctools::base_step_hit> & calo_tracker_spurious_pool_);
+
+void parse_config_file(const std::string & filename,
+		       std::vector<geomtools::geom_id> & list_of_gid_to_generate);
+
 
 int main( int  argc_ , char **argv_  )
 {
@@ -69,7 +74,7 @@ int main( int  argc_ , char **argv_  )
        "set the output path where produced files are created")
       ("config,c",
        po::value<std::string>(& config_file),
-       "set the self trigger config file to produce self trigger events")
+       "set the list of SD hits to generate from electronic mapping configuration file")
       ; // end of options description
 
     // Describe command line arguments :
@@ -96,24 +101,8 @@ int main( int  argc_ , char **argv_  )
     datatools::fetch_path_with_env(output_path);
 
     // Default config file (datatools::properties format):
-    if (config_file.empty()) config_file = "${FALAISE_DIGITIZATION_DIR}/resources/self_trigger.conf";
+    if (config_file.empty()) config_file = "${FALAISE_DIGITIZATION_DIR}/devel/resources/trigger_emul_from_channels.conf";
     datatools::fetch_path_with_env(config_file);
-    datatools::properties self_trigger_config;
-    datatools::properties::read_config(config_file, self_trigger_config);
-
-    std::string event_builder_mode = "";
-    if (self_trigger_config.has_key("event_builder_mode")) {
-      event_builder_mode = self_trigger_config.fetch_string("event_builder_mode");
-    }
-
-    // Default event mode :
-    if (event_builder_mode.empty()) event_builder_mode = "sliding_window";
-
-    std::clog << "Program to add calo / tracker self trigger hit to 'SD' !" << std::endl;
-
-    int32_t seed = 314158;
-    mygsl::rng random_generator;
-    random_generator.initialize(seed);
 
     std::string manager_config_file;
     manager_config_file = "@falaise:config/snemo/demonstrator/geometry/4.0/manager.conf";
@@ -131,15 +120,15 @@ int main( int  argc_ , char **argv_  )
 
 
     // Self trigger SD brio writer :
-    std::string self_trigger_SD_filename = output_path + "self_trigger_SD.brio";
-    dpp::output_module self_trigger_SD_writer;
-    datatools::properties self_trigger_SD_config;
-    self_trigger_SD_config.store ("logging.priority", "debug");
-    self_trigger_SD_config.store ("files.mode", "single");
-    self_trigger_SD_config.store ("files.single.filename", self_trigger_SD_filename);
-    self_trigger_SD_writer.initialize_standalone(self_trigger_SD_config);
+    std::string output_SD_filename = output_path + "trigger_emul_from_channels_SD.brio";
+    dpp::output_module output_SD_writer;
+    datatools::properties output_SD_config;
+    output_SD_config.store ("logging.priority", "debug");
+    output_SD_config.store ("files.mode", "single");
+    output_SD_config.store ("files.single.filename", output_SD_filename);
+    output_SD_writer.initialize_standalone(output_SD_config);
 
-    DT_LOG_INFORMATION(logging, "Serialization self trigger output file :" + self_trigger_SD_filename);
+    DT_LOG_INFORMATION(logging, "Serialization self trigger output file :" + output_SD_filename);
 
     std::string SD_bank_label = "SD";
     unsigned int module_number = 0;
@@ -149,10 +138,10 @@ int main( int  argc_ , char **argv_  )
     calo_locator.set_module_number(module_number);
     calo_locator.initialize();
 
-    // snemo::geometry::gveto_locator gveto_locator;
-    // gveto_locator.set_geo_manager(my_manager);
-    // gveto_locator.set_module_number(module_number);
-    // gveto_locator.initialize();
+    snemo::geometry::gveto_locator gveto_locator;
+    gveto_locator.set_geo_manager(my_manager);
+    gveto_locator.set_module_number(module_number);
+    gveto_locator.initialize();
 
     snemo::geometry::gg_locator gg_locator;
     gg_locator.set_geo_manager(my_manager);
@@ -160,224 +149,99 @@ int main( int  argc_ , char **argv_  )
     gg_locator.initialize();
 
 
-    // Select calo main wall GID :
-    geomtools::geom_id main_wall_gid_pattern(1302,
-                                             module_number,
-                                             geomtools::geom_id::ANY_ADDRESS, // Side
-                                             geomtools::geom_id::ANY_ADDRESS, // Column
-                                             geomtools::geom_id::ANY_ADDRESS, // Row
-					     0); // part only 0, to convert into any (to not have part 0 and 1 in the vector double count)
-    std::vector<geomtools::geom_id> collection_of_main_wall_gid;
-    my_manager.get_mapping().compute_matching_geom_id(main_wall_gid_pattern,
-                                                      collection_of_main_wall_gid);
-    // Convert part 0 into any (*)
-    for (std::size_t i = 0; i < collection_of_main_wall_gid.size(); i++) {
-      collection_of_main_wall_gid[i].set_any(4);
-    }
+    // // Select calo main wall GID :
+    // geomtools::geom_id main_wall_gid_pattern(1302,
+    //                                          module_number,
+    //                                          geomtools::geom_id::ANY_ADDRESS, // Side
+    //                                          geomtools::geom_id::ANY_ADDRESS, // Column
+    //                                          geomtools::geom_id::ANY_ADDRESS, // Row
+    // 					     0); // part only 0, to convert into any (to not have part 0 and 1 in the vector double count)
+    // std::vector<geomtools::geom_id> collection_of_main_wall_gid;
+    // my_manager.get_mapping().compute_matching_geom_id(main_wall_gid_pattern,
+    //                                                   collection_of_main_wall_gid);
+    // // Convert part 0 into any (*)
+    // for (std::size_t i = 0; i < collection_of_main_wall_gid.size(); i++) {
+    //   collection_of_main_wall_gid[i].set_any(4);
+    // }
 
-    // Select calo xwall GID :
-    geomtools::geom_id xwall_gid_pattern(1232,
-                                         module_number,
-                                         geomtools::geom_id::ANY_ADDRESS,  // Side
-                                         geomtools::geom_id::ANY_ADDRESS,  // Wall
-                                         geomtools::geom_id::ANY_ADDRESS,  // Column
-                                         geomtools::geom_id::ANY_ADDRESS); // Row
-    std::vector<geomtools::geom_id> collection_of_xwall_gid;
-    my_manager.get_mapping().compute_matching_geom_id(xwall_gid_pattern,
-                                                      collection_of_xwall_gid);
-
-
-    // Select geiger GID :
-    geomtools::geom_id geiger_gid_pattern(1210,
-					  module_number,
-					  geomtools::geom_id::ANY_ADDRESS,  // Side
-					  geomtools::geom_id::ANY_ADDRESS,  // Layer
-					  geomtools::geom_id::ANY_ADDRESS); // Row
-    std::vector<geomtools::geom_id> collection_of_geiger_gid;
-    my_manager.get_mapping().compute_matching_geom_id(geiger_gid_pattern,
-						      collection_of_geiger_gid);
+    // // Select calo xwall GID :
+    // geomtools::geom_id xwall_gid_pattern(1232,
+    //                                      module_number,
+    //                                      geomtools::geom_id::ANY_ADDRESS,  // Side
+    //                                      geomtools::geom_id::ANY_ADDRESS,  // Wall
+    //                                      geomtools::geom_id::ANY_ADDRESS,  // Column
+    //                                      geomtools::geom_id::ANY_ADDRESS); // Row
+    // std::vector<geomtools::geom_id> collection_of_xwall_gid;
+    // my_manager.get_mapping().compute_matching_geom_id(xwall_gid_pattern,
+    //                                                   collection_of_xwall_gid);
 
 
-    std::clog << "Generating pool of calo spurious hits 'SD'..." << std::endl;
-    std::vector<mctools::base_step_hit> calo_tracker_spurious_pool;
+    // // Select geiger GID :
+    // geomtools::geom_id geiger_gid_pattern(1210,
+    // 					  module_number,
+    // 					  geomtools::geom_id::ANY_ADDRESS,  // Side
+    // 					  geomtools::geom_id::ANY_ADDRESS,  // Layer
+    // 					  geomtools::geom_id::ANY_ADDRESS); // Row
+    // std::vector<geomtools::geom_id> collection_of_geiger_gid;
+    // my_manager.get_mapping().compute_matching_geom_id(geiger_gid_pattern,
+    // 						      collection_of_geiger_gid);
 
-    // Generate pool of main wall spurious signals :
-    generate_pool_of_calo_spurious_SD(&random_generator,
-				      calo_locator,
-				      self_trigger_config,
-				      collection_of_main_wall_gid,
-				      calo_tracker_spurious_pool);
 
-    // Generate pool of xwall spurious signals :
-    generate_pool_of_calo_spurious_SD(&random_generator,
-				      calo_locator,
-				      self_trigger_config,
-				      collection_of_xwall_gid,
-				      calo_tracker_spurious_pool);
+    // std::clog << "Generating pool of calo spurious hits 'SD'..." << std::endl;
+    // std::vector<mctools::base_step_hit> calo_tracker_spurious_pool;
 
-    // Generate pool of geiger spurious signals :
-    generate_pool_of_geiger_spurious_SD(&random_generator,
-					gg_locator,
-					self_trigger_config,
-					collection_of_geiger_gid,
-					calo_tracker_spurious_pool);
+    // // Generate pool of main wall spurious signals :
+    // generate_pool_of_calo_spurious_SD(&random_generator,
+    // 				      calo_locator,
+    // 				      self_trigger_config,
+    // 				      collection_of_main_wall_gid,
+    // 				      calo_tracker_spurious_pool);
 
-    // Sort calo tracker spurious pool by timestamp
-    std::sort(calo_tracker_spurious_pool.begin(),
-	      calo_tracker_spurious_pool.end(),
-	      [](const mctools::base_step_hit & bsha, const mctools::base_step_hit & bshb)
-	      {
-		return bsha.get_time_start() < bshb.get_time_start();
-	      });
+    // // Generate pool of xwall spurious signals :
+    // generate_pool_of_calo_spurious_SD(&random_generator,
+    // 				      calo_locator,
+    // 				      self_trigger_config,
+    // 				      collection_of_xwall_gid,
+    // 				      calo_tracker_spurious_pool);
 
-    std::size_t event_counter = 0;
-    if (event_builder_mode == "single_event") {
+    // // Generate pool of geiger spurious signals :
+    // generate_pool_of_geiger_spurious_SD(&random_generator,
+    // 					gg_locator,
+    // 					self_trigger_config,
+    // 					collection_of_geiger_gid,
+    // 					calo_tracker_spurious_pool);
 
-      datatools::things ER;
-      mctools::simulated_data * ptr_simu_data = 0;
-      ptr_simu_data = &(ER.add<mctools::simulated_data>(SD_bank_label));
-      mctools::simulated_data & self_trigger_SD = *ptr_simu_data;
-      self_trigger_SD.add_step_hits("calo", 2000);
-      self_trigger_SD.add_step_hits("xcalo", 2000);
-      self_trigger_SD.add_step_hits("gg", 2000);
 
-      for (std::size_t i = 0; i < calo_tracker_spurious_pool.size(); i++)
-	{
-	  if (calo_tracker_spurious_pool[i].get_geom_id().get_type() == 1210)
-	    {
-	      self_trigger_SD.add_step_hit("gg") = calo_tracker_spurious_pool[i];
-	    }
-	  if (calo_tracker_spurious_pool[i].get_geom_id().get_type() == 1302)
-	    {
-	      self_trigger_SD.add_step_hit("calo") = calo_tracker_spurious_pool[i];
-	    }
-	  if (calo_tracker_spurious_pool[i].get_geom_id().get_type() == 1232)
-	    {
-	      self_trigger_SD.add_step_hit("xcalo") = calo_tracker_spurious_pool[i];
-	    }
-	}
+    // std::size_t event_counter = 0;
 
-      if (self_trigger_SD.has_step_hits("calo") || self_trigger_SD.has_step_hits("xcalo") || self_trigger_SD.has_step_hits("gg"))
-	{
-	  self_trigger_SD_writer.process(ER);
-	  // self_trigger_SD.tree_dump();
-	  event_counter++;
-	}
-    }
+    // datatools::things ER;
+    // mctools::simulated_data * ptr_simu_data = 0;
+    // ptr_simu_data = &(ER.add<mctools::simulated_data>(SD_bank_label));
+    // mctools::simulated_data & output_SD = *ptr_simu_data;
+    // output_SD.add_step_hits("calo", 2000);
+    // output_SD.add_step_hits("xcalo", 2000);
+    // output_SD.add_step_hits("gveto", 2000);
+    // output_SD.add_step_hits("gg", 2000);
 
-    else if (event_builder_mode == "sliding_window") {
-      /*************************************************/
-      // Event builder and writing into brio file part :
-      /*************************************************/
+    // if (output_SD.has_step_hits("calo")
+    // 	|| output_SD.has_step_hits("xcalo")
+    // 	|| output_SD.has_step_hits("gveto")
+    // 	|| output_SD.has_step_hits("gg"))
+    //   {
+    // 	output_SD_writer.process(ER);
+    // 	// self_trigger_SD.tree_dump();
+    // 	event_counter++;
+    //   }
 
-      /*   Strategy to build events :
-	   <-----> event window (fix)
-	   |     |
-	   -x--x---x---x--x-----x-----x--x---x-------> time     (x : calo | tracker hits)
-	   |     |
-	   tstart  tstop    step = 1600ns (lowest step in the trigger)
-      */
+    // std::clog << "Number of events = " << event_counter << std::endl;
 
-      // Store events with a step of 1.6us and an event window given by the conf file
-      double time_interval;
-      double event_window; // = 100 * CLHEP::microsecond; // us : window tunable
-      double event_stepper = 1.6 * CLHEP::microsecond;
-      datatools::invalidate(time_interval);
-      datatools::invalidate(event_window);
 
-      if (self_trigger_config.has_key("time_interval")) {
-	time_interval = self_trigger_config.fetch_real("time_interval");
-      }
-      if (self_trigger_config.has_key("event_window_integration")) {
-	event_window = self_trigger_config.fetch_real("event_window_integration");
-      }
+    std::vector<geomtools::geom_id> list_of_gid_to_generate;
 
-      std::clog << "Time interval (in s) " << time_interval / CLHEP::second << std::endl;
-      std::clog << "Event window (in us) " << event_window / CLHEP::microsecond << std::endl;
-      std::clog << "Event stepper (in us) " << event_stepper / CLHEP::microsecond << std::endl;
-      for (unsigned int event_tstart = 0 * CLHEP::microsecond; event_tstart < time_interval; event_tstart += event_stepper)
-	{
-	  // Prepare new SD bank to add to the datatools::things ER (Event Record)
-	  datatools::things ER;
-	  mctools::simulated_data * ptr_simu_data = 0;
-	  ptr_simu_data = &(ER.add<mctools::simulated_data>(SD_bank_label));
-	  mctools::simulated_data & self_trigger_SD = *ptr_simu_data;
-	  unsigned int event_tstop = event_tstart + event_window;
-	  if (is_display) std::clog << "Event_tstart = " << event_tstart << " Event_tstop " << event_tstop << std::endl;
+    parse_config_file(config_file,
+		      list_of_gid_to_generate);
 
-	  // Add calo step hit in current event
-	  int first_calo_position = -1;
-	  bool first_calo_found = false;
-	  int last_calo_position = -1;
-	  bool last_calo_found = false;
-	  for (unsigned int i = 0; i < calo_tracker_spurious_pool.size(); i++)
-	    {
-	      if (first_calo_found == false && calo_tracker_spurious_pool[i].get_time_start() >= event_tstart) {
-		first_calo_position = i;
-		first_calo_found = true;
-	      }
-	      if (last_calo_found == false && calo_tracker_spurious_pool[i].get_time_start() >= event_tstop) {
-		last_calo_position = i - 1;
-		last_calo_found = true;
-	      }
-	      if (first_calo_found && last_calo_found) break;
-	    }
 
-	  if (first_calo_position != -1 && last_calo_position != -1) {
-	    for (int icalo = first_calo_position; icalo <= last_calo_position; icalo++)
-	      {
-		if (calo_tracker_spurious_pool[icalo].get_geom_id().get_type() == 1302)
-		  {
-		    self_trigger_SD.add_step_hits("calo", 20);
-		    self_trigger_SD.add_step_hit("calo") = calo_tracker_spurious_pool[icalo];
-		  }
-		else if (calo_tracker_spurious_pool[icalo].get_geom_id().get_type() == 1232)
-		  {
-		    self_trigger_SD.add_step_hits("xcalo", 20);
-		    self_trigger_SD.add_step_hit("xcalo") = calo_tracker_spurious_pool[icalo];
-		  }
-	      }
-	  }
-
-	  // Add tracker step hit in current event
-	  int first_geiger_position = -1;
-	  bool first_geiger_found = false;
-	  int last_geiger_position = -1;
-	  bool last_geiger_found = false;
-	  for (unsigned int i = 0; i < calo_tracker_spurious_pool.size(); i++)
-	    {
-	      if (first_geiger_found == false && calo_tracker_spurious_pool[i].get_time_start() >= event_tstart) {
-		first_geiger_position = i;
-		first_geiger_found = true;
-	      }
-	      if (last_geiger_found == false &&  calo_tracker_spurious_pool[i].get_time_start() >= event_tstop) {
-		last_geiger_position = i - 1;
-		last_geiger_found = true;
-	      }
-	      if (first_geiger_found && last_geiger_found) break;
-	    }
-
-	  if (first_geiger_position != -1 && last_geiger_position != -1) {
-	    for (int igeiger = first_geiger_position; igeiger <= last_geiger_position; igeiger++)
-	      {
-		if (calo_tracker_spurious_pool[igeiger].get_geom_id().get_type() == 1210)
-		  {
-		    self_trigger_SD.add_step_hits("gg", 20);
-		    self_trigger_SD.add_step_hit("gg") = calo_tracker_spurious_pool[igeiger];
-		  }
-	      }
-	  }
-
-	  if (self_trigger_SD.has_step_hits("calo") || self_trigger_SD.has_step_hits("xcalo") || self_trigger_SD.has_step_hits("gg"))
-	    {
-	      self_trigger_SD_writer.process(ER);
-	      // self_trigger_SD.tree_dump();
-	      event_counter++;
-	    }
-	}
-    }
-
-    std::clog << "Number of events = " << event_counter << std::endl;
     std::clog << "The end." << std::endl;
   }
 
@@ -592,6 +456,51 @@ void generate_pool_of_geiger_spurious_SD(mygsl::rng * rdm_gen_,
 	  hit_count++;
 	}
     }
+
+  return;
+}
+
+void parse_config_file(const std::string & filename,
+		       std::vector<geomtools::geom_id> & list_of_gid_to_generate)
+{
+  std::ifstream configstream;
+  configstream.open(filename);
+
+  std::string line;
+  std::size_t line_number = 0;
+  while (getline(configstream, line)) {
+    if (!line.empty()) {
+      std::clog << "Line #" << line_number << " : " << line << std::endl;
+      std::vector<std::string> splitted_lines;
+
+      boost::split(splitted_lines, line, [](char c){return c == ':';});
+
+      std::string hit_type = splitted_lines[0];
+      std::string crate_with_letter =  splitted_lines[1];
+      std::string boards_with_letter =  splitted_lines[2];
+
+      std::string feast_with_letter = "";
+      std::string channel_with_letter = "";
+      if (hit_type == "TRACKER")
+	{
+	  feast_with_letter = splitted_lines[3];
+	  channel_with_letter = splitted_lines[4];
+	}
+      else channel_with_letter = splitted_lines[3];
+
+      if (line_number == 0) std::clog << hit_type << ' '
+				      << crate_with_letter << ' '
+				      << boards_with_letter << ' '
+				      << feast_with_letter << ' '
+				      << channel_with_letter << ' ' << std::endl;
+
+
+      line_number++;
+    }
+  }
+
+
+
 
   return;
 }

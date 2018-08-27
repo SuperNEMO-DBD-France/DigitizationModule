@@ -206,7 +206,6 @@ namespace snemo {
       int module_id   = -1;
       int crate_id    = -1;
       int board_id    = -1;
-      int feast_id    = -1;
       int channel_id  = -1;
 
       uint32_t GID_type = geom_id_.get_type();
@@ -215,6 +214,8 @@ namespace snemo {
       if (GID_type == mapping::GEIGER_ANODIC_CATEGORY_TYPE
 	  || GID_type == mapping::GEIGER_CATHODIC_CATEGORY_TYPE)
 	{
+	  int feast_id    = -1;
+
 	  // Drift cell --> Side [0;1] Layer [0;8] Row [0;112]
 	  electronic_id.set_type(mapping::GEIGER_FEB_CATEGORY_TYPE);
 	  unsigned int side_index  = _gg_locator_->extract_side(geom_id_);

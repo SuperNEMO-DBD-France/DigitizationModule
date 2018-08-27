@@ -10,7 +10,8 @@ set(FalaiseDigitizationPlugin_DEVEL_PROGRAMS
   trigger_board_implementation.cxx
   trigger_program.cxx
   trigger_program_on_signals.cxx
-  thesis_trigger_program.cxx
+  #  thesis_trigger_program.cxx
+  trigger_emul_from_channels.cxx
   )
 
 # Use C++11
