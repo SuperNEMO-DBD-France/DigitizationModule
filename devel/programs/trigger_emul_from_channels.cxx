@@ -36,6 +36,10 @@
 #include <boost/algorithm/string.hpp>
 
 
+// Ourselves
+#include <snemo/digitization/mapping.h>
+#include <snemo/digitization/electronic_mapping.h>
+
 void generate_pool_of_calo_spurious_SD(mygsl::rng * rdm_gen_,
 				       const snemo::geometry::calo_locator & CL_,
 				       const datatools::properties & config_,
@@ -50,6 +54,20 @@ void generate_pool_of_geiger_spurious_SD(mygsl::rng * rdm_gen_,
 
 void parse_config_file(const std::string & filename,
 		       std::vector<geomtools::geom_id> & list_of_gid_to_generate);
+
+
+
+void generate_eid_for_a_channel(const std::string hit_type,
+				const std::size_t crate_id,
+				const std::size_t board_id,
+				const std::size_t feast_id,
+				const std::size_t channel_id,
+				geomtools::geom_id & eid_channel);
+
+
+void generate_geiger_hit(const geomtools::geom_id & gid_channel,
+			 const double & time_start,
+			 mctools::base_step_hit & a_BSH);
 
 
 int main( int  argc_ , char **argv_  )
@@ -214,14 +232,14 @@ int main( int  argc_ , char **argv_  )
 
     // std::size_t event_counter = 0;
 
-    // datatools::things ER;
-    // mctools::simulated_data * ptr_simu_data = 0;
-    // ptr_simu_data = &(ER.add<mctools::simulated_data>(SD_bank_label));
-    // mctools::simulated_data & output_SD = *ptr_simu_data;
-    // output_SD.add_step_hits("calo", 2000);
-    // output_SD.add_step_hits("xcalo", 2000);
-    // output_SD.add_step_hits("gveto", 2000);
-    // output_SD.add_step_hits("gg", 2000);
+    datatools::things ER;
+    mctools::simulated_data * ptr_simu_data = 0;
+    ptr_simu_data = &(ER.add<mctools::simulated_data>(SD_bank_label));
+    mctools::simulated_data & output_SD = *ptr_simu_data;
+    output_SD.add_step_hits("calo", 300);
+    output_SD.add_step_hits("xcalo", 150);
+    output_SD.add_step_hits("gveto", 70);
+    output_SD.add_step_hits("gg", 300);
 
     // if (output_SD.has_step_hits("calo")
     // 	|| output_SD.has_step_hits("xcalo")
@@ -240,6 +258,8 @@ int main( int  argc_ , char **argv_  )
 
     parse_config_file(config_file,
 		      list_of_gid_to_generate);
+
+    std::clog << "Size of GID list = " << list_of_gid_to_generate.size() << std::endl;
 
 
     std::clog << "The end." << std::endl;
@@ -468,37 +488,244 @@ void parse_config_file(const std::string & filename,
 
   std::string line;
   std::size_t line_number = 0;
-  while (getline(configstream, line)) {
-    if (!line.empty()) {
-      std::clog << "Line #" << line_number << " : " << line << std::endl;
-      std::vector<std::string> splitted_lines;
+  if (configstream.is_open()) {
+    while (getline(configstream, line)) {
+      if (!line.empty()) {
+	std::clog << "Line #" << line_number << " : " << line << std::endl;
+	std::vector<std::string> splitted_lines;
 
-      boost::split(splitted_lines, line, [](char c){return c == ':';});
+	// Line string parsing
+	boost::split(splitted_lines, line, [](char c){return c == ':';});
 
-      std::string hit_type = splitted_lines[0];
-      std::string crate_with_letter =  splitted_lines[1];
-      std::string boards_with_letter =  splitted_lines[2];
+	std::string hit_type = splitted_lines[0];
+	std::string crate_with_letter =  splitted_lines[1];
+	std::string board_with_letter =  splitted_lines[2];
 
-      std::string feast_with_letter = "";
-      std::string channel_with_letter = "";
-      if (hit_type == "TRACKER")
-	{
-	  feast_with_letter = splitted_lines[3];
-	  channel_with_letter = splitted_lines[4];
+	std::string feast_with_letter = ""; // Default value out of feast range
+	std::string channel_with_letter = "";
+	std::string time_with_letter = ""; // in microsecond
+
+	if (hit_type == "TRACKER")
+	  {
+	    feast_with_letter   = splitted_lines[3];
+	    channel_with_letter = splitted_lines[4];
+	    time_with_letter    = splitted_lines[5];
+	  }
+	else
+	  {
+	    channel_with_letter = splitted_lines[3];
+	    time_with_letter    = splitted_lines[4];
+	  }
+
+
+
+	if (line_number == 0) std::clog << hit_type << ' '
+					<< crate_with_letter << ' '
+					<< board_with_letter << ' '
+					<< feast_with_letter << ' '
+					<< channel_with_letter << ' '
+					<< time_with_letter << std::endl;
+
+	std::size_t crate_token = crate_with_letter.find('C'); // Pos of the letter
+	std::size_t crate_id = std::stoi(crate_with_letter.substr(crate_token + 1));
+
+	bool multiple_boards = false;
+	std::size_t found_mult_board = board_with_letter.find('-');
+	if (found_mult_board != std::string::npos) multiple_boards = true;
+
+	bool multiple_feasts = false;
+	std::size_t found_mult_feast = feast_with_letter.find('-');
+	if (found_mult_feast != std::string::npos) multiple_feasts = true;
+
+	bool multiple_channels = false;
+	std::size_t found = channel_with_letter.find('-');
+	if (found != std::string::npos) multiple_channels = true;
+
+	std::size_t board_token_begin = board_with_letter.find('B');
+	std::size_t board_token_last = board_with_letter.find('-');
+
+	std::size_t board_id_begin = -1;
+	std::size_t board_id_end = -1;
+
+	if (multiple_boards) {
+	  board_id_begin = std::stoi(board_with_letter.substr(board_token_begin + 1, board_token_last));
+	  board_id_end = std::stoi(board_with_letter.substr(board_token_last + 1));
 	}
-      else channel_with_letter = splitted_lines[3];
+	else {
+	  board_id_begin = std::stoi(board_with_letter.substr(board_token_begin + 1, board_token_last));
+	  board_id_end = board_id_begin;
+	}
 
-      if (line_number == 0) std::clog << hit_type << ' '
-				      << crate_with_letter << ' '
-				      << boards_with_letter << ' '
-				      << feast_with_letter << ' '
-				      << channel_with_letter << ' ' << std::endl;
+	std::clog << "Board id begin = " << board_id_begin << std::endl;
+	std::clog << "Board id end = " << board_id_end << std::endl;
 
 
-      line_number++;
+	std::size_t feast_token_begin = feast_with_letter.find("F");
+	std::size_t feast_token_last = feast_with_letter.find('-');
+
+	int feast_id_begin = -1;
+	int feast_id_end = -1;
+
+	if (hit_type == "TRACKER") {
+	  if (multiple_feasts) {
+	    feast_id_begin = std::stoi(feast_with_letter.substr(feast_token_begin + 1, feast_token_last));
+	    feast_id_end = std::stoi(feast_with_letter.substr(feast_token_last + 1));
+	  }
+	  else {
+	    feast_id_begin = std::stoi(feast_with_letter.substr(feast_token_begin + 1, feast_token_last));
+	    feast_id_end = feast_id_begin;
+	  }
+	}
+
+	std::clog << "Feast id begin = " << feast_id_begin << std::endl;
+	std::clog << "Feast id end = " << feast_id_end << std::endl;
+
+
+	std::size_t channel_token_begin = channel_with_letter.find("CH");
+	std::size_t channel_token_last = channel_with_letter.find('-');
+
+	std::size_t channel_id_begin = -1;
+	std::size_t channel_id_end = -1;
+
+	if (multiple_channels) {
+	  channel_id_begin = std::stoi(channel_with_letter.substr(channel_token_begin + 2, channel_token_last));
+	  channel_id_end = std::stoi(channel_with_letter.substr(channel_token_last + 1));
+	}
+	else {
+	  channel_id_begin = std::stoi(channel_with_letter.substr(channel_token_begin + 2, channel_token_last));
+	  channel_id_end = channel_id_begin;
+	}
+
+	std::clog << "Channel id begin = " << channel_id_begin << std::endl;
+	std::clog << "Channel id end = " << channel_id_end << std::endl;
+
+	std::size_t time_token = time_with_letter.find("T");
+	double time = std::stoi(time_with_letter.substr(time_token + 1)) * CLHEP::microsecond;
+
+	std::clog << "Time = " << time << std::endl;
+
+
+
+	for (std::size_t board_id = board_id_begin; board_id <= board_id_end; board_id++)
+	  {
+	    for (int feast_id = feast_id_begin; feast_id <= feast_id_end; feast_id++)
+	      {
+		for (std::size_t channel_id = channel_id_begin; channel_id <= channel_id_end; channel_id++)
+		  {
+		    // std::clog << board_id << ' ' << feast_id << ' ' << channel_id << std::endl;
+		    geomtools::geom_id a_eid;
+		    generate_eid_for_a_channel(hit_type, crate_id, board_id, feast_id, channel_id, a_eid);
+
+
+		    std::clog << "EID = " << a_eid << std::endl;
+
+		    // Convert EID into GID
+
+
+		  }
+
+	      }
+
+	  }
+
+
+
+	// std::size_t feast_token = -1;
+	// std::size_t feast_id = -1;
+
+	// if (hit_type == "TRACKER") {
+	//   feast_token = feast_with_letter.find('F'); // Pos of the letter
+	//   feast_id = std::stoi(feast_with_letter.substr(feast_token + 1));
+	// }
+
+	// std::size_t channel_token = channel_with_letter.find("CH"); // Pos of the letter
+	// std::size_t channel_id = std::stoi(channel_with_letter.substr(channel_token + 1));
+
+	// std::size_t time_token = time_with_letter.find('T'); // Pos of the letter
+	// std::size_t time_id = std::stoi(time_with_letter.substr(time_token + 1));
+
+	// std::clog << "Crate ID   = " << crate_id
+	// 	  << "Board ID   = " << board_id
+	// 	  << "Feast ID   = " << feast_id
+	// 	  << "Channel ID = " << channel_id
+	// 	  << "Time ID    = " << time_id << std::endl;
+
+
+
+	line_number++;
+      }
     }
+    configstream.close();
   }
 
+  std::clog << "End of parse method" << std::endl;
+
+  return;
+}
+
+
+
+void generate_eid_for_a_channel(const std::string hit_type,
+				const std::size_t crate_id,
+				const std::size_t board_id,
+				const std::size_t feast_id,
+				const std::size_t channel_id,
+				geomtools::geom_id & eid_channel)
+{
+  std::size_t module_id = 0;
+  if (hit_type ==  "TRACKER") {
+    eid_channel.set_depth(5);
+    // EID=[GG_FEB_TYPE:module_ID:crate_ID:board_ID:feast_ID:channel_ID]
+
+    eid_channel.set_type(snemo::digitization::mapping::GEIGER_FEB_CATEGORY_TYPE);
+    eid_channel.set(0, module_id);
+    eid_channel.set(1, crate_id);
+    eid_channel.set(2, board_id);
+    eid_channel.set(3, feast_id);
+    eid_channel.set(4, channel_id);
+  }
+
+  if (hit_type ==  "CALO")  {
+    eid_channel.set_depth(4);
+    // EID=[CALO_FEB_TYPE:module_ID:crate_ID:board_ID:channel_ID]
+
+    eid_channel.set_type(snemo::digitization::mapping::CALO_FEB_CATEGORY_TYPE);
+    eid_channel.set(0, module_id);
+    eid_channel.set(1, crate_id);
+    eid_channel.set(2, board_id);
+    eid_channel.set(3, channel_id);
+  }
+
+
+  return;
+}
+
+
+void generate_geiger_hit(const geomtools::geom_id & gid_channel,
+			 const double & time_start,
+			 mctools::base_step_hit & a_BSH)
+{
+  // geomtools::vector_3d geiger_cell_position;
+  // GL_.get_cell_position(geiger_gid, geiger_cell_position);
+  // geomtools::vector_3d geiger_hit_position;
+
+  // geiger_hit_position.setX(geiger_cell_position.x() + 10 * CLHEP::millimeter);
+  // geiger_hit_position.setY(geiger_cell_position.y() + 10 * CLHEP::millimeter);
+  // geiger_hit_position.setZ(geiger_cell_position.z());
+
+  // mctools::base_step_hit a_geiger_hit;
+  // a_geiger_hit.set_hit_id(hit_count);
+  // a_geiger_hit.set_geom_id(geiger_gid);
+  // a_geiger_hit.set_position_start(geiger_hit_position);
+  // a_geiger_hit.set_position_stop(geiger_cell_position);
+  // double anodic_time = 0;
+  // if (particular_case) anodic_time = timestamp_pool[j];
+  // else anodic_time = timestamp_pool[j] + j * cell_dead_time;
+  // a_geiger_hit.set_time_start(anodic_time);
+  // a_geiger_hit.set_particle_name("e-");
+  // //a_geiger_hit.tree_dump(std::clog, "A main geiger hit #" + std::to_string(a_geiger_hit.get_hit_id()));
+
+  // calo_tracker_spurious_pool_.push_back(a_geiger_hit);
 
 
 
