@@ -40,20 +40,9 @@
 #include <snemo/digitization/mapping.h>
 #include <snemo/digitization/electronic_mapping.h>
 
-void generate_pool_of_calo_spurious_SD(mygsl::rng * rdm_gen_,
-				       const snemo::geometry::calo_locator & CL_,
-				       const datatools::properties & config_,
-				       const std::vector<geomtools::geom_id> & gid_collection_,
-				       std::vector<mctools::base_step_hit> & calo_tracker_spurious_pool_);
-
-void generate_pool_of_geiger_spurious_SD(mygsl::rng * rdm_gen_,
-					 const snemo::geometry::gg_locator & GL_,
-					 const datatools::properties & config_,
-					 const std::vector<geomtools::geom_id> & gid_collection_,
-					 std::vector<mctools::base_step_hit> & calo_tracker_spurious_pool_);
 
 void parse_config_file(const std::string & filename,
-		       std::vector<geomtools::geom_id> & list_of_gid_to_generate);
+		       std::vector<std::pair<geomtools::geom_id, double> > & list_of_eid_time_to_generate);
 
 
 
@@ -64,10 +53,12 @@ void generate_eid_for_a_channel(const std::string hit_type,
 				const std::size_t channel_id,
 				geomtools::geom_id & eid_channel);
 
-
-void generate_geiger_hit(const geomtools::geom_id & gid_channel,
-			 const double & time_start,
-			 mctools::base_step_hit & a_BSH);
+void generate_BSH_and_fill_SD(const snemo::digitization::electronic_mapping & my_e_mapping,
+			      const snemo::geometry::calo_locator  & CL,
+			      const snemo::geometry::gveto_locator & GVL,
+			      const snemo::geometry::gg_locator    & GL,
+			      const std::vector<std::pair<geomtools::geom_id, double> > & list_of_eid_time_to_generate,
+			      mctools::simulated_data & output_SD);
 
 
 int main( int  argc_ , char **argv_  )
@@ -166,71 +157,13 @@ int main( int  argc_ , char **argv_  )
     gg_locator.set_module_number(module_number);
     gg_locator.initialize();
 
-
-    // // Select calo main wall GID :
-    // geomtools::geom_id main_wall_gid_pattern(1302,
-    //                                          module_number,
-    //                                          geomtools::geom_id::ANY_ADDRESS, // Side
-    //                                          geomtools::geom_id::ANY_ADDRESS, // Column
-    //                                          geomtools::geom_id::ANY_ADDRESS, // Row
-    // 					     0); // part only 0, to convert into any (to not have part 0 and 1 in the vector double count)
-    // std::vector<geomtools::geom_id> collection_of_main_wall_gid;
-    // my_manager.get_mapping().compute_matching_geom_id(main_wall_gid_pattern,
-    //                                                   collection_of_main_wall_gid);
-    // // Convert part 0 into any (*)
-    // for (std::size_t i = 0; i < collection_of_main_wall_gid.size(); i++) {
-    //   collection_of_main_wall_gid[i].set_any(4);
-    // }
-
-    // // Select calo xwall GID :
-    // geomtools::geom_id xwall_gid_pattern(1232,
-    //                                      module_number,
-    //                                      geomtools::geom_id::ANY_ADDRESS,  // Side
-    //                                      geomtools::geom_id::ANY_ADDRESS,  // Wall
-    //                                      geomtools::geom_id::ANY_ADDRESS,  // Column
-    //                                      geomtools::geom_id::ANY_ADDRESS); // Row
-    // std::vector<geomtools::geom_id> collection_of_xwall_gid;
-    // my_manager.get_mapping().compute_matching_geom_id(xwall_gid_pattern,
-    //                                                   collection_of_xwall_gid);
-
-
-    // // Select geiger GID :
-    // geomtools::geom_id geiger_gid_pattern(1210,
-    // 					  module_number,
-    // 					  geomtools::geom_id::ANY_ADDRESS,  // Side
-    // 					  geomtools::geom_id::ANY_ADDRESS,  // Layer
-    // 					  geomtools::geom_id::ANY_ADDRESS); // Row
-    // std::vector<geomtools::geom_id> collection_of_geiger_gid;
-    // my_manager.get_mapping().compute_matching_geom_id(geiger_gid_pattern,
-    // 						      collection_of_geiger_gid);
-
-
-    // std::clog << "Generating pool of calo spurious hits 'SD'..." << std::endl;
-    // std::vector<mctools::base_step_hit> calo_tracker_spurious_pool;
-
-    // // Generate pool of main wall spurious signals :
-    // generate_pool_of_calo_spurious_SD(&random_generator,
-    // 				      calo_locator,
-    // 				      self_trigger_config,
-    // 				      collection_of_main_wall_gid,
-    // 				      calo_tracker_spurious_pool);
-
-    // // Generate pool of xwall spurious signals :
-    // generate_pool_of_calo_spurious_SD(&random_generator,
-    // 				      calo_locator,
-    // 				      self_trigger_config,
-    // 				      collection_of_xwall_gid,
-    // 				      calo_tracker_spurious_pool);
-
-    // // Generate pool of geiger spurious signals :
-    // generate_pool_of_geiger_spurious_SD(&random_generator,
-    // 					gg_locator,
-    // 					self_trigger_config,
-    // 					collection_of_geiger_gid,
-    // 					calo_tracker_spurious_pool);
-
-
-    // std::size_t event_counter = 0;
+    // Electronic mapping :
+    datatools::properties electronic_config;
+    electronic_config.store_integer("module_number", snemo::digitization::mapping::DEMONSTRATOR_MODULE_NUMBER);
+    electronic_config.store_string("feast_channel_mapping", "${FALAISE_DIGI_RESOURCE_DIR}/config/snemo/demonstrator/simulation/digitization/0.1/feast_channel_mapping.csv");
+    snemo::digitization::electronic_mapping my_e_mapping;
+    my_e_mapping.set_geo_manager(my_manager);
+    my_e_mapping.initialize(electronic_config);
 
     datatools::things ER;
     mctools::simulated_data * ptr_simu_data = 0;
@@ -254,12 +187,22 @@ int main( int  argc_ , char **argv_  )
     // std::clog << "Number of events = " << event_counter << std::endl;
 
 
-    std::vector<geomtools::geom_id> list_of_gid_to_generate;
+    std::vector<std::pair<geomtools::geom_id,double> > list_of_eid_time_to_generate;
 
     parse_config_file(config_file,
-		      list_of_gid_to_generate);
+		      list_of_eid_time_to_generate);
 
-    std::clog << "Size of GID list = " << list_of_gid_to_generate.size() << std::endl;
+    std::clog << "Size of EID/time pair list = " << list_of_eid_time_to_generate.size() << std::endl;
+
+
+    generate_BSH_and_fill_SD(my_e_mapping,
+			     calo_locator,
+			     gveto_locator,
+			     gg_locator,
+			     list_of_eid_time_to_generate,
+			     output_SD);
+
+    output_SD_writer.process(ER);
 
 
     std::clog << "The end." << std::endl;
@@ -279,209 +222,8 @@ int main( int  argc_ , char **argv_  )
   return error_code;
 }
 
-
-void generate_pool_of_calo_spurious_SD(mygsl::rng * rdm_gen_,
-				       const snemo::geometry::calo_locator & CL_,
-				       const datatools::properties & config_,
-				       const std::vector<geomtools::geom_id> & gid_collection_,
-				       std::vector<mctools::base_step_hit> & calo_tracker_spurious_pool_)
-{
-  int hit_count = 0;
-  double time_interval; //= 0.1 * CLHEP::second;
-  double calo_self_triggering_frequency; // = 1. / CLHEP::second; // Hertz
-  double energy_min;
-  double energy_max;
-  datatools::invalidate(time_interval);
-  datatools::invalidate(calo_self_triggering_frequency);
-  datatools::invalidate(energy_min);
-  datatools::invalidate(energy_max);
-
-  if (config_.has_key("time_interval")) {
-    time_interval = config_.fetch_real("time_interval");
-  }
-
-  if (config_.has_key("calo.self_trigger_frequency")) {
-    calo_self_triggering_frequency = config_.fetch_real("calo.self_trigger_frequency");
-  }
-
-  if (config_.has_key("calo.energy_min")) {
-    energy_min = config_.fetch_real("calo.energy_min");
-  }
-
-  if (config_.has_key("calo.energy_max")) {
-    energy_max = config_.fetch_real("calo.energy_max");
-  }
-
-  std::clog << "Calo self-trigger frequency (in Hz) " << calo_self_triggering_frequency / CLHEP::hertz << std::endl;
-  std::clog << "Calo energy min (in MeV) " << energy_min << std::endl;
-  std::clog << "Calo energy max (in MeV) " << energy_max << std::endl;
-
-  // Create spurious hits during a time interval for each calo GID :
-  for (std::size_t i = 0; i < gid_collection_.size(); i++)
-    {
-      double mean_number = time_interval * calo_self_triggering_frequency;
-      double sigma_gauss = std::sqrt(mean_number);
-      std::size_t number_of_calo_hit = 0;
-      std::string distrib = "";
-      // Number of calo hit during time_interval for a calo block (identified by his GID) :
-      // If > 15 gaussian distribution
-      if (mean_number > 15) {
-        number_of_calo_hit = rdm_gen_->gaussian(mean_number, sigma_gauss);
-        distrib = "gaussian";
-      }
-      // Else Poisson distribution
-      else {
-        number_of_calo_hit = rdm_gen_->poisson(mean_number);
-        distrib = "poisson";
-      }
-
-      //std::clog << "mean_number " << mean_number << " number_of_calo_hit " << number_of_calo_hit << std::endl;
-
-      geomtools::geom_id calo_gid = gid_collection_[i];
-
-      for (std::size_t j = 0; j < number_of_calo_hit; j++)
-	{
-	  geomtools::vector_3d calo_block_position;
-	  CL_.get_block_position(calo_gid, calo_block_position);
-
-	  // Create a new calo hit in the middle of the scintillator block :
-	  mctools::base_step_hit a_calo_hit;
-	  a_calo_hit.set_hit_id(hit_count);
-	  a_calo_hit.set_geom_id(calo_gid);
-	  a_calo_hit.set_position_start(calo_block_position);
-	  a_calo_hit.set_position_stop(calo_block_position);
-	  const double timestamp = rdm_gen_->flat(0, time_interval);
-	  a_calo_hit.set_time_start(timestamp);
-	  a_calo_hit.set_time_stop(timestamp);
-	  const double energy = rdm_gen_->flat(energy_min, energy_max);
-	  a_calo_hit.set_energy_deposit(energy);
-	  a_calo_hit.set_particle_name("e-");
-	  // a_calo_hit.tree_dump(std::clog, "A main calo hit #" + std::to_string(a_calo_hit.get_hit_id()));
-
-	  calo_tracker_spurious_pool_.push_back(a_calo_hit);
-	  hit_count++;
-	}
-    }
-
-  return;
-}
-
-void generate_pool_of_geiger_spurious_SD(mygsl::rng * rdm_gen_,
-					 const snemo::geometry::gg_locator & GL_,
-					 const datatools::properties & config_,
-					 const std::vector<geomtools::geom_id> & gid_collection_,
-					 std::vector<mctools::base_step_hit> & calo_tracker_spurious_pool_)
-{
-  int hit_count = 0;
-  double time_interval; //= 0.1 * CLHEP::second;
-  double geiger_self_triggering_frequency; // = 1. / CLHEP::second; // Hertz
-  double cell_dead_time;
-  datatools::invalidate(time_interval);
-  datatools::invalidate(geiger_self_triggering_frequency);
-  datatools::invalidate(cell_dead_time);
-
-  if (config_.has_key("time_interval")) {
-    time_interval = config_.fetch_real("time_interval");
-  }
-
-  if (config_.has_key("geiger.self_trigger_frequency")) {
-    geiger_self_triggering_frequency = config_.fetch_real("geiger.self_trigger_frequency");
-  }
-
-  if (config_.has_key("geiger.dead_time")) {
-    cell_dead_time = config_.fetch_real("geiger.dead_time");
-  }
-
-  std::clog << "Tracker self-trigger frequency (in Hz) " << geiger_self_triggering_frequency / CLHEP::hertz << std::endl;
-  std::clog << "Tracker cell dead time (in ms) " << cell_dead_time / CLHEP::millisecond << std::endl;
-
-  // std::clog << "Time interval = " << time_interval << " GG ST freq = " << geiger_self_triggering_frequency << " GG cell_dead_time = " << cell_dead_time << std::endl;
-
-  // Create spurious hits during a time interval for each geiger cell thanks to GID :
-  for (std::size_t i = 0; i < gid_collection_.size(); i++)
-    {
-      double mean_number = time_interval * geiger_self_triggering_frequency;
-      double sigma_gauss = std::sqrt(mean_number);
-      std::size_t number_of_geiger_hit = 0;
-      std::string distrib = "";
-
-      // Number of geiger hit during time_interval for a geiger cell (identified by his GID) :
-      // If nhits > 15 : gaussian distribution
-      if (mean_number > 15) {
-        number_of_geiger_hit = rdm_gen_->gaussian(mean_number, sigma_gauss);
-        distrib = "gaussian";
-      }
-      // else Poisson distribution
-      else {
-        number_of_geiger_hit = rdm_gen_->poisson(mean_number);
-        distrib = "poisson";
-      }
-
-      const geomtools::geom_id geiger_gid = gid_collection_[i];
-
-      // We have to generate 'number_of_geiger_hit' of the same cell in the time [0:time_interval]
-      // We have to take care about the dead time of the cell.
-      // After a spurious hit, each cell cannot trigger during the cell dead time :
-
-      std::vector<double> timestamp_pool;
-
-      double time_interval_limit = number_of_geiger_hit * cell_dead_time;
-      double time_max = time_interval - time_interval_limit;
-      // std::clog << "Time interval = " << time_interval << " Time int lim = " << time_interval_limit << " tmax = " << time_max << " Freq = " << geiger_self_triggering_frequency << " Mean = " << mean_number << " GG hits = " << number_of_geiger_hit << std::endl;
-      bool particular_case = false;
-      if (time_max <= 0) {
-  	// Particular case, high frequency / low dead_time or time interval too small
-  	// Geiger cell always trigger after dead time recovery, kind of 'saturation'
-  	for (std::size_t j = 0; j < number_of_geiger_hit; j++) {
-  	  const double timestamp = j * cell_dead_time;
-  	  if (timestamp >= 0 && timestamp < time_interval) {
-  	    timestamp_pool.push_back(timestamp);
-  	  }
-  	}
-  	particular_case = true;
-      }
-      else {
-  	for (std::size_t j = 0; j < number_of_geiger_hit; j++) {
-  	  const double timestamp = rdm_gen_ -> flat(0, time_max);
-  	  timestamp_pool.push_back(timestamp);
-  	}
-  	particular_case = false;
-      }
-      std::sort(timestamp_pool.begin(), timestamp_pool.end());
-
-      // Fill and add a new Geiger hit
-      for (std::size_t j = 0; j < timestamp_pool.size(); j++)
-      	{
-	  geomtools::vector_3d geiger_cell_position;
-	  GL_.get_cell_position(geiger_gid, geiger_cell_position);
-	  geomtools::vector_3d geiger_hit_position;
-
-	  geiger_hit_position.setX(geiger_cell_position.x() + 10 * CLHEP::millimeter);
-	  geiger_hit_position.setY(geiger_cell_position.y() + 10 * CLHEP::millimeter);
-	  geiger_hit_position.setZ(geiger_cell_position.z());
-
-	  mctools::base_step_hit a_geiger_hit;
-	  a_geiger_hit.set_hit_id(hit_count);
-	  a_geiger_hit.set_geom_id(geiger_gid);
-	  a_geiger_hit.set_position_start(geiger_hit_position);
-	  a_geiger_hit.set_position_stop(geiger_cell_position);
-      	  double anodic_time = 0;
-      	  if (particular_case) anodic_time = timestamp_pool[j];
-      	  else anodic_time = timestamp_pool[j] + j * cell_dead_time;
-	  a_geiger_hit.set_time_start(anodic_time);
-	  a_geiger_hit.set_particle_name("e-");
-	  //a_geiger_hit.tree_dump(std::clog, "A main geiger hit #" + std::to_string(a_geiger_hit.get_hit_id()));
-
-	  calo_tracker_spurious_pool_.push_back(a_geiger_hit);
-	  hit_count++;
-	}
-    }
-
-  return;
-}
-
 void parse_config_file(const std::string & filename,
-		       std::vector<geomtools::geom_id> & list_of_gid_to_generate)
+		       std::vector<std::pair<geomtools::geom_id,double> > & list_of_eid_time_to_generate)
 {
   std::ifstream configstream;
   configstream.open(filename);
@@ -490,7 +232,7 @@ void parse_config_file(const std::string & filename,
   std::size_t line_number = 0;
   if (configstream.is_open()) {
     while (getline(configstream, line)) {
-      if (!line.empty()) {
+      if (!line.empty() && line[0] != '#') {
 	std::clog << "Line #" << line_number << " : " << line << std::endl;
 	std::vector<std::string> splitted_lines;
 
@@ -501,7 +243,7 @@ void parse_config_file(const std::string & filename,
 	std::string crate_with_letter =  splitted_lines[1];
 	std::string board_with_letter =  splitted_lines[2];
 
-	std::string feast_with_letter = ""; // Default value out of feast range
+	std::string feast_with_letter = "";
 	std::string channel_with_letter = "";
 	std::string time_with_letter = ""; // in microsecond
 
@@ -541,7 +283,7 @@ void parse_config_file(const std::string & filename,
 	std::size_t found = channel_with_letter.find('-');
 	if (found != std::string::npos) multiple_channels = true;
 
-	std::size_t board_token_begin = board_with_letter.find('B');
+	std::size_t board_token_begin = board_with_letter.find('S');
 	std::size_t board_token_last = board_with_letter.find('-');
 
 	std::size_t board_id_begin = -1;
@@ -555,10 +297,6 @@ void parse_config_file(const std::string & filename,
 	  board_id_begin = std::stoi(board_with_letter.substr(board_token_begin + 1, board_token_last));
 	  board_id_end = board_id_begin;
 	}
-
-	std::clog << "Board id begin = " << board_id_begin << std::endl;
-	std::clog << "Board id end = " << board_id_end << std::endl;
-
 
 	std::size_t feast_token_begin = feast_with_letter.find("F");
 	std::size_t feast_token_last = feast_with_letter.find('-');
@@ -577,10 +315,6 @@ void parse_config_file(const std::string & filename,
 	  }
 	}
 
-	std::clog << "Feast id begin = " << feast_id_begin << std::endl;
-	std::clog << "Feast id end = " << feast_id_end << std::endl;
-
-
 	std::size_t channel_token_begin = channel_with_letter.find("CH");
 	std::size_t channel_token_last = channel_with_letter.find('-');
 
@@ -596,15 +330,8 @@ void parse_config_file(const std::string & filename,
 	  channel_id_end = channel_id_begin;
 	}
 
-	std::clog << "Channel id begin = " << channel_id_begin << std::endl;
-	std::clog << "Channel id end = " << channel_id_end << std::endl;
-
 	std::size_t time_token = time_with_letter.find("T");
-	double time = std::stoi(time_with_letter.substr(time_token + 1)) * CLHEP::microsecond;
-
-	std::clog << "Time = " << time << std::endl;
-
-
+	double a_time = std::stoi(time_with_letter.substr(time_token + 1)) * CLHEP::microsecond;
 
 	for (std::size_t board_id = board_id_begin; board_id <= board_id_end; board_id++)
 	  {
@@ -612,45 +339,16 @@ void parse_config_file(const std::string & filename,
 	      {
 		for (std::size_t channel_id = channel_id_begin; channel_id <= channel_id_end; channel_id++)
 		  {
-		    // std::clog << board_id << ' ' << feast_id << ' ' << channel_id << std::endl;
+		    std::pair<geomtools::geom_id, double> a_eid_time_pair;
 		    geomtools::geom_id a_eid;
 		    generate_eid_for_a_channel(hit_type, crate_id, board_id, feast_id, channel_id, a_eid);
 
+		    a_eid_time_pair = std::make_pair(a_eid, a_time);
 
-		    std::clog << "EID = " << a_eid << std::endl;
-
-		    // Convert EID into GID
-
-
+		    list_of_eid_time_to_generate.push_back(a_eid_time_pair);
 		  }
-
 	      }
-
 	  }
-
-
-
-	// std::size_t feast_token = -1;
-	// std::size_t feast_id = -1;
-
-	// if (hit_type == "TRACKER") {
-	//   feast_token = feast_with_letter.find('F'); // Pos of the letter
-	//   feast_id = std::stoi(feast_with_letter.substr(feast_token + 1));
-	// }
-
-	// std::size_t channel_token = channel_with_letter.find("CH"); // Pos of the letter
-	// std::size_t channel_id = std::stoi(channel_with_letter.substr(channel_token + 1));
-
-	// std::size_t time_token = time_with_letter.find('T'); // Pos of the letter
-	// std::size_t time_id = std::stoi(time_with_letter.substr(time_token + 1));
-
-	// std::clog << "Crate ID   = " << crate_id
-	// 	  << "Board ID   = " << board_id
-	// 	  << "Feast ID   = " << feast_id
-	// 	  << "Channel ID = " << channel_id
-	// 	  << "Time ID    = " << time_id << std::endl;
-
-
 
 	line_number++;
       }
@@ -696,36 +394,112 @@ void generate_eid_for_a_channel(const std::string hit_type,
     eid_channel.set(3, channel_id);
   }
 
-
   return;
 }
 
-
-void generate_geiger_hit(const geomtools::geom_id & gid_channel,
-			 const double & time_start,
-			 mctools::base_step_hit & a_BSH)
+void generate_BSH_and_fill_SD(const snemo::digitization::electronic_mapping & my_e_mapping,
+			      const snemo::geometry::calo_locator  & CL,
+			      const snemo::geometry::gveto_locator & GVL,
+			      const snemo::geometry::gg_locator    & GL,
+			      const std::vector<std::pair<geomtools::geom_id, double> > & list_of_eid_time_to_generate,
+			      mctools::simulated_data & output_SD)
 {
-  // geomtools::vector_3d geiger_cell_position;
-  // GL_.get_cell_position(geiger_gid, geiger_cell_position);
-  // geomtools::vector_3d geiger_hit_position;
+  std::size_t hit_count = 0;
+  for (std::size_t i = 0; i < list_of_eid_time_to_generate.size(); i++)
+    {
 
-  // geiger_hit_position.setX(geiger_cell_position.x() + 10 * CLHEP::millimeter);
-  // geiger_hit_position.setY(geiger_cell_position.y() + 10 * CLHEP::millimeter);
-  // geiger_hit_position.setZ(geiger_cell_position.z());
+      geomtools::geom_id a_eid = list_of_eid_time_to_generate[i].first;
+      double hit_time_start = list_of_eid_time_to_generate[i].second;
 
-  // mctools::base_step_hit a_geiger_hit;
-  // a_geiger_hit.set_hit_id(hit_count);
-  // a_geiger_hit.set_geom_id(geiger_gid);
-  // a_geiger_hit.set_position_start(geiger_hit_position);
-  // a_geiger_hit.set_position_stop(geiger_cell_position);
-  // double anodic_time = 0;
-  // if (particular_case) anodic_time = timestamp_pool[j];
-  // else anodic_time = timestamp_pool[j] + j * cell_dead_time;
-  // a_geiger_hit.set_time_start(anodic_time);
-  // a_geiger_hit.set_particle_name("e-");
-  // //a_geiger_hit.tree_dump(std::clog, "A main geiger hit #" + std::to_string(a_geiger_hit.get_hit_id()));
+      // See the GID and produce corresponding BSH (calo / xcalo / gveto / geiger) :
+      geomtools::geom_id a_gid;
+      my_e_mapping.convert_EID_to_GID(false, a_eid, a_gid);
 
-  // calo_tracker_spurious_pool_.push_back(a_geiger_hit);
+
+
+      // Calo type
+      if (a_gid.get_type() == snemo::digitization::mapping::CALO_MAIN_WALL_CATEGORY_TYPE
+	  || a_gid.get_type() == snemo::digitization::mapping::CALO_XWALL_CATEGORY_TYPE
+	  || a_gid.get_type() == snemo::digitization::mapping::CALO_GVETO_CATEGORY_TYPE) {
+
+	geomtools::vector_3d calo_block_position;
+	geomtools::geom_id calo_gid;
+
+	if (a_gid.get_type() == snemo::digitization::mapping::CALO_MAIN_WALL_CATEGORY_TYPE) {
+	  calo_gid.set_type(snemo::digitization::mapping::CALO_MAIN_WALL_CATEGORY_TYPE);
+	  calo_gid.set_depth(5);
+	  calo_gid.inherits_from(a_gid);
+	  calo_gid.set_any(4);
+	  std::clog << "GID " << calo_gid << std::endl;
+	  CL.get_block_position(calo_gid, calo_block_position);
+	}
+
+	if (a_gid.get_type() == snemo::digitization::mapping::CALO_XWALL_CATEGORY_TYPE) {
+	  calo_gid = a_gid;
+	  CL.get_block_position(calo_gid, calo_block_position);
+	}
+
+	if (a_gid.get_type() == snemo::digitization::mapping::CALO_GVETO_CATEGORY_TYPE) {
+	  calo_gid = a_gid;
+	  GVL.get_block_position(a_gid, calo_block_position);
+	}
+
+	geomtools::vector_3d calo_hit_position;
+	calo_hit_position.setX(calo_block_position.x()); // - 100 * CLHEP::millimeter);
+	calo_hit_position.setY(calo_block_position.y()); // - 10 * CLHEP::millimeter);
+	calo_hit_position.setZ(calo_block_position.z());
+
+	// Create a new calo hit in the middle of the scintillator block :
+	mctools::base_step_hit a_calo_hit;
+	a_calo_hit.set_hit_id(hit_count);
+	a_calo_hit.set_geom_id(calo_gid);
+	a_calo_hit.set_position_start(calo_hit_position);
+	a_calo_hit.set_position_stop(calo_hit_position);
+
+	a_calo_hit.set_time_start(hit_time_start);
+	a_calo_hit.set_time_stop(hit_time_start);
+	const double energy = 1 * CLHEP::MeV;
+	a_calo_hit.set_energy_deposit(energy);
+	a_calo_hit.set_particle_name("e-");
+
+	if (calo_gid.get_type() == snemo::digitization::mapping::CALO_MAIN_WALL_CATEGORY_TYPE) output_SD.add_step_hit("calo") = a_calo_hit;
+	if (calo_gid.get_type() == snemo::digitization::mapping::CALO_XWALL_CATEGORY_TYPE) output_SD.add_step_hit("xcalo") = a_calo_hit;
+	if (calo_gid.get_type() == snemo::digitization::mapping::CALO_GVETO_CATEGORY_TYPE) output_SD.add_step_hit("gveto") = a_calo_hit;
+      }
+
+      // Geiger cell hit
+      if (a_gid.get_type() == snemo::digitization::mapping::GEIGER_ANODIC_CATEGORY_TYPE) {
+
+	geomtools::vector_3d geiger_cell_position;
+	GL.get_cell_position(a_gid, geiger_cell_position);
+	geomtools::vector_3d geiger_hit_position;
+
+	geiger_hit_position.setX(geiger_cell_position.x() + 3 * CLHEP::millimeter);
+	geiger_hit_position.setY(geiger_cell_position.y() + 3 * CLHEP::millimeter);
+	geiger_hit_position.setZ(geiger_cell_position.z());
+
+	mctools::base_step_hit a_geiger_hit;
+	a_geiger_hit.set_hit_id(hit_count);
+	a_geiger_hit.set_geom_id(a_gid);
+	a_geiger_hit.set_position_start(geiger_hit_position);
+	a_geiger_hit.set_position_stop(geiger_cell_position);
+
+	double anodic_time = hit_time_start;
+	a_geiger_hit.set_time_start(anodic_time);
+	a_geiger_hit.set_particle_name("e-");
+
+	output_SD.add_step_hit("gg") = a_geiger_hit;
+      }
+
+
+      std::clog << "EID = " << a_eid << " Time = " << hit_time_start << " GID = " << a_gid << std::endl;
+      hit_count++;
+    }
+
+
+
+
+
 
 
 
