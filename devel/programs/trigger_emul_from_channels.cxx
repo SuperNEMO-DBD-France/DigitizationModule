@@ -174,26 +174,13 @@ int main( int  argc_ , char **argv_  )
     output_SD.add_step_hits("gveto", 70);
     output_SD.add_step_hits("gg", 300);
 
-    // if (output_SD.has_step_hits("calo")
-    // 	|| output_SD.has_step_hits("xcalo")
-    // 	|| output_SD.has_step_hits("gveto")
-    // 	|| output_SD.has_step_hits("gg"))
-    //   {
-    // 	output_SD_writer.process(ER);
-    // 	// self_trigger_SD.tree_dump();
-    // 	event_counter++;
-    //   }
-
-    // std::clog << "Number of events = " << event_counter << std::endl;
-
 
     std::vector<std::pair<geomtools::geom_id,double> > list_of_eid_time_to_generate;
 
     parse_config_file(config_file,
 		      list_of_eid_time_to_generate);
 
-    std::clog << "Size of EID/time pair list = " << list_of_eid_time_to_generate.size() << std::endl;
-
+    // std::clog << "Size of EID/time pair list = " << list_of_eid_time_to_generate.size() << std::endl;
 
     generate_BSH_and_fill_SD(my_e_mapping,
 			     calo_locator,
@@ -233,7 +220,7 @@ void parse_config_file(const std::string & filename,
   if (configstream.is_open()) {
     while (getline(configstream, line)) {
       if (!line.empty() && line[0] != '#') {
-	std::clog << "Line #" << line_number << " : " << line << std::endl;
+	// std::clog << "Line #" << line_number << " : " << line << std::endl;
 	std::vector<std::string> splitted_lines;
 
 	// Line string parsing
@@ -258,15 +245,6 @@ void parse_config_file(const std::string & filename,
 	    channel_with_letter = splitted_lines[3];
 	    time_with_letter    = splitted_lines[4];
 	  }
-
-
-
-	if (line_number == 0) std::clog << hit_type << ' '
-					<< crate_with_letter << ' '
-					<< board_with_letter << ' '
-					<< feast_with_letter << ' '
-					<< channel_with_letter << ' '
-					<< time_with_letter << std::endl;
 
 	std::size_t crate_token = crate_with_letter.find('C'); // Pos of the letter
 	std::size_t crate_id = std::stoi(crate_with_letter.substr(crate_token + 1));
@@ -356,7 +334,7 @@ void parse_config_file(const std::string & filename,
     configstream.close();
   }
 
-  std::clog << "End of parse method" << std::endl;
+  // std::clog << "parse_config_file():end of parse method" << std::endl;
 
   return;
 }
@@ -407,7 +385,6 @@ void generate_BSH_and_fill_SD(const snemo::digitization::electronic_mapping & my
   std::size_t hit_count = 0;
   for (std::size_t i = 0; i < list_of_eid_time_to_generate.size(); i++)
     {
-
       geomtools::geom_id a_eid = list_of_eid_time_to_generate[i].first;
       double hit_time_start = list_of_eid_time_to_generate[i].second;
 
@@ -415,7 +392,7 @@ void generate_BSH_and_fill_SD(const snemo::digitization::electronic_mapping & my
       geomtools::geom_id a_gid;
       my_e_mapping.convert_EID_to_GID(false, a_eid, a_gid);
 
-
+      std::clog << "EID : " << a_eid << " <=> GID : " << a_gid << std::endl;
 
       // Calo type
       if (a_gid.get_type() == snemo::digitization::mapping::CALO_MAIN_WALL_CATEGORY_TYPE
@@ -430,7 +407,6 @@ void generate_BSH_and_fill_SD(const snemo::digitization::electronic_mapping & my
 	  calo_gid.set_depth(5);
 	  calo_gid.inherits_from(a_gid);
 	  calo_gid.set_any(4);
-	  std::clog << "GID " << calo_gid << std::endl;
 	  CL.get_block_position(calo_gid, calo_block_position);
 	}
 
@@ -449,7 +425,7 @@ void generate_BSH_and_fill_SD(const snemo::digitization::electronic_mapping & my
 	calo_hit_position.setY(calo_block_position.y()); // - 10 * CLHEP::millimeter);
 	calo_hit_position.setZ(calo_block_position.z());
 
-	// Create a new calo hit in the middle of the scintillator block :
+	// Create a new calo hit in the middle of the scintillator block step :
 	mctools::base_step_hit a_calo_hit;
 	a_calo_hit.set_hit_id(hit_count);
 	a_calo_hit.set_geom_id(calo_gid);
@@ -495,12 +471,12 @@ void generate_BSH_and_fill_SD(const snemo::digitization::electronic_mapping & my
       std::clog << "EID = " << a_eid << " Time = " << hit_time_start << " GID = " << a_gid << std::endl;
       hit_count++;
     }
+  std::clog << "Number of  EID / time pair : " << hit_count << std::endl;
 
-
-
-
-
-
+  std::clog << "Main calo hits  : " << output_SD.get_number_of_step_hits("calo") << std::endl;
+  std::clog << "Xwall calo hits : " << output_SD.get_number_of_step_hits("xcalo") << std::endl;
+  std::clog << "Gveto calo hits : " << output_SD.get_number_of_step_hits("gveto") << std::endl;
+  std::clog << "Geiger hits     : " << output_SD.get_number_of_step_hits("gg") << std::endl;
 
 
   return;
